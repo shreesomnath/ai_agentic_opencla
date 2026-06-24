@@ -191,6 +191,9 @@ The programmatic interface was validated using a case study on solar panel waste
 \end{figure}
 This demonstrates that our custom integration script can dynamically trigger LCA runs, solve complex systems matrices, and parse multi-category environmental outcomes in sub-second to second timeframes, laying a solid foundation for the iterative optimization loops required by the SAA-Agent.
 
+Furthermore, the project team validated the feasibility of the Task 3 optimization loops by implementing a multi-objective Pareto trade-off evaluator and a local LLM agent wrapper. Ingesting a raw solar module Bill of Materials (BOM), the system programmatically mapped virgin inputs, performed a differential mass balance check via the TVL (finding exactly $0.00\%$ mass deviation error), and ran a sensitivity-based feedstock substitution (replacing virgin glass fiber with sorted recycled glass cullet). Calculations using the \textit{"ReCiPe 2016 Midpoint (H)"} method and a localized cost registry demonstrated a Pareto-improving design: Global Warming Potential decreased by $66.44\%$, Terrestrial Acidification decreased by $73.02\%$, Water Consumption fell by $50.53\%$, and raw material procurement cost was reduced by $69.82\%$. Finally, a locally running open-source model (\texttt{qwen2.5-coder:7b}) successfully generated structured engineering justifications of these trade-offs, proving the potential of a self-guided, neuro-symbolic LCA copilot.
+
+
 \subsection{Research Design and Work Plan}
 The project will be executed over a 3-year period across three core research tasks:
 \begin{itemize}
