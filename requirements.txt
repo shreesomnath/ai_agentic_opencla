@@ -1,3 +1,6 @@
 olca-ipc>=2.0.0a0
 olca-schema>=2.0.0
 requests>=2.25.0
+flask>=2.0.0
+matplotlib>=3.4.0
+numpy>=1.20.0
