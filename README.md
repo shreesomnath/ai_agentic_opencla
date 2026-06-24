@@ -77,5 +77,39 @@ python3 test_sensitivity.py
 
 ---
 
-## 4. Custom Agent Integration
+## 4. Setting up on Other Devices & LLM Integration
+
+This codebase is packaged to be 100% portable and executable on other devices. Below are the steps for other users or devices to run the pipeline:
+
+### A. Python & Environment Setup
+1. Clone this repository to the target device.
+2. Install the necessary Python packages using `requirements.txt`:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+### B. OpenLCA 2.x Configuration
+1. Install **OpenLCA 2.x** on the target device.
+2. Load an active database (such as ecoinvent).
+3. Start the IPC server (`Window` -> `Developer Tools` -> `IPC Server`) on port `8080`.
+
+### C. (Optional) Run Local LLM Reasoning (Ollama)
+If they want to enable the automated natural language report justification generator:
+1. Download and install **Ollama** from [ollama.com](https://ollama.com).
+2. Run the following command in the terminal to pull the recommended coding & reasoning model:
+   ```bash
+   ollama pull qwen2.5-coder:7b
+   ```
+3. Keep Ollama running in the background. The pipeline will automatically detect the server at `http://localhost:11434` and call it. If Ollama is offline, the pipeline runs normally and falls back gracefully.
+
+### D. Run the Optimization Pipeline
+To run the end-to-end bulk BOM ingestion, TVL verification, hotspot sensitivity analysis, and multi-objective Pareto substitution calculations:
+```bash
+python3 run_pipeline.py
+```
+
+---
+
+## 5. Custom Agent Integration
 The custom skill at **`.agents/skills/autonomous_lca/SKILL.md`** teaches AI agents (such as Google Antigravity) how to automatically write Python scripts and run them against your databases. This forms the foundation of the proposed **Agentic LCA Execution Agent**.
+
