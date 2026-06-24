@@ -6,6 +6,9 @@ from .multiobjective import CostRegistry, MultiObjectiveEvaluator
 from .llm_agent import LcaLlmAgent
 from .visualizer import LcaVisualizer
 from .compiler import LcaCompiler
+from .optimization import ParetoOptimizer
+from .coordinator import LcaAutonomousCoordinator
+
 
 
 

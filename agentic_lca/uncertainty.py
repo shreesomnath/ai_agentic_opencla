@@ -290,7 +290,8 @@ class UncertaintyPropagator:
                 "ci_low": ci_low,
                 "ci_high": ci_high,
                 "margin_of_error": margin_of_error,
-                "unit": category_units[kpi]
+                "unit": category_units[kpi],
+                "trials": vals
             }
             
         return stats

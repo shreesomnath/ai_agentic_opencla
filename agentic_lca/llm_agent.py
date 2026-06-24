@@ -224,4 +224,44 @@ Output only the JSON array and nothing else.
             pass
         return candidates
 
+    def expand_material_query(self, query):
+        """
+        Uses the local LLM to translate or expand informal material names, synonyms,
+        or chemical abbreviations (e.g. 'PET', 'HDPE', 'scrap') into official standard 
+        LCA/ecoinvent flow naming terms.
+        """
+        if not self.is_ollama_active():
+            return [query]
+            
+        prompt = f"""
+You are a materials mapping translator for an LCA database.
+The user is searching for this feedstock or material: "{query}"
+
+Identify standard database naming variants and synonyms for this material in databases like ecoinvent.
+Respond ONLY with a JSON object containing the key "expansions" mapped to a list of standard names, for example:
+{{
+  "expansions": ["polyethylene terephthalate", "polyethylene terephthalate, granulate"]
+}}
+
+Do not write conversational text.
+"""
+        payload = {
+            "model": self.model,
+            "prompt": prompt,
+            "stream": False,
+            "format": "json"
+        }
+        try:
+            response = requests.post(f"{self.ollama_url}/api/generate", json=payload, timeout=10)
+            if response.status_code == 200:
+                content = response.json().get("response", "").strip()
+                import json
+                data = json.loads(content)
+                expanded = data.get("expansions", [])
+                if isinstance(expanded, list):
+                    return [str(item) for item in expanded if item]
+        except Exception:
+            pass
+        return [query]
+
 

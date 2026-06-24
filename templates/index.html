@@ -62,6 +62,7 @@
                     <div class="workspace-tabs">
                         <button type="button" class="tab-btn active" id="tab-flat">Flat List</button>
                         <button type="button" class="tab-btn" id="tab-hierarchical">Hierarchical JSON</button>
+                        <button type="button" class="tab-btn" id="tab-autonomous">Autonomous Loop</button>
                     </div>
 
                     <!-- Panel 1: Flat List BOM Ingestion -->
@@ -106,6 +107,10 @@
                                     Run Optimization
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                                 </button>
+                                <button type="button" class="btn btn-secondary" id="pareto-btn" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; border: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                                    Pareto Frontier
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -123,6 +128,25 @@
                             <button type="button" class="btn btn-primary" id="compile-hierarchical-btn">
                                 Compile & Calculate 🚀
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- Panel 3: Autonomous Agent Loop -->
+                    <div id="panel-autonomous" class="tab-panel">
+                        <div class="workspace-section">
+                            <label for="autonomous-goal-input">Specify Sustainability Directive (Goal)</label>
+                            <textarea id="autonomous-goal-input" class="bom-textarea" rows="4" placeholder="e.g. Minimize carbon footprint as much as possible, keeping feedstock cost under $10.00"></textarea>
+                        </div>
+                        <div class="bom-actions">
+                            <button type="button" class="btn btn-primary" id="run-autonomous-btn" style="width: 100%; background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                                Launch Autonomous Agent 🚀
+                            </button>
+                        </div>
+                        
+                        <!-- Terminal Log Stream -->
+                        <div class="workspace-section" style="margin-top: 16px;">
+                            <label>Consensus Log Stream</label>
+                            <div id="autonomous-terminal" style="background-color: #0f172a; color: #38bdf8; font-family: monospace; font-size: 11px; padding: 12px; border-radius: 8px; border: 1px solid #334155; height: 180px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5; box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);">Waiting to launch agent loop...</div>
                         </div>
                     </div>
 
@@ -247,17 +271,22 @@
                 <div class="visuals-row">
                     <!-- Plot Panel -->
                     <div class="visual-panel chart-panel">
-                        <div class="panel-header">
-                            <h3>
+                        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <h3 style="margin: 0;">
                                 <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line><line x1="2" y1="20" x2="22" y2="20"></line></svg>
-                                Multi-Objective Trade-Off Chart
+                                Analysis & Charts
                             </h3>
+                            <div class="chart-toggle-tabs" style="display: flex; gap: 4px; background: var(--border-color); padding: 2px; border-radius: 6px;">
+                                <button type="button" class="chart-tab-btn active" id="chart-tab-tradeoff">Trade-Offs</button>
+                                <button type="button" class="chart-tab-btn" id="chart-tab-uncertainty">Uncertainty Dist.</button>
+                            </div>
                         </div>
                         <div class="chart-content-area">
                             <div class="placeholder-text" id="chart-placeholder">
                                 Run optimization to display comparison metrics
                             </div>
-                            <img id="tradeoff-chart-img" style="display: none;" alt="Optimization Tradeoffs Bar Chart">
+                            <img id="tradeoff-chart-img" style="display: none; width: 100%; height: auto;" alt="Optimization Tradeoffs Bar Chart">
+                            <img id="uncertainty-chart-img" style="display: none; width: 100%; height: auto;" alt="Uncertainty Distribution Histogram">
                         </div>
                     </div>
 
@@ -276,8 +305,8 @@
                                 </div>
                             </div>
                             <div class="chat-terminal-bar">
-                                <input type="text" id="chat-input" placeholder="Ask Copilot a question or request feedstock swap..." disabled>
-                                <button type="button" id="chat-send-btn" disabled>
+                                <input type="text" id="chat-input" placeholder="Ask Copilot a question or request feedstock swap...">
+                                <button type="button" id="chat-send-btn">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                                 </button>
                             </div>

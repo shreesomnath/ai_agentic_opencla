@@ -216,14 +216,16 @@ class MultiObjectiveEvaluator:
                 "stddev": baseline_stat["stddev"],
                 "ci_low": baseline_stat["ci_low"],
                 "ci_high": baseline_stat["ci_high"],
-                "margin_of_error": baseline_stat["margin_of_error"]
+                "margin_of_error": baseline_stat["margin_of_error"],
+                "trials": baseline_stat.get("trials", [])
             },
             "optimized": opt_val,
             "optimized_uncertainty": {
                 "stddev": opt_stat["stddev"],
                 "ci_low": opt_stat["ci_low"],
                 "ci_high": opt_stat["ci_high"],
-                "margin_of_error": opt_stat["margin_of_error"]
+                "margin_of_error": opt_stat["margin_of_error"],
+                "trials": opt_stat.get("trials", [])
             },
             "difference": diff,
             "percentage_change": rel_change_pct,

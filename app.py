@@ -3,7 +3,7 @@ import uuid
 import csv
 import sys
 import json
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, Response
 from agentic_lca import (
     LcaExecutor, 
     FlowMapper, 
@@ -14,7 +14,9 @@ from agentic_lca import (
     LcaLlmAgent,
     LcaVisualizer,
     LcaCompiler,
-    UncertaintyPropagator
+    UncertaintyPropagator,
+    ParetoOptimizer,
+    LcaAutonomousCoordinator
 )
 import olca_schema as o
 
@@ -295,6 +297,7 @@ def run_optimization():
             raise RuntimeError(report.get("message", "Substitution evaluation failed."))
             
         # 8. Generate chart and save in static directory
+        # 8. Generate chart and save in static directory
         chart_filename_dark = "optimization_tradeoffs_dark.png"
         chart_filename_light = "optimization_tradeoffs_light.png"
         chart_path_dark = os.path.join(app.root_path, 'static', chart_filename_dark)
@@ -312,6 +315,26 @@ def run_optimization():
         LcaVisualizer.generate_tradeoff_chart(
             report, 
             "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs_light.png",
+            theme="light"
+        )
+
+        # Generate uncertainty distribution charts
+        unc_filename_dark = "uncertainty_distribution_dark.png"
+        unc_filename_light = "uncertainty_distribution_light.png"
+        unc_path_dark = os.path.join(app.root_path, 'static', unc_filename_dark)
+        unc_path_light = os.path.join(app.root_path, 'static', unc_filename_light)
+        
+        LcaVisualizer.generate_uncertainty_chart(report, unc_path_dark, theme="dark")
+        LcaVisualizer.generate_uncertainty_chart(report, unc_path_light, theme="light")
+        
+        LcaVisualizer.generate_uncertainty_chart(
+            report, 
+            "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_distribution_dark.png",
+            theme="dark"
+        )
+        LcaVisualizer.generate_uncertainty_chart(
+            report, 
+            "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_distribution_light.png",
             theme="light"
         )
         
@@ -341,7 +364,9 @@ def run_optimization():
             "temp_sys_id": temp_sys_id,
             "method_id": method_desc.id,
             "chart_url_dark": f"/static/{chart_filename_dark}",
-            "chart_url_light": f"/static/{chart_filename_light}"
+            "chart_url_light": f"/static/{chart_filename_light}",
+            "unc_url_dark": f"/static/{unc_filename_dark}",
+            "unc_url_light": f"/static/{unc_filename_light}"
         })
 
     except Exception as e:
@@ -361,6 +386,251 @@ def run_optimization():
                 except: pass
         if os.path.exists(temp_bom_path):
             os.remove(temp_bom_path)
+
+# Global jobs store
+jobs = {}
+
+@app.route('/api/autonomous-redesign', methods=['POST'])
+def run_autonomous_redesign():
+    """
+    Starts the LcaAutonomousCoordinator loop in a background thread and returns a job_id.
+    """
+    import threading
+    data = request.json or {}
+    items = data.get("items", [])
+    goal = data.get("goal", "").strip()
+    
+    if not items:
+        return jsonify({"success": False, "error": "BOM is empty"}), 400
+    if not goal:
+        return jsonify({"success": False, "error": "Goal description is empty"}), 400
+        
+    job_id = str(uuid.uuid4())
+    jobs[job_id] = {
+        "status": "running",
+        "logs": [],
+        "result": None,
+        "error": None
+    }
+    
+    def worker():
+        def web_logger(msg):
+            if job_id in jobs:
+                jobs[job_id]["logs"].append(msg)
+            
+        try:
+            coordinator = LcaAutonomousCoordinator(logger=web_logger)
+            result = coordinator.run_optimization_goal(items, goal, commit_to_db=True)
+            if job_id in jobs:
+                jobs[job_id]["result"] = result
+                jobs[job_id]["status"] = "completed"
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            if job_id in jobs:
+                jobs[job_id]["error"] = str(e)
+                jobs[job_id]["status"] = "failed"
+            
+    thread = threading.Thread(target=worker)
+    thread.daemon = True
+    thread.start()
+    
+    return jsonify({
+        "success": True,
+        "job_id": job_id
+    })
+
+@app.route('/api/autonomous-redesign/stream/<job_id>', methods=['GET'])
+def stream_autonomous_redesign(job_id):
+    """
+    Streams the logs and final result of the autonomous loop via Server-Sent Events (SSE).
+    """
+    import time
+    
+    def event_stream():
+        if job_id not in jobs:
+            yield f"data: {json.dumps({'type': 'failed', 'error': 'Job not found'})}\n\n"
+            return
+            
+        job = jobs[job_id]
+        last_idx = 0
+        
+        while True:
+            # Check for new logs
+            logs = job["logs"]
+            if len(logs) > last_idx:
+                for msg in logs[last_idx:]:
+                    yield f"data: {json.dumps({'type': 'log', 'message': msg})}\n\n"
+                last_idx = len(logs)
+                
+            # Check status
+            if job["status"] != "running":
+                if job["status"] == "completed":
+                    yield f"data: {json.dumps({'type': 'completed', 'result': job['result']})}\n\n"
+                else:
+                    yield f"data: {json.dumps({'type': 'failed', 'error': job['error']})}\n\n"
+                break
+                
+            time.sleep(0.1)
+            
+    return Response(event_stream(), mimetype="text/event-stream")
+
+@app.route('/api/pareto', methods=['POST'])
+def run_pareto_optimization():
+    """
+    Ingests a BOM, constructs a temporary process and product system, 
+    runs Pareto optimization across GWP, Acidification, Water, and Cost,
+    and returns the list of Pareto-optimal configurations.
+    """
+    data = request.json or {}
+    items = data.get("items", [])
+    num_samples = int(data.get("num_samples", 2000))
+    
+    executor = None
+    temp_sys_id = None
+    temp_proc_id = None
+    temp_flow_id = None
+    
+    try:
+        executor = LcaExecutor()
+        verifier = ThermodynamicVerifier(tolerance=0.01)
+        mapper = FlowMapper(executor)
+        cost_registry = CostRegistry()
+        optimizer = ParetoOptimizer(executor, mapper, verifier, cost_registry)
+        
+        # Load units
+        unit_map = get_cached_units(executor.client)
+        kg_unit = unit_map.get("kg")
+        if not kg_unit:
+            return jsonify({"success": False, "error": "Kilogram (kg) unit reference not found in database."}), 500
+            
+        exchanges = []
+        total_input_mass = 0.0
+        internal_id_counter = 2
+        
+        # 1. Parse temporary BOM
+        for item in items:
+            flow_name = item["flow_name"]
+            amount = float(item["amount"])
+            unit_name = item["unit"]
+            
+            matches = mapper.search(flow_name, top_k=1, flow_type_filter=o.FlowType.PRODUCT_FLOW)
+            if not matches:
+                continue
+            matched_flow, score = matches[0]
+            
+            matched_unit = unit_map.get(unit_name.lower(), kg_unit)
+            
+            exchange = o.Exchange()
+            exchange.is_input = True
+            exchange.flow = o.Ref(
+                ref_type=o.RefType.Flow,
+                id=matched_flow.id,
+                name=matched_flow.name,
+                ref_unit=matched_flow.ref_unit
+            )
+            exchange.amount = amount
+            exchange.unit = o.Ref(ref_type=o.RefType.Unit, id=matched_unit.id, name=matched_unit.name)
+            exchange.flow_property = o.Ref(
+                ref_type=o.RefType.FlowProperty,
+                id="93a60a56-a3c8-11da-a746-0800200b9a66", # Mass
+                name="Mass"
+            )
+            exchange.internal_id = internal_id_counter
+            internal_id_counter += 1
+            exchanges.append(exchange)
+            
+            # Mass conservation sum
+            if unit_name.lower() == "kg":
+                total_input_mass += amount
+            elif unit_name.lower() == "g":
+                total_input_mass += amount * 1e-3
+            elif "water" in flow_name.lower() and unit_name.lower() in ["m3", "cubic meter"]:
+                total_input_mass += amount * 1000.0
+                
+        if not exchanges:
+            return jsonify({"success": False, "error": "No BOM flows could be mapped to ecoinvent database."}), 400
+            
+        # 2. Create finished product flow
+        temp_flow_id = str(uuid.uuid4())
+        module_flow = o.Flow()
+        module_flow.id = temp_flow_id
+        module_flow.name = "Web-Synthesized Pareto Product"
+        module_flow.flow_type = o.FlowType.PRODUCT_FLOW
+        module_flow.flow_properties = [
+            o.FlowPropertyFactor(
+                is_ref_flow_property=True,
+                conversion_factor=1.0,
+                flow_property=o.Ref(
+                    ref_type=o.RefType.FlowProperty,
+                    id="93a60a56-a3c8-11da-a746-0800200b9a66",
+                    name="Mass"
+                )
+            )
+        ]
+        executor.client.put(module_flow)
+        
+        # 3. Create unit process
+        temp_proc_id = str(uuid.uuid4())
+        process = o.Process()
+        process.id = temp_proc_id
+        process.name = "Web-Synthesized Pareto Manufacturing"
+        process.process_type = o.ProcessType.UNIT_PROCESS
+        
+        out_exchange = o.Exchange()
+        out_exchange.is_input = False
+        out_exchange.flow = o.Ref(ref_type=o.RefType.Flow, id=module_flow.id, name=module_flow.name, ref_unit="kg")
+        out_exchange.amount = total_input_mass
+        out_exchange.unit = o.Ref(ref_type=o.RefType.Unit, id=kg_unit.id, name=kg_unit.name)
+        out_exchange.flow_property = o.Ref(ref_type=o.RefType.FlowProperty, id="93a60a56-a3c8-11da-a746-0800200b9a66", name="Mass")
+        out_exchange.is_quantitative_reference = True
+        out_exchange.internal_id = 1
+        
+        process.exchanges = [out_exchange] + exchanges
+        
+        # Save process
+        executor.client.put(process)
+        
+        # 4. Compile product system
+        sys_ref = executor.client.create_product_system(process)
+        if not sys_ref:
+            raise RuntimeError("Failed to compile product system.")
+        temp_sys_id = sys_ref.id
+        
+        # Locate ReCiPe
+        methods = executor.find_impact_method("ReCiPe 2016 Midpoint (H)")
+        if not methods:
+            raise ValueError("ReCiPe 2016 Midpoint (H) method not found.")
+        method_desc = methods[0]
+        
+        # 5. Run Pareto Optimizer
+        frontier = optimizer.optimize_process(
+            process_id=temp_proc_id,
+            system_id=temp_sys_id,
+            method_id=method_desc.id,
+            num_samples=num_samples
+        )
+        
+        return jsonify({
+            "success": True,
+            "frontier": frontier
+        })
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+        
+    finally:
+        # Cleanup databases
+        if executor:
+            if temp_sys_id:
+                try: executor.client.delete(o.Ref(ref_type=o.RefType.ProductSystem, id=temp_sys_id))
+                except: pass
+            if temp_proc_id:
+                try: executor.client.delete(o.Ref(ref_type=o.RefType.Process, id=temp_proc_id))
+                except: pass
+            if temp_flow_id:
+                try: executor.client.delete(o.Ref(ref_type=o.RefType.Flow, id=temp_flow_id))
+                except: pass
 
 @app.route('/api/compile', methods=['POST'])
 def compile_hierarchical_bom():
@@ -500,6 +770,11 @@ def chat():
         command = llm_agent.parse_chat_command(message, exchanges, report)
         action = command.get("action", "chat")
         
+        if action == "substitute" and not (temp_proc_id and temp_sys_id and method_id):
+            action = "chat"
+            command["action"] = "chat"
+            command["response"] = "Please load a case study or compile a hierarchical BOM first before requesting feedstock substitutions. Once loaded, you can request swaps like 'replace steel with scrap steel'."
+            
         if action == "substitute" and temp_proc_id and temp_sys_id and method_id:
             virgin_name = command.get("virgin_flow_name")
             substitute_query = command.get("substitute_search_query")
@@ -638,6 +913,7 @@ def chat():
                 )
                 
                 # Save new chart
+                # Save new chart
                 chart_filename_dark = "optimization_tradeoffs_dark.png"
                 chart_filename_light = "optimization_tradeoffs_light.png"
                 chart_path_dark = os.path.join(app.root_path, 'static', chart_filename_dark)
@@ -654,6 +930,26 @@ def chat():
                 LcaVisualizer.generate_tradeoff_chart(
                     sub_report, 
                     "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs_light.png",
+                    theme="light"
+                )
+
+                # Generate new uncertainty distribution charts
+                unc_filename_dark = "uncertainty_distribution_dark.png"
+                unc_filename_light = "uncertainty_distribution_light.png"
+                unc_path_dark = os.path.join(app.root_path, 'static', unc_filename_dark)
+                unc_path_light = os.path.join(app.root_path, 'static', unc_filename_light)
+                
+                LcaVisualizer.generate_uncertainty_chart(sub_report, unc_path_dark, theme="dark")
+                LcaVisualizer.generate_uncertainty_chart(sub_report, unc_path_light, theme="light")
+                
+                LcaVisualizer.generate_uncertainty_chart(
+                    sub_report, 
+                    "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_distribution_dark.png",
+                    theme="dark"
+                )
+                LcaVisualizer.generate_uncertainty_chart(
+                    sub_report, 
+                    "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_distribution_light.png",
                     theme="light"
                 )
                 
@@ -683,7 +979,9 @@ def chat():
                     "temp_sys_id": sys_ref.id,
                     "method_id": method_id,
                     "chart_url_dark": f"/static/{chart_filename_dark}?t={int(time.time())}",
-                    "chart_url_light": f"/static/{chart_filename_light}?t={int(time.time())}"
+                    "chart_url_light": f"/static/{chart_filename_light}?t={int(time.time())}",
+                    "unc_url_dark": f"/static/{unc_filename_dark}?t={int(time.time())}",
+                    "unc_url_light": f"/static/{unc_filename_light}?t={int(time.time())}"
                 })
                 
             finally:

@@ -12,6 +12,10 @@ class LcaCompiler:
         self.mapper = mapper
         self.verifier = verifier
         self.unit_map = {}
+        self.assembly_processes = {}
+        self.created_flows = []
+        self.created_processes = []
+        self.created_product_systems = []
         self._load_units()
 
     def _load_units(self):
@@ -49,6 +53,7 @@ class LcaCompiler:
         # Build the final product system in openLCA
         print(f"[Compiler] Building product system for '{bom_dict['name']}'...")
         sys_ref = self.client.create_product_system(top_proc_ref)
+        self.created_product_systems.append(sys_ref)
         
         return top_flow_ref, top_proc_ref, sys_ref
 
@@ -122,6 +127,7 @@ class LcaCompiler:
             )
         ]
         self.client.put(custom_flow)
+        self.created_flows.append(o.Ref(ref_type=o.RefType.Flow, id=flow_id))
         
         # Create unit process for the assembly
         proc_id = str(uuid.uuid4())
@@ -162,4 +168,31 @@ class LcaCompiler:
         flow_ref = o.Ref(ref_type=o.RefType.Flow, id=flow_id, name=custom_flow.name, ref_unit=unit_str)
         proc_ref = o.Ref(ref_type=o.RefType.Process, id=proc_id, name=custom_proc.name)
         
+        self.created_processes.append(proc_ref)
+        self.assembly_processes[custom_flow.name] = proc_ref
+        
         return flow_ref, proc_ref
+
+    def cleanup(self):
+        """Deletes all custom product systems, processes, and flows created during compilation."""
+        print("[Compiler] Cleaning up temporary compilation entities from database...")
+        # 1. Delete product systems first
+        for sys_ref in self.created_product_systems:
+            try:
+                self.client.delete(sys_ref)
+            except Exception as e:
+                print(f"  [Warning] Failed to delete product system {sys_ref.id}: {e}")
+                
+        # 2. Delete processes
+        for proc_ref in self.created_processes:
+            try:
+                self.client.delete(proc_ref)
+            except Exception as e:
+                print(f"  [Warning] Failed to delete process {proc_ref.id}: {e}")
+                
+        # 3. Delete flows
+        for flow_ref in self.created_flows:
+            try:
+                self.client.delete(flow_ref)
+            except Exception as e:
+                print(f"  [Warning] Failed to delete flow {flow_ref.id}: {e}")

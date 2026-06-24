@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -116,4 +118,83 @@ class LcaVisualizer:
         plt.savefig(output_path, bbox_inches='tight', facecolor=fig.get_facecolor(), edgecolor='none')
         plt.close()
         print(f" -> Optimization comparison chart successfully generated and saved to: {output_path} (theme: {theme})")
+        return True
+
+    @staticmethod
+    def generate_uncertainty_chart(report, output_path="uncertainty_distribution.png", theme="dark"):
+        """
+        Creates a stochastically-resolved histogram comparison comparing baseline and optimized
+        carbon footprint (GWP) Monte Carlo distribution trials. Displays mean lines and confidence intervals.
+        """
+        metrics = report.get("metrics", {})
+        gwp = metrics.get("Global Warming", {})
+        if not gwp:
+            # Fallback to check first available metric key
+            for k in metrics.keys():
+                if "warming" in k.lower() or "carbon" in k.lower() or "gwp" in k.lower():
+                    gwp = metrics[k]
+                    break
+            if not gwp and metrics:
+                gwp = list(metrics.values())[0]
+                
+        if not gwp:
+            print("No GWP metrics found for uncertainty distribution plot.")
+            return False
+            
+        base_trials = gwp.get("baseline_uncertainty", {}).get("trials", [])
+        opt_trials = gwp.get("optimized_uncertainty", {}).get("trials", [])
+        
+        if not base_trials or not opt_trials:
+            print("No raw Monte Carlo trials found in GWP metrics for plotting.")
+            return False
+
+        # Check theme color configuration
+        is_light = (theme == "light")
+        bg_color = '#ffffff' if is_light else '#09090b'
+        card_color = '#ffffff' if is_light else '#18181b'
+        border_color = '#cbd5e1' if is_light else '#27272a'
+        text_primary = '#1e1e38' if is_light else '#fafafa'
+        text_secondary = '#3730a3' if is_light else '#a1a1aa'
+        grid_color = '#cbd5e1' if is_light else '#27272a'
+        
+        # Colors for baseline (zinc/grey) and optimized (emerald green)
+        base_color = '#94a3b8' if is_light else '#52525b'
+        opt_color = '#0d9488' if is_light else '#10b981'
+        
+        fig, ax = plt.subplots(figsize=(10, 5.5), dpi=150, facecolor=bg_color)
+        ax.set_facecolor(bg_color)
+        
+        # Plot histograms
+        ax.hist(base_trials, bins=40, alpha=0.5, label='Baseline GWP Distribution', color=base_color, edgecolor=border_color, linewidth=0.5)
+        ax.hist(opt_trials, bins=40, alpha=0.7, label='Optimized GWP Distribution', color=opt_color, edgecolor=opt_color, linewidth=0.5)
+        
+        # Draw mean vertical lines
+        base_mean = sum(base_trials) / len(base_trials)
+        opt_mean = sum(opt_trials) / len(opt_trials)
+        ax.axvline(base_mean, color=base_color, linestyle='--', linewidth=1.5, label=f'Baseline Mean ({base_mean:.3f})')
+        ax.axvline(opt_mean, color=opt_color, linestyle='--', linewidth=1.5, label=f'Optimized Mean ({opt_mean:.3f})')
+        
+        # Label axes
+        unit = gwp.get("unit", "kg CO2 eq")
+        ax.set_xlabel(f'Carbon Footprint / Global Warming Potential ({unit})', fontsize=11, fontweight='bold', labelpad=10, color=text_primary)
+        ax.set_ylabel('Trial Frequency (Counts)', fontsize=11, fontweight='bold', labelpad=10, color=text_primary)
+        ax.set_title(f"Uncertainty Propagation: {report.get('process_name', 'Process Substitution')}\n"
+                     f"Stochastic Monte Carlo Simulation ({len(base_trials)} Trials)",
+                     fontsize=12, fontweight='bold', pad=15, color=text_primary)
+                     
+        # Legend style
+        legend = ax.legend(frameon=True, facecolor=card_color, edgecolor=border_color, loc='upper right')
+        for text in legend.get_texts():
+            text.set_color(text_primary)
+            
+        # Style axes and grid
+        ax.tick_params(colors=text_secondary, which='both', labelsize=9)
+        for spine in ax.spines.values():
+            spine.set_color(border_color)
+        ax.grid(axis='y', linestyle='--', color=grid_color, alpha=0.6)
+        
+        fig.tight_layout()
+        plt.savefig(output_path, bbox_inches='tight', facecolor=fig.get_facecolor(), edgecolor='none')
+        plt.close()
+        print(f" -> Uncertainty distribution chart generated and saved to: {output_path} (theme: {theme})")
         return True
