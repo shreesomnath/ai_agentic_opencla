@@ -8,8 +8,10 @@ from agentic_lca import (
     ThermodynamicVerifier, 
     SensitivityAnalyzer, 
     CostRegistry, 
-    MultiObjectiveEvaluator
+    MultiObjectiveEvaluator,
+    LcaLlmAgent
 )
+
 
 def get_unit_refs(client):
     """Scrapes common unit references from an existing database process to avoid hardcoding."""
@@ -306,8 +308,24 @@ def main():
         print(f" - Material cost savings:    {cost_pct:+.2f}%")
         print(f" - Water consumption change: {water_pct:+.2f}%")
         print(f" - Terrestrial Acidification: {acid_pct:+.2f}%")
-        print("\nDecision: Fedstock substitution is Pareto-improving because environmental and cost metrics all decreased.")
+        print("\nDecision: Feedstock substitution is Pareto-improving because environmental and cost metrics all decreased.")
         print("="*80)
+        
+        # 8. Generate LLM Justification Report
+        print("\n[8/8] Contacting Local LLM Agent for engineering justification...")
+        llm_agent = LcaLlmAgent()
+        if llm_agent.is_ollama_active():
+            print(" -> Local LLM active. Generating justification paragraph...")
+            justification = llm_agent.generate_engineering_justification(report)
+            print("\nLLM Justification Report:")
+            print("-" * 80)
+            print(justification)
+            print("-" * 80)
+        else:
+            print(" -> Local LLM Agent is offline (Ollama not responding on port 11434).")
+            print("    To enable this: download Ollama and run 'ollama run qwen2.5-coder:7b' on your Mac.")
+        print("="*80)
+
         
     except Exception as e:
         print(f"\nPipeline error: {e}")

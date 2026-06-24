@@ -1,0 +1,3 @@
+olca-ipc>=2.0.0a0
+olca-schema>=2.0.0
+requests>=2.25.0
