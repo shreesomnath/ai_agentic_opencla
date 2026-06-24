@@ -16,6 +16,10 @@ From: python:3.9-slim
     requirements.txt /app/requirements.txt
     agentic_lca /app/agentic_lca
     run_pipeline.py /app/run_pipeline.py
+    app.py /app/app.py
+    templates /app/templates
+    static /app/static
+    samples /app/samples
     sample_bom.csv /app/sample_bom.csv
 
 %post
