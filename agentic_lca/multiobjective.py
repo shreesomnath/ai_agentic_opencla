@@ -67,9 +67,10 @@ class MultiObjectiveEvaluator:
                 total_cost += cost
         return total_cost
 
-    def evaluate_substitution(self, process_id, system_id, method_id, target_flow_id, substitute_flow_desc):
+    def evaluate_substitution(self, process_id, system_id, method_id, target_flow_id, substitute_flow_desc, mapping_scores=None):
         """
-        Evaluates the trade-offs of substituting a process input exchange with an alternative.
+        Evaluates the trade-offs of substituting a process input exchange with an alternative,
+        propagating mapping uncertainty through a Monte Carlo simulation.
         
         Parameters:
           process_id: ID of the process to modify
@@ -77,10 +78,13 @@ class MultiObjectiveEvaluator:
           method_id: ID of the multi-impact assessment method (e.g. ReCiPe 2016 Midpoint H)
           target_flow_id: ID of the flow to replace in the process exchanges
           substitute_flow_desc: FlowDescriptor of the substitute flow
+          mapping_scores: Dictionary of flow IDs to mapping confidence scores
           
         Returns:
           A dictionary containing comparison reports for GWP, Acidification, Water, and Cost.
         """
+        from .uncertainty import UncertaintyPropagator
+
         # 1. Fetch process details
         proc = self.client.get(o.Process, process_id)
         target_exchange = None
@@ -94,19 +98,18 @@ class MultiObjectiveEvaluator:
             
         original_flow_ref = target_exchange.flow
 
+        # 2. Baseline Environmental impacts & uncertainty propagation
+        print("[MOE] Running baseline environmental calculation & uncertainty propagation...")
+        propagator = UncertaintyPropagator(self.executor, self.cost_registry)
+        baseline_stats = propagator.propagate(
+            process_id=process_id,
+            system_id=system_id,
+            method_id=method_id,
+            mapping_scores=mapping_scores,
+            num_trials=1000
+        )
         
-        # 2. Baseline Environmental impacts
-        print("[MOE] Running baseline environmental calculation...")
-        baseline_impacts = self.executor.calculate(system_id, method_id)
-        
-        baseline_gwp = self._find_impact(baseline_impacts, "global warming")
-        baseline_acid = self._find_impact(baseline_impacts, "acidification")
-        baseline_water = self._find_impact(baseline_impacts, "water consumption")
-        
-        # 3. Baseline Process Cost
-        baseline_cost = self.calculate_process_cost(proc)
-        
-        # 4. TVL Check for Substitution
+        # 3. TVL Check for Substitution
         print("[MOE] Running TVL mass balance check for substitute flow...")
         _, baseline_tvl = self.verifier.verify_mass_balance(proc)
         
@@ -126,17 +129,33 @@ class MultiObjectiveEvaluator:
         mass_diff_output = abs(substituted_tvl['total_output_mass_kg'] - baseline_tvl['total_output_mass_kg'])
         is_substitution_valid = (mass_diff_input < 0.01) and (mass_diff_output < 0.01)
         
+        # Check elemental difference between substitute and original flow
+        orig_comp = self.verifier.get_flow_composition(original_flow_ref.name)
+        sub_comp = self.verifier.get_flow_composition(substitute_flow_desc.name)
+        
+        elemental_message = ""
+        if orig_comp and sub_comp:
+            elemental_discrepancy = 0.0
+            all_elements = set(orig_comp.keys()) | set(sub_comp.keys())
+            for el in all_elements:
+                elemental_discrepancy += abs(orig_comp.get(el, 0.0) - sub_comp.get(el, 0.0))
+                
+            if elemental_discrepancy > 0.20:
+                is_substitution_valid = False
+                elemental_message = f"Elemental profile mismatch of {elemental_discrepancy*100:.1f}% (e.g. cannot swap '{original_flow_ref.name}' with '{substitute_flow_desc.name}')."
+        
         if not is_substitution_valid:
             # Revert in-memory reference
             target_exchange.flow = original_flow_ref
+            msg = elemental_message if elemental_message else f"Mass not conserved. Input delta: {mass_diff_input:.4f} kg, Output delta: {mass_diff_output:.4f} kg"
             return {
                 "status": "REJECTED_TVL_FAILED",
-                "message": f"Mass not conserved. Input delta: {mass_diff_input:.4f} kg, Output delta: {mass_diff_output:.4f} kg",
+                "message": msg,
                 "baseline": {},
                 "optimized": {}
             }
             
-        # 5. Apply substitution to DB and compile a temporary system
+        # 4. Apply substitution to DB and compile a temporary system
         print("[MOE] Applying substitution to database & compiling temporary product system...")
         self.client.put(proc)
         
@@ -144,19 +163,17 @@ class MultiObjectiveEvaluator:
         sys_obj = self.client.get(o.ProductSystem, system_id)
         temp_sys = self.client.create_product_system(sys_obj.ref_process)
         
-        opt_gwp, opt_acid, opt_water, opt_cost = 0.0, 0.0, 0.0, 0.0
-        
+        opt_stats = {}
         try:
-            # Calculate optimized environmental impacts
-            print("[MOE] Running optimized environmental calculation...")
-            opt_impacts = self.executor.calculate(temp_sys.id, method_id)
-            
-            opt_gwp = self._find_impact(opt_impacts, "global warming")
-            opt_acid = self._find_impact(opt_impacts, "acidification")
-            opt_water = self._find_impact(opt_impacts, "water consumption")
-            
-            # Calculate optimized process cost
-            opt_cost = self.calculate_process_cost(proc)
+            # Calculate optimized environmental impacts & uncertainty propagation
+            print("[MOE] Running optimized environmental calculation & uncertainty propagation...")
+            opt_stats = propagator.propagate(
+                process_id=process_id,
+                system_id=temp_sys.id,
+                method_id=method_id,
+                mapping_scores=mapping_scores,
+                num_trials=1000
+            )
             
         finally:
             # Revert flow back to original in the database
@@ -173,10 +190,10 @@ class MultiObjectiveEvaluator:
             "substituted_from": original_flow_ref.name,
             "substituted_to": substitute_flow_desc.name,
             "metrics": {
-                "Global Warming": self._format_metric(baseline_gwp, opt_gwp, "kg CO2 eq"),
-                "Acidification": self._format_metric(baseline_acid, opt_acid, "kg SO2 eq"),
-                "Water Consumption": self._format_metric(baseline_water, opt_water, "m3"),
-                "Feedstock Cost": self._format_metric(baseline_cost, opt_cost, "USD")
+                "Global Warming": self._format_metric(baseline_stats["Global Warming"], opt_stats["Global Warming"]),
+                "Acidification": self._format_metric(baseline_stats["Acidification"], opt_stats["Acidification"]),
+                "Water Consumption": self._format_metric(baseline_stats["Water Consumption"], opt_stats["Water Consumption"]),
+                "Feedstock Cost": self._format_metric(baseline_stats["Feedstock Cost"], opt_stats["Feedstock Cost"])
             }
         }
         
@@ -187,14 +204,28 @@ class MultiObjectiveEvaluator:
         item = next((r for r in results if substring.lower() in r["category_name"].lower()), None)
         return item["amount"] if item else 0.0
 
-    def _format_metric(self, baseline, optimized, unit):
-        """Formats baseline, optimized, delta, and percentage change for a metric."""
-        diff = optimized - baseline
-        rel_change_pct = (diff / baseline * 100) if baseline > 0 else 0.0
+    def _format_metric(self, baseline_stat, opt_stat):
+        """Formats baseline, optimized, delta, percentage change, and uncertainty ranges for a metric."""
+        base_val = baseline_stat["baseline"]
+        opt_val = opt_stat["baseline"]
+        diff = opt_val - base_val
+        rel_change_pct = (diff / base_val * 100) if base_val > 0 else 0.0
         return {
-            "baseline": baseline,
-            "optimized": optimized,
+            "baseline": base_val,
+            "baseline_uncertainty": {
+                "stddev": baseline_stat["stddev"],
+                "ci_low": baseline_stat["ci_low"],
+                "ci_high": baseline_stat["ci_high"],
+                "margin_of_error": baseline_stat["margin_of_error"]
+            },
+            "optimized": opt_val,
+            "optimized_uncertainty": {
+                "stddev": opt_stat["stddev"],
+                "ci_low": opt_stat["ci_low"],
+                "ci_high": opt_stat["ci_high"],
+                "margin_of_error": opt_stat["margin_of_error"]
+            },
             "difference": diff,
             "percentage_change": rel_change_pct,
-            "unit": unit
+            "unit": baseline_stat["unit"]
         }

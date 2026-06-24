@@ -118,3 +118,22 @@ apptainer run --network host lca_copilot.sif --chat
 This software bridge serves as the experimental validation for the NSF CBET Engineering Environmental Resiliency (EER) proposal.
 * **LaTeX Source**: [`NSF_Proposal.tex`](NSF_Proposal.tex)
 * **Compiled Proposal Document**: [`NSF_Proposal.pdf`](NSF_Proposal.pdf)
+
+---
+
+## 🔬 Advanced Research Components (Year 1 & 2 Milestones)
+
+We have successfully developed and validated the core scientific tasks outlined in the 3-Year NSF Proposal:
+
+### 1. Stochastic Uncertainty Propagator (Task 1: Year 1)
+* **Monte Carlo Engine (`UncertaintyPropagator`):** Calculates standard deviations for all BOM feedstocks based on AI mapping confidence: $\sigma_i = \text{amount} \times (1.0 - \text{mapping\_score}) \times 0.15$. It samples feedstock volumes from a normal distribution ($\ge 0$) and calculates 95% confidence interval bounds using dynamic linear sensitivities (first-order gradients) computed in openLCA.
+* **Stoichiometric Elemental Conservation (TVL):** Extended the Thermodynamic Verification Layer in [agentic_lca/tvl.py](file:///Users/somnath.luitel/documents/airlab/openlca/agentic_lca/tvl.py) to parse molecular formulas (local dictionaries + PubChem REST API fallbacks) and check element conservation (carbon, silicon, hydrogen, oxygen, metals). Rejects substitutions with chemical mismatches $>20\%$ (e.g. plastic for steel).
+* **Test Scripts:**
+  - Run `python3 test_uncertainty.py` to verify Monte Carlo error propagation.
+  - Run `python3 test_tvl_elemental.py` to inspect detailed element balances.
+  - Run `python3 test_tvl_substitution.py` to check stoichiometric substitution filtering.
+
+### 2. Hierarchical BOM Compiler (Task 2: Year 2)
+* **Programmatic Supply-Chain Orchestration (`LcaCompiler`):** Recursively processes multi-level nested BOM trees in [agentic_lca/compiler.py](file:///Users/somnath.luitel/documents/airlab/openlca/agentic_lca/compiler.py). It dynamically registers custom product flows and unit processes in the database for intermediate sub-assemblies, links them, compiles a complete openLCA product system, and evaluates lifecycle footprints.
+* **Test Script:**
+  - Run `python3 test_compiler.py` to compile, verify mass-balance, and run calculations for a multi-level composite wind blade.

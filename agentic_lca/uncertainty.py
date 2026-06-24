@@ -90,3 +90,208 @@ class SensitivityAnalyzer:
                 self.client.put(proc)
                 
         return sensitivities
+
+
+class UncertaintyPropagator:
+    """
+    Performs stochastic error propagation using a Monte Carlo simulation
+    based on local linear sensitivities and mapping confidence scores.
+    """
+    def __init__(self, executor, cost_registry=None):
+        self.executor = executor
+        self.client = executor.client
+        from .multiobjective import CostRegistry
+        self.cost_registry = cost_registry if cost_registry else CostRegistry()
+
+    def propagate(self, process_id, system_id, method_id, mapping_scores=None, num_trials=1000):
+        """
+        Runs Monte Carlo propagation of inventory mapping uncertainty.
+        
+        Parameters:
+          process_id: ID of the process to analyze
+          system_id: ID of the product system
+          method_id: ID of the LCIA method
+          mapping_scores: Dict mapping flow_id to mapping_score float (0.0 to 1.0)
+          num_trials: Number of Monte Carlo iterations
+          
+        Returns:
+          A dictionary of impact categories containing statistics: mean, stddev, and 95% CI.
+        """
+        if mapping_scores is None:
+            mapping_scores = {}
+
+        # 1. Run baseline environmental calculation
+        print("[Uncertainty] Running baseline calculation...")
+        baseline_results = self.executor.calculate(system_id, method_id)
+        
+        # We target GWP, Acidification, and Water Consumption
+        target_categories = {
+            "Global Warming": ["global warming"],
+            "Acidification": ["acidification"],
+            "Water Consumption": ["water consumption"]
+        }
+        
+        baselines = {}
+        category_full_names = {}
+        category_units = {}
+        
+        for kpi, queries in target_categories.items():
+            found = None
+            for item in baseline_results:
+                if any(q in item["category_name"].lower() for q in queries):
+                    found = item
+                    break
+            # Fallback to anything matching if not found
+            if not found and baseline_results:
+                found = next((item for item in baseline_results if queries[0] in item["category_name"].lower()), None)
+            if not found and baseline_results:
+                found = baseline_results[0]
+            
+            if found:
+                baselines[kpi] = found["amount"]
+                category_full_names[kpi] = found["category_name"]
+                category_units[kpi] = found["unit"]
+            else:
+                baselines[kpi] = 0.0
+                category_full_names[kpi] = kpi
+                category_units[kpi] = ""
+
+        # Fetch baseline process cost
+        proc = self.client.get(o.Process, process_id)
+        
+        # Calculate baseline cost
+        total_cost_baseline = 0.0
+        for exchange in proc.exchanges:
+            if exchange.is_input and exchange.flow:
+                flow_name = exchange.flow.name
+                unit_name = exchange.unit.name if exchange.unit else ""
+                amount = exchange.amount
+                cost = self.cost_registry.get_flow_cost(flow_name, amount, unit_name)
+                total_cost_baseline += cost
+                
+        baselines["Feedstock Cost"] = total_cost_baseline
+        category_full_names["Feedstock Cost"] = "Feedstock Cost"
+        category_units["Feedstock Cost"] = "USD"
+
+        # 2. Identify input exchanges to perturb
+        input_exchanges = [e for e in proc.exchanges if e.is_input and e.flow and e.amount > 0]
+        
+        # Compute sensitivity coefficients (slopes) for all categories
+        coefficients = {kpi: {} for kpi in baselines.keys()}
+        
+        for idx, exchange in enumerate(input_exchanges):
+            flow_id = exchange.flow.id
+            flow_name = exchange.flow.name
+            orig_amount = exchange.amount
+            perturbation = 0.10 # +10% perturbation
+            new_amount = orig_amount * (1.0 + perturbation)
+            delta_x = new_amount - orig_amount
+            
+            # Cost slope is simply unit cost
+            unit_name = exchange.unit.name if exchange.unit else ""
+            unit_cost = self.cost_registry.get_flow_cost(flow_name, 1.0, unit_name)
+            coefficients["Feedstock Cost"][flow_id] = unit_cost
+            
+            if delta_x == 0:
+                for kpi in target_categories.keys():
+                    coefficients[kpi][flow_id] = 0.0
+                continue
+                
+            print(f"[Uncertainty] Computing sensitivity for exchange '{flow_name}'...")
+            try:
+                # Apply perturbation in database
+                exchange.amount = new_amount
+                self.client.put(proc)
+                
+                # Re-calculate
+                new_results = self.executor.calculate(system_id, method_id)
+                
+                for kpi, queries in target_categories.items():
+                    target_name = category_full_names[kpi]
+                    new_item = next((r for r in new_results if r["category_name"] == target_name), None)
+                    if not new_item:
+                        new_item = next((r for r in new_results if any(q in r["category_name"].lower() for q in queries)), None)
+                        
+                    if new_item:
+                        new_val = new_item["amount"]
+                        slope = (new_val - baselines[kpi]) / delta_x
+                        coefficients[kpi][flow_id] = slope
+                    else:
+                        coefficients[kpi][flow_id] = 0.0
+            except Exception as e:
+                print(f"[Uncertainty] Error perturbing exchange '{flow_name}': {e}")
+                for kpi in target_categories.keys():
+                    coefficients[kpi][flow_id] = 0.0
+            finally:
+                # Restore original amount in database
+                exchange.amount = orig_amount
+                self.client.put(proc)
+
+        # 3. Perform Monte Carlo loop
+        import random
+        
+        simulated_values = {kpi: [] for kpi in baselines.keys()}
+        
+        for _ in range(num_trials):
+            perturbed_exchanges = {}
+            for exchange in input_exchanges:
+                flow_id = exchange.flow.id
+                orig_amount = exchange.amount
+                
+                # Fetch mapping score (default to 1.0 if not found, i.e., perfect match)
+                score = mapping_scores.get(flow_id, 1.0)
+                
+                # Standard deviation formula: sigma = amount * (1.0 - score) * 0.15
+                sigma = orig_amount * (1.0 - score) * 0.15
+                
+                # Sample from normal distribution
+                if sigma > 0:
+                    sampled_amount = random.normalvariate(orig_amount, sigma)
+                else:
+                    sampled_amount = orig_amount
+                    
+                # Clip to 0 to prevent physical impossibility
+                if sampled_amount < 0:
+                    sampled_amount = 0.0
+                    
+                perturbed_exchanges[flow_id] = sampled_amount
+                
+            # Compute total impacts for this trial
+            for kpi in baselines.keys():
+                trial_impact = baselines[kpi]
+                for flow_id, sampled_amount in perturbed_exchanges.items():
+                    orig_exchange = next(e for e in input_exchanges if e.flow.id == flow_id)
+                    slope = coefficients[kpi].get(flow_id, 0.0)
+                    trial_impact += slope * (sampled_amount - orig_exchange.amount)
+                simulated_values[kpi].append(trial_impact)
+                
+        # 4. Compute statistics
+        stats = {}
+        for kpi in baselines.keys():
+            vals = sorted(simulated_values[kpi])
+            mean_val = sum(vals) / len(vals)
+            
+            # Variance and standard deviation
+            variance = sum((x - mean_val) ** 2 for x in vals) / (len(vals) - 1) if len(vals) > 1 else 0.0
+            stddev = variance ** 0.5
+            
+            # 95% Confidence Interval
+            ci_low_idx = int(0.025 * len(vals))
+            ci_high_idx = int(0.975 * len(vals)) - 1
+            ci_low = vals[ci_low_idx] if vals else mean_val
+            ci_high = vals[ci_high_idx] if vals else mean_val
+            
+            margin_of_error = (ci_high - ci_low) / 2
+            
+            stats[kpi] = {
+                "baseline": baselines[kpi],
+                "mean": mean_val,
+                "stddev": stddev,
+                "ci_low": ci_low,
+                "ci_high": ci_high,
+                "margin_of_error": margin_of_error,
+                "unit": category_units[kpi]
+            }
+            
+        return stats
+

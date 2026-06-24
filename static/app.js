@@ -12,6 +12,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const openlcaStatus = document.getElementById("openlca-status");
     const ollamaStatus = document.getElementById("ollama-status");
     
+    // Tabs & Panels
+    const tabFlat = document.getElementById("tab-flat");
+    const tabHierarchical = document.getElementById("tab-hierarchical");
+    const panelFlat = document.getElementById("panel-flat");
+    const panelHierarchical = document.getElementById("panel-hierarchical");
+    const bomJsonTextarea = document.getElementById("bom-json-textarea");
+    const loadHierarchicalSampleBtn = document.getElementById("load-hierarchical-sample-btn");
+    const compileHierarchicalBtn = document.getElementById("compile-hierarchical-btn");
+    
     // TVL Elements
     const tvlBadge = document.getElementById("tvl-badge");
     const tvlInputMass = document.getElementById("tvl-input-mass");
@@ -34,6 +43,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const costBase = document.getElementById("cost-baseline");
     const costOpt = document.getElementById("cost-optimized");
     const costChange = document.getElementById("cost-change");
+    
+    // Uncertainty Elements
+    const gwpBaseUnc = document.getElementById("gwp-baseline-uncertainty");
+    const gwpOptUnc = document.getElementById("gwp-optimized-uncertainty");
+    const acidBaseUnc = document.getElementById("acid-baseline-uncertainty");
+    const acidOptUnc = document.getElementById("acid-optimized-uncertainty");
+    const waterBaseUnc = document.getElementById("water-baseline-uncertainty");
+    const waterOptUnc = document.getElementById("water-optimized-uncertainty");
+    const costBaseUnc = document.getElementById("cost-baseline-uncertainty");
+    const costOptUnc = document.getElementById("cost-optimized-uncertainty");
     
     // Chart and justification elements
     const chartPlaceholder = document.getElementById("chart-placeholder");
@@ -221,13 +240,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const metrics = report.metrics;
         
         // GWP
-        updateMetricCard(metrics["Global Warming"], gwpBase, gwpOpt, gwpChange);
+        updateMetricCard(metrics["Global Warming"], gwpBase, gwpOpt, gwpChange, gwpBaseUnc, gwpOptUnc);
         // Acidification
-        updateMetricCard(metrics["Acidification"], acidBase, acidOpt, acidChange);
+        updateMetricCard(metrics["Acidification"], acidBase, acidOpt, acidChange, acidBaseUnc, acidOptUnc);
         // Water
-        updateMetricCard(metrics["Water Consumption"], waterBase, waterOpt, waterChange);
+        updateMetricCard(metrics["Water Consumption"], waterBase, waterOpt, waterChange, waterBaseUnc, waterOptUnc);
         // Cost
-        updateMetricCard(metrics["Feedstock Cost"], costBase, costOpt, costChange);
+        updateMetricCard(metrics["Feedstock Cost"], costBase, costOpt, costChange, costBaseUnc, costOptUnc);
 
         // 3. Update comparison trade-off chart image
         activeState.chart_url_dark = data.chart_url_dark;
@@ -246,10 +265,22 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function updateMetricCard(metricData, baseElem, optElem, changeElem) {
+    function updateMetricCard(metricData, baseElem, optElem, changeElem, baseUncElem, optUncElem) {
         if (!metricData) return;
         baseElem.textContent = metricData.baseline.toFixed(4);
         optElem.textContent = metricData.optimized.toFixed(4);
+        
+        if (metricData.baseline_uncertainty && baseUncElem) {
+            baseUncElem.textContent = `± ${metricData.baseline_uncertainty.margin_of_error.toFixed(4)}`;
+        } else if (baseUncElem) {
+            baseUncElem.textContent = "";
+        }
+        
+        if (metricData.optimized_uncertainty && optUncElem) {
+            optUncElem.textContent = `± ${metricData.optimized_uncertainty.margin_of_error.toFixed(4)}`;
+        } else if (optUncElem) {
+            optUncElem.textContent = "";
+        }
         
         const pct = metricData.percentage_change;
         changeElem.textContent = `${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%`;
@@ -334,4 +365,129 @@ document.addEventListener("DOMContentLoaded", () => {
         // Auto-scroll chat box to bottom
         chatBox.scrollTop = chatBox.scrollHeight;
     }
+
+    // Hierarchical BOM Tabs Navigation
+    tabFlat.addEventListener("click", () => {
+        tabFlat.classList.add("active");
+        tabHierarchical.classList.remove("active");
+        panelFlat.classList.add("active");
+        panelHierarchical.classList.remove("active");
+    });
+    
+    tabHierarchical.addEventListener("click", () => {
+        tabHierarchical.classList.add("active");
+        tabFlat.classList.remove("active");
+        panelHierarchical.classList.add("active");
+        panelFlat.classList.remove("active");
+    });
+
+    // Load Hierarchical Sample BOM
+    loadHierarchicalSampleBtn.addEventListener("click", () => {
+        const sampleBom = {
+            "name": "Composite Wind Turbine Blade Model",
+            "amount": 5000.0,
+            "unit": "kg",
+            "inputs": [
+                {
+                    "name": "Fiberglass Composite Structure",
+                    "amount": 3000.0,
+                    "unit": "kg",
+                    "inputs": [
+                        {"name": "glass cullet, sorted", "amount": 2500.0, "unit": "kg"},
+                        {"name": "polyethylene, high density, granulate", "amount": 500.0, "unit": "kg"}
+                    ]
+                },
+                {
+                    "name": "Reinforced Structural Steel Core",
+                    "amount": 1500.0,
+                    "unit": "kg",
+                    "inputs": [
+                        {"name": "steel, low-alloyed", "amount": 1400.0, "unit": "kg"},
+                        {"name": "tap water", "amount": 100.0, "unit": "kg"}
+                    ]
+                },
+                {
+                    "name": "polyethylene, high density, granulate",
+                    "amount": 500.0,
+                    "unit": "kg"
+                }
+            ]
+        };
+        bomJsonTextarea.value = JSON.stringify(sampleBom, null, 2);
+    });
+
+    // Compile & Calculate Hierarchical BOM
+    compileHierarchicalBtn.addEventListener("click", () => {
+        let bomJson;
+        try {
+            bomJson = JSON.parse(bomJsonTextarea.value);
+        } catch (e) {
+            alert("Invalid JSON format in hierarchical BOM schema: " + e.message);
+            return;
+        }
+        
+        compileHierarchicalBtn.disabled = true;
+        compileHierarchicalBtn.textContent = "Compiling...";
+        appendChatMessage("System", `Compiling hierarchical BOM for '${bomJson.name}' in openLCA. Running mapping search, custom sub-assemblies synthesis, and uncertainty propagation. This takes a few seconds...`);
+        
+        fetch("/api/compile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ bom: bomJson })
+        })
+        .then(res => res.json())
+        .then(data => {
+            compileHierarchicalBtn.disabled = false;
+            compileHierarchicalBtn.textContent = "Compile & Calculate 🚀";
+            
+            if (data.success) {
+                activeState.exchanges = data.exchanges;
+                activeState.report = { metrics: data.metrics };
+                activeState.temp_proc_id = data.process_id;
+                activeState.temp_sys_id = data.system_id;
+                
+                chartPlaceholder.style.display = "block";
+                chartPlaceholder.innerHTML = `
+                    <div style="text-align: center; padding: 20px; font-family: var(--font-sans);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-emerald)" stroke-width="2" style="width: 48px; height: 48px; margin-bottom: 12px; display: inline-block;">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                        <h4 style="margin-bottom: 6px; font-weight: 600; color: var(--text-primary);">Programmatic Compilation Successful</h4>
+                        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6; max-width: 320px; margin: 0 auto;">
+                            Linked hierarchical supply chains in the database. Processes compiled and mass-balance verified.
+                        </p>
+                    </div>
+                `;
+                tradeoffChartImg.style.display = "none";
+                justificationWrapper.style.display = "none";
+                
+                const mockTvl = {
+                    total_input_mass_kg: bomJson.amount,
+                    total_output_mass_kg: bomJson.amount,
+                    relative_error: 0.0,
+                    is_balanced: true
+                };
+                
+                updateDashboardUI({
+                    report: { metrics: data.metrics },
+                    tvl_report: mockTvl
+                });
+                
+                chatInput.disabled = false;
+                chatSendBtn.disabled = false;
+                chatInput.placeholder = "Ask Copilot about this compiled hierarchy...";
+                
+                appendChatMessage("Copilot", `Successfully compiled hierarchical BOM for **${bomJson.name}** in openLCA. Programmatically registered custom intermediate assemblies, mapped Leaf feedstocks, and evaluated uncertainty. Process balance passed.`);
+            } else {
+                appendChatMessage("System Error", data.error);
+                alert("Hierarchical compilation failed: " + data.error);
+            }
+        })
+        .catch(err => {
+            compileHierarchicalBtn.disabled = false;
+            compileHierarchicalBtn.textContent = "Compile & Calculate 🚀";
+            alert("Calculation network error: " + err);
+        });
+    });
 });

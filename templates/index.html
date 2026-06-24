@@ -58,45 +58,70 @@
                         <p class="section-desc">Map raw materials and test dynamic process variations</p>
                     </div>
 
-                    <div class="workspace-section">
-                        <div class="form-group">
-                            <label for="sample-select">Load Study Template</label>
-                            <select id="sample-select">
-                                <option value="">-- Choose case study --</option>
-                            </select>
+                    <!-- Tabs navigation -->
+                    <div class="workspace-tabs">
+                        <button type="button" class="tab-btn active" id="tab-flat">Flat List</button>
+                        <button type="button" class="tab-btn" id="tab-hierarchical">Hierarchical JSON</button>
+                    </div>
+
+                    <!-- Panel 1: Flat List BOM Ingestion -->
+                    <div id="panel-flat" class="tab-panel active">
+                        <div class="workspace-section">
+                            <div class="form-group">
+                                <label for="sample-select">Load Study Template</label>
+                                <select id="sample-select">
+                                    <option value="">-- Choose case study --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="workspace-section bom-editor-section">
+                            <div class="section-title-row">
+                                <h3>BOM Feedstock Inventory</h3>
+                                <span class="rows-indicator" id="rows-count">0 items</span>
+                            </div>
+                            
+                            <div class="bom-table-container">
+                                <table id="bom-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Material Flow</th>
+                                            <th>Amount</th>
+                                            <th>Unit</th>
+                                            <th style="width: 40px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bom-tbody">
+                                        <!-- Dynamic rows loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="bom-actions">
+                                <button type="button" class="btn btn-secondary" id="add-row-btn">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    Add Flow
+                                </button>
+                                <button type="button" class="btn btn-primary" id="optimize-btn">
+                                    Run Optimization
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="workspace-section bom-editor-section">
-                        <div class="section-title-row">
-                            <h3>BOM Feedstock Inventory</h3>
-                            <span class="rows-indicator" id="rows-count">0 items</span>
+                    <!-- Panel 2: Hierarchical BOM Compiler -->
+                    <div id="panel-hierarchical" class="tab-panel">
+                        <div class="workspace-section">
+                            <label for="bom-json-textarea">Hierarchical BOM Schema (JSON)</label>
+                            <textarea id="bom-json-textarea" class="bom-textarea" rows="14" placeholder="Paste custom nested BOM tree here..."></textarea>
                         </div>
-                        
-                        <div class="bom-table-container">
-                            <table id="bom-table">
-                                <thead>
-                                    <tr>
-                                        <th>Material Flow</th>
-                                        <th>Amount</th>
-                                        <th>Unit</th>
-                                        <th style="width: 40px;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="bom-tbody">
-                                    <!-- Dynamic rows loaded here -->
-                                </tbody>
-                            </table>
-                        </div>
-                        
                         <div class="bom-actions">
-                            <button type="button" class="btn btn-secondary" id="add-row-btn">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                Add Flow
+                            <button type="button" class="btn btn-secondary" id="load-hierarchical-sample-btn">
+                                Wind Blade Sample
                             </button>
-                            <button type="button" class="btn btn-primary" id="optimize-btn">
-                                Run Optimization
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <button type="button" class="btn btn-primary" id="compile-hierarchical-btn">
+                                Compile & Calculate 🚀
                             </button>
                         </div>
                     </div>
@@ -138,10 +163,12 @@
                             <div class="kpi-value-box">
                                 <span class="val-label">Baseline</span>
                                 <span class="val-num base" id="gwp-baseline">-</span>
+                                <span class="val-error-bounds" id="gwp-baseline-uncertainty"></span>
                             </div>
                             <div class="kpi-value-box">
                                 <span class="val-label">Optimized</span>
                                 <span class="val-num opt" id="gwp-optimized">-</span>
+                                <span class="val-error-bounds" id="gwp-optimized-uncertainty"></span>
                             </div>
                         </div>
                         <div class="kpi-badge-row">
@@ -158,10 +185,12 @@
                             <div class="kpi-value-box">
                                 <span class="val-label">Baseline</span>
                                 <span class="val-num base" id="acid-baseline">-</span>
+                                <span class="val-error-bounds" id="acid-baseline-uncertainty"></span>
                             </div>
                             <div class="kpi-value-box">
                                 <span class="val-label">Optimized</span>
                                 <span class="val-num opt" id="acid-optimized">-</span>
+                                <span class="val-error-bounds" id="acid-optimized-uncertainty"></span>
                             </div>
                         </div>
                         <div class="kpi-badge-row">
@@ -178,10 +207,12 @@
                             <div class="kpi-value-box">
                                 <span class="val-label">Baseline</span>
                                 <span class="val-num base" id="water-baseline">-</span>
+                                <span class="val-error-bounds" id="water-baseline-uncertainty"></span>
                             </div>
                             <div class="kpi-value-box">
                                 <span class="val-label">Optimized</span>
                                 <span class="val-num opt" id="water-optimized">-</span>
+                                <span class="val-error-bounds" id="water-optimized-uncertainty"></span>
                             </div>
                         </div>
                         <div class="kpi-badge-row">
@@ -198,10 +229,12 @@
                             <div class="kpi-value-box">
                                 <span class="val-label">Baseline</span>
                                 <span class="val-num base" id="cost-baseline">-</span>
+                                <span class="val-error-bounds" id="cost-baseline-uncertainty"></span>
                             </div>
                             <div class="kpi-value-box">
                                 <span class="val-label">Optimized</span>
                                 <span class="val-num opt" id="cost-optimized">-</span>
+                                <span class="val-error-bounds" id="cost-optimized-uncertainty"></span>
                             </div>
                         </div>
                         <div class="kpi-badge-row">

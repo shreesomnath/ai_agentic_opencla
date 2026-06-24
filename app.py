@@ -12,7 +12,9 @@ from agentic_lca import (
     CostRegistry, 
     MultiObjectiveEvaluator,
     LcaLlmAgent,
-    LcaVisualizer
+    LcaVisualizer,
+    LcaCompiler,
+    UncertaintyPropagator
 )
 import olca_schema as o
 
@@ -123,6 +125,7 @@ def run_optimization():
         exchanges = []
         total_input_mass = 0.0
         internal_id_counter = 2
+        mapping_scores = {}
         
         # 1. Parse temporary BOM
         for item in items:
@@ -134,6 +137,7 @@ def run_optimization():
             if not matches:
                 continue
             matched_flow, score = matches[0]
+            mapping_scores[matched_flow.id] = score
             
             matched_unit = unit_map.get(unit_name.lower(), kg_unit)
             
@@ -266,9 +270,13 @@ def run_optimization():
                 continue
             if "recycled" in flow_desc.name.lower() or "cullet" in flow_desc.name.lower() or "scrap" in flow_desc.name.lower():
                 substitute_flow_desc = flow_desc
+                mapping_scores[flow_desc.id] = score
                 break
         if not substitute_flow_desc:
             substitute_flow_desc = next((f for f, s in mapper_results if f.id != hotspot_flow_id), None)
+            if substitute_flow_desc:
+                sub_score = next(s for f, s in mapper_results if f.id == substitute_flow_desc.id)
+                mapping_scores[substitute_flow_desc.id] = sub_score
             
         if not substitute_flow_desc:
             raise ValueError(f"No substitute flow found for hotspot '{hotspot_flow_name}'.")
@@ -279,7 +287,8 @@ def run_optimization():
             system_id=temp_sys_id,
             method_id=method_desc.id,
             target_flow_id=hotspot_flow_id,
-            substitute_flow_desc=substitute_flow_desc
+            substitute_flow_desc=substitute_flow_desc,
+            mapping_scores=mapping_scores
         )
         
         if report.get("status") != "SUCCESS":
@@ -352,6 +361,115 @@ def run_optimization():
                 except: pass
         if os.path.exists(temp_bom_path):
             os.remove(temp_bom_path)
+
+@app.route('/api/compile', methods=['POST'])
+def compile_hierarchical_bom():
+    """
+    Ingests a hierarchical JSON BOM, programmatically compiles the processes and product
+    system in openLCA, calculates impacts/uncertainty, cleans up, and returns results.
+    """
+    data = request.json or {}
+    bom_data = data.get("bom")
+    if not bom_data:
+        return jsonify({"success": False, "error": "BOM data is empty"}), 400
+        
+    executor = None
+    flow_ref = None
+    proc_ref = None
+    sys_ref = None
+    
+    try:
+        executor = LcaExecutor()
+        verifier = ThermodynamicVerifier(tolerance=0.01)
+        mapper = FlowMapper(executor)
+        compiler = LcaCompiler(executor, mapper, verifier)
+        
+        # Compile hierarchical BOM
+        flow_ref, proc_ref, sys_ref = compiler.compile_bom(bom_data)
+        
+        # Locate ReCiPe
+        methods = executor.find_impact_method("ReCiPe 2016 Midpoint (H)")
+        if not methods:
+            raise ValueError("ReCiPe 2016 Midpoint (H) method not found.")
+        method_desc = methods[0]
+        
+        # Fetch the compiled process details to show exchanges
+        proc_obj = executor.client.get(o.Process, proc_ref.id)
+        exchanges_list = []
+        for ex in proc_obj.exchanges:
+            if ex.flow:
+                exchanges_list.append({
+                    "id": ex.flow.id,
+                    "name": ex.flow.name,
+                    "amount": ex.amount,
+                    "unit": ex.unit.name if ex.unit else "",
+                    "is_input": ex.is_input
+                })
+                
+        # Run uncertainty propagation on the compiled tree structure!
+        print("[Compiler API] Running uncertainty propagation...")
+        propagator = UncertaintyPropagator(executor)
+        
+        # Build mapping scores dict: assign a default high mapping confidence for leaf elements compiled
+        mapping_scores = {}
+        for ex in exchanges_list:
+            mapping_scores[ex["id"]] = 0.85
+            
+        uncertainty_stats = propagator.propagate(
+            process_id=proc_ref.id,
+            system_id=sys_ref.id,
+            method_id=method_desc.id,
+            mapping_scores=mapping_scores,
+            num_trials=100
+        )
+        
+        # Parse and format calculation results into the standard KPI visualizer layout
+        report_metrics = {}
+        for kpi, stat in uncertainty_stats.items():
+            report_metrics[kpi] = {
+                "baseline": stat["baseline"],
+                "baseline_uncertainty": {
+                    "stddev": stat["stddev"],
+                    "ci_low": stat["ci_low"],
+                    "ci_high": stat["ci_high"],
+                    "margin_of_error": stat["margin_of_error"]
+                },
+                "optimized": stat["baseline"],
+                "optimized_uncertainty": {
+                    "stddev": stat["stddev"],
+                    "ci_low": stat["ci_low"],
+                    "ci_high": stat["ci_high"],
+                    "margin_of_error": stat["margin_of_error"]
+                },
+                "difference": 0.0,
+                "percentage_change": 0.0,
+                "unit": stat["unit"]
+            }
+        
+        return jsonify({
+            "success": True,
+            "flow_id": flow_ref.id,
+            "process_id": proc_ref.id,
+            "system_id": sys_ref.id,
+            "metrics": report_metrics,
+            "exchanges": exchanges_list
+        })
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+        
+    finally:
+        # Cleanup compiled entities from database
+        if executor:
+            if sys_ref:
+                try: executor.client.delete(o.Ref(ref_type=o.RefType.ProductSystem, id=sys_ref.id))
+                except: pass
+            if proc_ref:
+                try: executor.client.delete(o.Ref(ref_type=o.RefType.Process, id=proc_ref.id))
+                except: pass
+            if flow_ref:
+                try: executor.client.delete(o.Ref(ref_type=o.RefType.Flow, id=flow_ref.id))
+                except: pass
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
@@ -498,6 +616,16 @@ def chat():
             if not sys_ref:
                 raise RuntimeError("Failed to compile product system.")
             
+            # Reconstruct mapping_scores
+            mapping_scores = {}
+            for ex in exchanges:
+                ex_flow_id = sub_desc.id if ex["id"] == target_flow_id else ex["id"]
+                ex_flow_name = sub_desc.name if ex["id"] == target_flow_id else ex["name"]
+                
+                matches = mapper.search(ex_flow_name, top_k=1)
+                score = matches[0][1] if matches else 1.0
+                mapping_scores[ex_flow_id] = score
+
             try:
                 # Calculate updated metrics
                 sub_report = evaluator.evaluate_substitution(
@@ -505,7 +633,8 @@ def chat():
                     system_id=sys_ref.id,
                     method_id=method_id,
                     target_flow_id=target_flow_id,
-                    substitute_flow_desc=sub_desc
+                    substitute_flow_desc=sub_desc,
+                    mapping_scores=mapping_scores
                 )
                 
                 # Save new chart

@@ -637,6 +637,14 @@ body.light-theme #bom-table input:focus {
     color: var(--text-primary);
 }
 
+.val-error-bounds {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    white-space: nowrap;
+}
+
 .kpi-badge-row {
     display: flex;
 }
@@ -873,4 +881,65 @@ body.light-theme .user-msg {
     color: var(--accent-violet);
     border-bottom-color: var(--accent-violet);
     text-shadow: 0 0 8px rgba(124, 58, 237, 0.15);
+}
+
+/* Workspace Tabs */
+.workspace-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 16px;
+    gap: 8px;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+    margin-bottom: -1px;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+}
+
+.tab-btn.active {
+    color: var(--text-secondary);
+    border-bottom-color: var(--text-secondary);
+}
+
+/* Tab Panels */
+.tab-panel {
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.tab-panel.active {
+    display: flex;
+}
+
+/* Textarea styling */
+.bom-textarea {
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.5;
+    resize: vertical;
+    width: 100%;
+    outline: none;
+}
+
+.bom-textarea:focus {
+    border-color: var(--border-focus);
 }
