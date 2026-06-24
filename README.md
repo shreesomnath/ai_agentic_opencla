@@ -4,6 +4,14 @@ Welcome to **Agentic LCA**, a next-generation scientific AI copilot designed to 
 
 This platform connects directly to **OpenLCA 2.x** and uses **local offline Large Language Models (LLMs)** (via Ollama) to ingest raw Bills of Materials (BOM), verify thermodynamic mass conservation, dynamically identify environmental hotspots, search circular feedstock substitutes, and evaluate multi-objective Pareto trade-offs.
 
+## 🖥️ Web Dashboard Showcase
+
+Agentic LCA features a custom, premium web dashboard supporting dynamic Bill of Materials editing, real-time Pareto visualizations, and terminal copilot chat reasoning:
+
+| Space Theme (Dark Mode) | Normal Theme (Light Mode) |
+| :---: | :---: |
+| ![Dark Theme Interface](lca_dashboard_dark.jpg) | ![Light Theme Interface](lca_dashboard_light.jpg) |
+
 ---
 
 ## 🚀 Key Features
