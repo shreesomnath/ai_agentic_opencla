@@ -61,12 +61,19 @@ def main():
         print("="*80)
         
         # 1. Parse CSV and map flows
-        print("\n[1/7] Ingesting BOM and mapping exchanges to ecoinvent flows...")
+        bom_path = "sample_bom.csv"
+        for idx, arg in enumerate(sys.argv):
+            if arg == "--bom" and idx + 1 < len(sys.argv):
+                bom_path = sys.argv[idx + 1]
+                break
+
+        print(f"\n[1/7] Ingesting BOM '{bom_path}' and mapping exchanges to ecoinvent flows...")
         exchanges = []
         total_input_mass = 0.0
         internal_id_counter = 2
         
-        with open("sample_bom.csv", mode="r") as f:
+        with open(bom_path, mode="r") as f:
+
             reader = csv.DictReader(f)
             for row in reader:
                 flow_name = row["flow_name"]
@@ -342,16 +349,21 @@ def main():
         is_chat_mode = "--chat" in sys.argv or "--interactive" in sys.argv
         
         if is_chat_mode:
-            print("\n" + "="*80)
-            print("         WELCOME TO THE AGENTIC LCA INTERACTIVE COPILOT")
-            print("="*80)
-            print("Ask questions about the results, request next steps, or substitute materials.")
-            print("Examples:")
-            print(" - 'Why does glass cullet have less carbon impact?'")
-            print(" - 'What if we substitute steel with scrap steel?'")
-            print(" - 'Tell me the main hotspots.'")
-            print("Type 'exit' or 'quit' to end the session.")
-            print("="*80)
+            help_message = """================================================================================
+         WELCOME TO THE AGENTIC LCA INTERACTIVE COPILOT
+================================================================================
+Ask questions about the results, request next steps, or substitute materials.
+Examples:
+ - 'Why does glass cullet have less carbon impact?'
+ - 'What if we substitute steel with scrap steel?'
+ - 'Tell me the main hotspots.'
+ 
+Commands:
+ - Type 'help' or '?' to show this message again.
+ - Type 'exit', 'end', or 'quit' to end the session.
+================================================================================
+"""
+            print("\n" + help_message)
             
             # Prepare exchanges list for the LLM context
             exchanges_list = []
@@ -371,9 +383,17 @@ def main():
                     user_query = input("\nLCA-Copilot> ").strip()
                     if not user_query:
                         continue
-                    if user_query.lower() in ["exit", "quit"]:
+                    
+                    # Command parsing
+                    query_lower = user_query.lower()
+                    if query_lower in ["exit", "quit", "end"]:
                         print("Ending interactive session. Goodbye!")
                         break
+                        
+                    if query_lower in ["help", "?"]:
+                        print("\n" + help_message)
+                        continue
+
                         
                     print("Processing query...")
                     llm_command = llm_agent.parse_chat_command(user_query, exchanges_list, active_report)

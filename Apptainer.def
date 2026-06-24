@@ -1,0 +1,36 @@
+Bootstrap: docker
+From: python:3.9-slim
+
+%help
+    Agentic LCA: Autonomous LCA & Sustainability Analytics Pipeline.
+    Containerized via Apptainer (Singularity) for zero-dependency execution.
+    
+    Usage:
+      # Run the default optimization pipeline (expects OpenLCA IPC server running on host port 8080)
+      apptainer run --network host agentic_lca.sif
+      
+      # Run in interactive chat mode
+      apptainer run --network host agentic_lca.sif --chat
+
+%files
+    requirements.txt /app/requirements.txt
+    agentic_lca /app/agentic_lca
+    run_pipeline.py /app/run_pipeline.py
+    sample_bom.csv /app/sample_bom.csv
+
+%post
+    apt-get update && apt-get install -y --no-install-recommends \
+        curl \
+        && rm -rf /var/lib/apt/lists/*
+    
+    # Install dependencies
+    pip install --no-cache-dir --upgrade pip
+    pip install --no-cache-dir -r /app/requirements.txt
+
+%environment
+    export PYTHONPATH="/app:${PYTHONPATH}"
+    export LC_ALL=C
+
+%runscript
+    cd /app
+    exec python3 run_pipeline.py "$@"
