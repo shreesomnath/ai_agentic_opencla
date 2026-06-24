@@ -286,14 +286,24 @@ def run_optimization():
             raise RuntimeError(report.get("message", "Substitution evaluation failed."))
             
         # 8. Generate chart and save in static directory
-        chart_filename = "optimization_tradeoffs.png"
-        chart_path = os.path.join(app.root_path, 'static', chart_filename)
-        LcaVisualizer.generate_tradeoff_chart(report, chart_path)
+        chart_filename_dark = "optimization_tradeoffs_dark.png"
+        chart_filename_light = "optimization_tradeoffs_light.png"
+        chart_path_dark = os.path.join(app.root_path, 'static', chart_filename_dark)
+        chart_path_light = os.path.join(app.root_path, 'static', chart_filename_light)
+        
+        LcaVisualizer.generate_tradeoff_chart(report, chart_path_dark, theme="dark")
+        LcaVisualizer.generate_tradeoff_chart(report, chart_path_light, theme="light")
         
         # Save a copy in artifacts too
         LcaVisualizer.generate_tradeoff_chart(
             report, 
-            "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs.png"
+            "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs_dark.png",
+            theme="dark"
+        )
+        LcaVisualizer.generate_tradeoff_chart(
+            report, 
+            "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs_light.png",
+            theme="light"
         )
         
         # 9. LLM justification paragraph
@@ -321,7 +331,8 @@ def run_optimization():
             "temp_proc_id": temp_proc_id,
             "temp_sys_id": temp_sys_id,
             "method_id": method_desc.id,
-            "chart_url": f"/static/{chart_filename}"
+            "chart_url_dark": f"/static/{chart_filename_dark}",
+            "chart_url_light": f"/static/{chart_filename_light}"
         })
 
     except Exception as e:
@@ -498,13 +509,23 @@ def chat():
                 )
                 
                 # Save new chart
-                chart_filename = "optimization_tradeoffs.png"
-                chart_path = os.path.join(app.root_path, 'static', chart_filename)
-                LcaVisualizer.generate_tradeoff_chart(sub_report, chart_path)
+                chart_filename_dark = "optimization_tradeoffs_dark.png"
+                chart_filename_light = "optimization_tradeoffs_light.png"
+                chart_path_dark = os.path.join(app.root_path, 'static', chart_filename_dark)
+                chart_path_light = os.path.join(app.root_path, 'static', chart_filename_light)
+                
+                LcaVisualizer.generate_tradeoff_chart(sub_report, chart_path_dark, theme="dark")
+                LcaVisualizer.generate_tradeoff_chart(sub_report, chart_path_light, theme="light")
                 
                 LcaVisualizer.generate_tradeoff_chart(
                     sub_report, 
-                    "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs.png"
+                    "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs_dark.png",
+                    theme="dark"
+                )
+                LcaVisualizer.generate_tradeoff_chart(
+                    sub_report, 
+                    "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs_light.png",
+                    theme="light"
                 )
                 
                 # Fetch new LLM justification
@@ -532,7 +553,8 @@ def chat():
                     "temp_proc_id": rebuild_proc_id,
                     "temp_sys_id": sys_ref.id,
                     "method_id": method_id,
-                    "chart_url": f"/static/{chart_filename}?t={int(time.time())}"
+                    "chart_url_dark": f"/static/{chart_filename_dark}?t={int(time.time())}",
+                    "chart_url_light": f"/static/{chart_filename_light}?t={int(time.time())}"
                 })
                 
             finally:

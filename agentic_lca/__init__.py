@@ -2,3 +2,9 @@ from .client import LcaExecutor
 from .tvl import ThermodynamicVerifier
 from .uncertainty import SensitivityAnalyzer
 from .mapper import FlowMapper
+from .multiobjective import CostRegistry, MultiObjectiveEvaluator
+from .llm_agent import LcaLlmAgent
+from .visualizer import LcaVisualizer
+
+
+

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agentic LCA: Multi-Objective Sustainability Dashboard</title>
+    <title>Agentic LCA | Sustainability Ingestion & Optimization</title>
     <!-- Premium Google Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,69 +15,109 @@
         <!-- Top Navigation Header -->
         <header class="app-header">
             <div class="logo-area">
-                <span class="logo-icon">🌟</span>
-                <h1>Agentic LCA <span class="badge-tag">Copilot 1.0</span></h1>
+                <svg class="logo-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.58 0 8a7 7 0 0 1-8 10Z"></path>
+                    <path d="M19 2c-2.26 4.33-5.27 7.14-8 8"></path>
+                </svg>
+                <h1>Agentic LCA <span class="badge-tag">Platform</span></h1>
             </div>
-            <div class="server-status">
-                <div class="status-indicator online" id="openlca-status">OpenLCA Server: Connected</div>
-                <div class="status-indicator online" id="ollama-status">Ollama LLM: Connected</div>
+            
+            <div class="header-right">
+                <div class="developer-credit">
+                    <span class="credit-label">DEVELOPERS</span>
+                    <span class="names">Somnath Luitel & Manmeet Singh</span>
+                </div>
+                
+                <div class="server-status">
+                    <div class="status-indicator online" id="openlca-status">OpenLCA Server</div>
+                    <div class="status-indicator online" id="ollama-status">Ollama LLM</div>
+                </div>
+                
+                <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
             </div>
         </header>
 
         <div class="main-layout">
-            <!-- Sidebar Controls -->
-            <aside class="sidebar">
-                <div class="card font-selector">
-                    <h2>📋 Select Technology</h2>
-                    <div class="form-group">
-                        <label for="sample-select">Load BOM Case Study</label>
-                        <select id="sample-select">
-                            <option value="">-- Choose case study --</option>
-                        </select>
+            <!-- Workspace Panel (Unified Column) -->
+            <aside class="workspace-panel">
+                <div class="workspace-card">
+                    <div class="workspace-header">
+                        <h2>
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <rect x="7" y="7" width="3" height="3"></rect>
+                                <rect x="7" y="14" width="3" height="3"></rect>
+                                <line x1="13" y1="8" x2="17" y2="8"></line>
+                                <line x1="13" y1="15" x2="17" y2="15"></line>
+                            </svg>
+                            Ingestion Workspace
+                        </h2>
+                        <p class="section-desc">Map raw materials and test dynamic process variations</p>
                     </div>
-                </div>
 
-                <div class="card bom-editor-card">
-                    <h2>🛠️ Bill of Materials Editor</h2>
-                    <p class="section-desc">Manage materials, weights, and units dynamically.</p>
-                    
-                    <div class="bom-table-container">
-                        <table id="bom-table">
-                            <thead>
-                                <tr>
-                                    <th>Material Flow</th>
-                                    <th>Amount</th>
-                                    <th>Unit</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody id="bom-tbody">
-                                <!-- Dynamic rows added here -->
-                            </tbody>
-                        </table>
+                    <div class="workspace-section">
+                        <div class="form-group">
+                            <label for="sample-select">Load Study Template</label>
+                            <select id="sample-select">
+                                <option value="">-- Choose case study --</option>
+                            </select>
+                        </div>
                     </div>
-                    
-                    <div class="bom-actions">
-                        <button type="button" class="btn btn-secondary" id="add-row-btn">+ Add Material</button>
-                        <button type="button" class="btn btn-primary" id="optimize-btn">Run Optimization 🚀</button>
-                    </div>
-                </div>
 
-                <div class="card tvl-status-card">
-                    <h2>⚖️ Physical Verification (TVL)</h2>
-                    <div class="tvl-details">
-                        <div class="tvl-indicator" id="tvl-badge">Not Checked</div>
-                        <div class="tvl-metrics">
-                            <div class="metric-row">
-                                <span>Input Mass:</span>
+                    <div class="workspace-section bom-editor-section">
+                        <div class="section-title-row">
+                            <h3>BOM Feedstock Inventory</h3>
+                            <span class="rows-indicator" id="rows-count">0 items</span>
+                        </div>
+                        
+                        <div class="bom-table-container">
+                            <table id="bom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Material Flow</th>
+                                        <th>Amount</th>
+                                        <th>Unit</th>
+                                        <th style="width: 40px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bom-tbody">
+                                    <!-- Dynamic rows loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="bom-actions">
+                            <button type="button" class="btn btn-secondary" id="add-row-btn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                Add Flow
+                            </button>
+                            <button type="button" class="btn btn-primary" id="optimize-btn">
+                                Run Optimization
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Thermodynamic Mass Balance Check -->
+                    <div class="verification-status-panel">
+                        <div class="verification-header">
+                            <span>Mass Balance Verification (TVL)</span>
+                            <span class="tvl-status-badge" id="tvl-badge">Not Checked</span>
+                        </div>
+                        <div class="verification-stats">
+                            <div class="stat-pill">
+                                <label>Inputs</label>
                                 <span id="tvl-input-mass">0.00 kg</span>
                             </div>
-                            <div class="metric-row">
-                                <span>Output Mass:</span>
+                            <div class="stat-pill">
+                                <label>Outputs</label>
                                 <span id="tvl-output-mass">0.00 kg</span>
                             </div>
-                            <div class="metric-row">
-                                <span>Stoichiometric Error:</span>
+                            <div class="stat-pill">
+                                <label>Error</label>
                                 <span id="tvl-error">0.00%</span>
                             </div>
                         </div>
@@ -85,121 +125,160 @@
                 </div>
             </aside>
 
-            <!-- Main Panel Content -->
-            <main class="content-panel">
-                <!-- 4 Performance Metric Cards -->
-                <div class="metrics-grid">
-                    <div class="metric-card shadow-teal" id="card-gwp">
-                        <div class="metric-title">
-                            <span>Climate Change (GWP)</span>
-                            <span class="unit-tag">kg CO2 eq</span>
+            <!-- Main Analytics Canvas -->
+            <main class="analytics-canvas">
+                <!-- Single Unified Banner for KPI Metrics -->
+                <div class="analytics-kpi-banner">
+                    <div class="kpi-card" id="card-gwp">
+                        <div class="kpi-header">
+                            <span>Global Warming (GWP)</span>
+                            <span class="unit-tag">kg CO₂ eq</span>
                         </div>
-                        <div class="metric-value-row">
-                            <div class="val-box">
-                                <label>Baseline</label>
-                                <span class="base-val" id="gwp-baseline">-</span>
+                        <div class="kpi-comparison">
+                            <div class="kpi-value-box">
+                                <span class="val-label">Baseline</span>
+                                <span class="val-num base" id="gwp-baseline">-</span>
                             </div>
-                            <div class="val-box">
-                                <label>Optimized</label>
-                                <span class="opt-val" id="gwp-optimized">-</span>
+                            <div class="kpi-value-box">
+                                <span class="val-label">Optimized</span>
+                                <span class="val-num opt" id="gwp-optimized">-</span>
                             </div>
                         </div>
-                        <div class="change-badge" id="gwp-change">-</div>
+                        <div class="kpi-badge-row">
+                            <span class="kpi-badge" id="gwp-change">-</span>
+                        </div>
                     </div>
 
-                    <div class="metric-card shadow-indigo" id="card-acid">
-                        <div class="metric-title">
-                            <span>Acidification Potential</span>
-                            <span class="unit-tag">kg SO2 eq</span>
+                    <div class="kpi-card" id="card-acid">
+                        <div class="kpi-header">
+                            <span>Acidification</span>
+                            <span class="unit-tag">kg SO₂ eq</span>
                         </div>
-                        <div class="metric-value-row">
-                            <div class="val-box">
-                                <label>Baseline</label>
-                                <span class="base-val" id="acid-baseline">-</span>
+                        <div class="kpi-comparison">
+                            <div class="kpi-value-box">
+                                <span class="val-label">Baseline</span>
+                                <span class="val-num base" id="acid-baseline">-</span>
                             </div>
-                            <div class="val-box">
-                                <label>Optimized</label>
-                                <span class="opt-val" id="acid-optimized">-</span>
+                            <div class="kpi-value-box">
+                                <span class="val-label">Optimized</span>
+                                <span class="val-num opt" id="acid-optimized">-</span>
                             </div>
                         </div>
-                        <div class="change-badge" id="acid-change">-</div>
+                        <div class="kpi-badge-row">
+                            <span class="kpi-badge" id="acid-change">-</span>
+                        </div>
                     </div>
 
-                    <div class="metric-card shadow-blue" id="card-water">
-                        <div class="metric-title">
-                            <span>Water Consumption</span>
-                            <span class="unit-tag">m3</span>
+                    <div class="kpi-card" id="card-water">
+                        <div class="kpi-header">
+                            <span>Water Usage</span>
+                            <span class="unit-tag">m³</span>
                         </div>
-                        <div class="metric-value-row">
-                            <div class="val-box">
-                                <label>Baseline</label>
-                                <span class="base-val" id="water-baseline">-</span>
+                        <div class="kpi-comparison">
+                            <div class="kpi-value-box">
+                                <span class="val-label">Baseline</span>
+                                <span class="val-num base" id="water-baseline">-</span>
                             </div>
-                            <div class="val-box">
-                                <label>Optimized</label>
-                                <span class="opt-val" id="water-optimized">-</span>
+                            <div class="kpi-value-box">
+                                <span class="val-label">Optimized</span>
+                                <span class="val-num opt" id="water-optimized">-</span>
                             </div>
                         </div>
-                        <div class="change-badge" id="water-change">-</div>
+                        <div class="kpi-badge-row">
+                            <span class="kpi-badge" id="water-change">-</span>
+                        </div>
                     </div>
 
-                    <div class="metric-card shadow-green" id="card-cost">
-                        <div class="metric-title">
+                    <div class="kpi-card" id="card-cost">
+                        <div class="kpi-header">
                             <span>Feedstock Cost</span>
                             <span class="unit-tag">USD</span>
                         </div>
-                        <div class="metric-value-row">
-                            <div class="val-box">
-                                <label>Baseline</label>
-                                <span class="base-val" id="cost-baseline">-</span>
+                        <div class="kpi-comparison">
+                            <div class="kpi-value-box">
+                                <span class="val-label">Baseline</span>
+                                <span class="val-num base" id="cost-baseline">-</span>
                             </div>
-                            <div class="val-box">
-                                <label>Optimized</label>
-                                <span class="opt-val" id="cost-optimized">-</span>
+                            <div class="kpi-value-box">
+                                <span class="val-label">Optimized</span>
+                                <span class="val-num opt" id="cost-optimized">-</span>
                             </div>
                         </div>
-                        <div class="change-badge" id="cost-change">-</div>
+                        <div class="kpi-badge-row">
+                            <span class="kpi-badge" id="cost-change">-</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="visuals-grid">
-                    <!-- Plot Chart Display -->
-                    <div class="card chart-card">
-                        <h2>📊 Multi-Objective Trade-Off Chart</h2>
-                        <div class="chart-container">
+                <!-- Plot and Chat Row -->
+                <div class="visuals-row">
+                    <!-- Plot Panel -->
+                    <div class="visual-panel chart-panel">
+                        <div class="panel-header">
+                            <h3>
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line><line x1="2" y1="20" x2="22" y2="20"></line></svg>
+                                Multi-Objective Trade-Off Chart
+                            </h3>
+                        </div>
+                        <div class="chart-content-area">
                             <div class="placeholder-text" id="chart-placeholder">
-                                Optimize a case study to display comparison chart
+                                Run optimization to display comparison metrics
                             </div>
                             <img id="tradeoff-chart-img" style="display: none;" alt="Optimization Tradeoffs Bar Chart">
                         </div>
                     </div>
 
-                    <!-- Chat Copilot Console -->
-                    <div class="card chat-card-container">
-                        <h2>💬 Interactive Copilot Chat</h2>
-                        <div class="chat-area">
-                            <div class="chat-messages" id="chat-box">
+                    <!-- Chat Copilot Panel -->
+                    <div class="visual-panel chat-panel">
+                        <div class="panel-header">
+                            <h3>
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                Copilot Decision Chat
+                            </h3>
+                        </div>
+                        <div class="chat-terminal">
+                            <div class="chat-logs" id="chat-box">
                                 <div class="message system-msg">
-                                    <strong>Copilot:</strong> Welcome! Load a case study above or input custom materials to run. I can explain GWP hotspots, justify trade-offs, or execute substitutions (e.g. try saying <em>"What if we replace steel with scrap steel?"</em>).
+                                    <strong>Copilot:</strong> Welcome! Load a study template or build a custom BOM flow. Once optimized, I can explain emission tradeoffs, identify hotspots, or run automated substitutions (e.g. try: <em>"What if we substitute steel with scrap steel?"</em>).
                                 </div>
                             </div>
-                            <div class="chat-input-area">
-                                <input type="text" id="chat-input" placeholder="Ask Copilot a question or request a feedstock swap..." disabled>
-                                <button type="button" class="btn btn-primary" id="chat-send-btn" disabled>Send</button>
+                            <div class="chat-terminal-bar">
+                                <input type="text" id="chat-input" placeholder="Ask Copilot a question or request feedstock swap..." disabled>
+                                <button type="button" id="chat-send-btn" disabled>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- LLM Engineering Justification Paper Card -->
-                <div class="card justification-card" id="justification-wrapper" style="display: none;">
-                    <h2>📝 Engineering Justification Report (LLM Generated)</h2>
-                    <blockquote class="justification-text" id="justification-content">
-                        <!-- Justification goes here -->
-                    </blockquote>
+                <!-- LLM Engineering Justification Report -->
+                <div class="visual-panel justification-panel" id="justification-wrapper" style="display: none;">
+                    <div class="panel-header">
+                        <h3>
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            Engineering Justification Report
+                        </h3>
+                    </div>
+                    <div class="justification-body">
+                        <blockquote id="justification-content"></blockquote>
+                    </div>
                 </div>
             </main>
         </div>
+
+        <!-- App Footer -->
+        <footer class="app-footer">
+            <div class="footer-left">
+                <span>Agentic Life Cycle Assessment (LCA) Platform</span>
+            </div>
+            <div class="footer-center">
+                <span>Developed by: <strong>Somnath Luitel</strong> & <strong>Manmeet Singh</strong></span>
+            </div>
+            <div class="footer-right">
+                <span>© 2026 <a href="https://air-lab-wku.github.io/" target="_blank" class="footer-link">AirLab</a> | OpenLCA Integration v2.0</span>
+            </div>
+        </footer>
     </div>
 
     <!-- Script imports -->

@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const chatInput = document.getElementById("chat-input");
     const chatSendBtn = document.getElementById("chat-send-btn");
     const chatBox = document.getElementById("chat-box");
+    const themeToggle = document.getElementById("theme-toggle");
     
     const openlcaStatus = document.getElementById("openlca-status");
     const ollamaStatus = document.getElementById("ollama-status");
@@ -46,8 +47,35 @@ document.addEventListener("DOMContentLoaded", () => {
         report: {},
         temp_proc_id: null,
         temp_sys_id: null,
-        method_id: null
+        method_id: null,
+        chart_url_dark: null,
+        chart_url_light: null
     };
+
+    // Theme Switcher Logic
+    const savedTheme = localStorage.getItem("theme") || "light"; // Default is light/normal theme
+    if (savedTheme === "light") {
+        document.body.classList.add("light-theme");
+    } else {
+        document.body.classList.remove("light-theme");
+    }
+    
+    themeToggle.addEventListener("click", () => {
+        document.body.classList.toggle("light-theme");
+        const isLight = document.body.classList.contains("light-theme");
+        localStorage.setItem("theme", isLight ? "light" : "dark");
+        updateChartImageSource();
+    });
+
+    function updateChartImageSource() {
+        if (!tradeoffChartImg || tradeoffChartImg.style.display === "none") return;
+        const isLight = document.body.classList.contains("light-theme");
+        const url = isLight ? activeState.chart_url_light : activeState.chart_url_dark;
+        if (url) {
+            const base = url.split("?")[0];
+            tradeoffChartImg.src = `${base}?t=${Date.now()}`;
+        }
+    }
 
     // 1. Initial Setup: Fetch samples dropdown
     fetch("/api/samples")
@@ -147,6 +175,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 activeState.temp_proc_id = data.temp_proc_id;
                 activeState.temp_sys_id = data.temp_sys_id;
                 activeState.method_id = data.method_id;
+                activeState.chart_url_dark = data.chart_url_dark;
+                activeState.chart_url_light = data.chart_url_light;
                 
                 // Enable chat console
                 chatInput.disabled = false;
@@ -200,9 +230,12 @@ document.addEventListener("DOMContentLoaded", () => {
         updateMetricCard(metrics["Feedstock Cost"], costBase, costOpt, costChange);
 
         // 3. Update comparison trade-off chart image
+        activeState.chart_url_dark = data.chart_url_dark;
+        activeState.chart_url_light = data.chart_url_light;
+        
         chartPlaceholder.style.display = "none";
         tradeoffChartImg.style.display = "block";
-        tradeoffChartImg.src = `${data.chart_url}?t=${Date.now()}`;
+        updateChartImageSource();
 
         // 4. Update Justification Content
         if (data.justification) {
@@ -271,6 +304,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     activeState.report = data.report;
                     activeState.temp_proc_id = data.temp_proc_id;
                     activeState.temp_sys_id = data.temp_sys_id;
+                    activeState.chart_url_dark = data.chart_url_dark;
+                    activeState.chart_url_light = data.chart_url_light;
                     
                     // Update UI elements
                     updateDashboardUI(data);
