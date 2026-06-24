@@ -170,3 +170,58 @@ Respond only with a valid JSON object. Do not add any conversational text before
             "response": "I didn't understand that command. Try asking a question or request a substitution (e.g., 'replace glass fibre with glass cullet')."
         }
 
+    def rerank_candidates(self, query, candidates):
+        """
+        Uses the local LLM to semantically re-rank and score the top TF-IDF flow candidates.
+        Provides a neuro-symbolic re-ranking layer for high mapping precision.
+        """
+        if not self.is_ollama_active() or not candidates:
+            return candidates
+            
+        candidates_str = "\n".join([f"{idx+1}. Name: '{c[0].name}' (ID: {c[0].id}, Category: {c[0].category}, TF-IDF score: {c[1]:.4f})" for idx, c in enumerate(candidates)])
+        
+        prompt = f"""
+You are an expert material database matching engine for life cycle assessment (LCA).
+The user is looking for a flow in the ecoinvent database that matches their feedstock: "{query}"
+
+Here are the top candidates retrieved from the database using a text keyword search:
+{candidates_str}
+
+Evaluate these candidates based on:
+1. Physical/chemical composition: Does the chemical substance or material class match?
+2. Recycled/circular status: If the query specifies "recycled", "scrap", "secondary", "reclaimed", or "cullet", prioritize candidates that contain these words or represent secondary recycling processes. Do NOT choose virgin materials if recycled/scrap alternatives are available in the list.
+3. Class precision.
+
+Identify the best order of matches. Return a JSON array of integers representing the 1-based indices of the candidates in order of preference (best match first, e.g. [2, 1, 3, 4, 5]). 
+Output only the JSON array and nothing else.
+"""
+        payload = {
+            "model": self.model,
+            "prompt": prompt,
+            "stream": False,
+            "format": "json"
+        }
+        
+        try:
+            response = requests.post(f"{self.ollama_url}/api/generate", json=payload, timeout=12)
+            if response.status_code == 200:
+                content = response.json().get("response", "").strip()
+                indices = json.loads(content)
+                
+                # Parse indices list safely
+                ranked = []
+                for val in indices:
+                    idx = int(val) - 1
+                    if 0 <= idx < len(candidates):
+                        ranked.append(candidates[idx])
+                        
+                # Add any missing candidates that the LLM forgot to include
+                for c in candidates:
+                    if c not in ranked:
+                        ranked.append(c)
+                return ranked
+        except Exception:
+            pass
+        return candidates
+
+

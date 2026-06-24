@@ -2,6 +2,7 @@ import math
 import re
 from collections import Counter
 import olca_schema as o
+from .llm_agent import LcaLlmAgent
 
 class FlowMapper:
     """
@@ -12,6 +13,7 @@ class FlowMapper:
     def __init__(self, executor):
         self.executor = executor
         self.client = executor.client
+        self.llm_agent = LcaLlmAgent()
         self.flows = []
         self.doc_frequencies = Counter()
         self.num_documents = 0
@@ -130,4 +132,13 @@ class FlowMapper:
                 
         # Sort results by similarity score
         results = sorted(results, key=lambda x: x[1], reverse=True)
-        return results[:top_k]
+        top_candidates = results[:top_k]
+        
+        # Apply Generative LLM Re-ranking (Task 1) if LLM is active and we have candidates
+        if len(top_candidates) > 1 and self.llm_agent.is_ollama_active():
+            try:
+                top_candidates = self.llm_agent.rerank_candidates(query, top_candidates)
+            except Exception:
+                pass
+                
+        return top_candidates
