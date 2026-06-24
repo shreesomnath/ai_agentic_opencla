@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic LCA: Multi-Objective Sustainability Dashboard</title>
+    <!-- Premium Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Navigation Header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <span class="logo-icon">🌟</span>
+                <h1>Agentic LCA <span class="badge-tag">Copilot 1.0</span></h1>
+            </div>
+            <div class="server-status">
+                <div class="status-indicator online" id="openlca-status">OpenLCA Server: Connected</div>
+                <div class="status-indicator online" id="ollama-status">Ollama LLM: Connected</div>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <!-- Sidebar Controls -->
+            <aside class="sidebar">
+                <div class="card font-selector">
+                    <h2>📋 Select Technology</h2>
+                    <div class="form-group">
+                        <label for="sample-select">Load BOM Case Study</label>
+                        <select id="sample-select">
+                            <option value="">-- Choose case study --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card bom-editor-card">
+                    <h2>🛠️ Bill of Materials Editor</h2>
+                    <p class="section-desc">Manage materials, weights, and units dynamically.</p>
+                    
+                    <div class="bom-table-container">
+                        <table id="bom-table">
+                            <thead>
+                                <tr>
+                                    <th>Material Flow</th>
+                                    <th>Amount</th>
+                                    <th>Unit</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="bom-tbody">
+                                <!-- Dynamic rows added here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="bom-actions">
+                        <button type="button" class="btn btn-secondary" id="add-row-btn">+ Add Material</button>
+                        <button type="button" class="btn btn-primary" id="optimize-btn">Run Optimization 🚀</button>
+                    </div>
+                </div>
+
+                <div class="card tvl-status-card">
+                    <h2>⚖️ Physical Verification (TVL)</h2>
+                    <div class="tvl-details">
+                        <div class="tvl-indicator" id="tvl-badge">Not Checked</div>
+                        <div class="tvl-metrics">
+                            <div class="metric-row">
+                                <span>Input Mass:</span>
+                                <span id="tvl-input-mass">0.00 kg</span>
+                            </div>
+                            <div class="metric-row">
+                                <span>Output Mass:</span>
+                                <span id="tvl-output-mass">0.00 kg</span>
+                            </div>
+                            <div class="metric-row">
+                                <span>Stoichiometric Error:</span>
+                                <span id="tvl-error">0.00%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Panel Content -->
+            <main class="content-panel">
+                <!-- 4 Performance Metric Cards -->
+                <div class="metrics-grid">
+                    <div class="metric-card shadow-teal" id="card-gwp">
+                        <div class="metric-title">
+                            <span>Climate Change (GWP)</span>
+                            <span class="unit-tag">kg CO2 eq</span>
+                        </div>
+                        <div class="metric-value-row">
+                            <div class="val-box">
+                                <label>Baseline</label>
+                                <span class="base-val" id="gwp-baseline">-</span>
+                            </div>
+                            <div class="val-box">
+                                <label>Optimized</label>
+                                <span class="opt-val" id="gwp-optimized">-</span>
+                            </div>
+                        </div>
+                        <div class="change-badge" id="gwp-change">-</div>
+                    </div>
+
+                    <div class="metric-card shadow-indigo" id="card-acid">
+                        <div class="metric-title">
+                            <span>Acidification Potential</span>
+                            <span class="unit-tag">kg SO2 eq</span>
+                        </div>
+                        <div class="metric-value-row">
+                            <div class="val-box">
+                                <label>Baseline</label>
+                                <span class="base-val" id="acid-baseline">-</span>
+                            </div>
+                            <div class="val-box">
+                                <label>Optimized</label>
+                                <span class="opt-val" id="acid-optimized">-</span>
+                            </div>
+                        </div>
+                        <div class="change-badge" id="acid-change">-</div>
+                    </div>
+
+                    <div class="metric-card shadow-blue" id="card-water">
+                        <div class="metric-title">
+                            <span>Water Consumption</span>
+                            <span class="unit-tag">m3</span>
+                        </div>
+                        <div class="metric-value-row">
+                            <div class="val-box">
+                                <label>Baseline</label>
+                                <span class="base-val" id="water-baseline">-</span>
+                            </div>
+                            <div class="val-box">
+                                <label>Optimized</label>
+                                <span class="opt-val" id="water-optimized">-</span>
+                            </div>
+                        </div>
+                        <div class="change-badge" id="water-change">-</div>
+                    </div>
+
+                    <div class="metric-card shadow-green" id="card-cost">
+                        <div class="metric-title">
+                            <span>Feedstock Cost</span>
+                            <span class="unit-tag">USD</span>
+                        </div>
+                        <div class="metric-value-row">
+                            <div class="val-box">
+                                <label>Baseline</label>
+                                <span class="base-val" id="cost-baseline">-</span>
+                            </div>
+                            <div class="val-box">
+                                <label>Optimized</label>
+                                <span class="opt-val" id="cost-optimized">-</span>
+                            </div>
+                        </div>
+                        <div class="change-badge" id="cost-change">-</div>
+                    </div>
+                </div>
+
+                <div class="visuals-grid">
+                    <!-- Plot Chart Display -->
+                    <div class="card chart-card">
+                        <h2>📊 Multi-Objective Trade-Off Chart</h2>
+                        <div class="chart-container">
+                            <div class="placeholder-text" id="chart-placeholder">
+                                Optimize a case study to display comparison chart
+                            </div>
+                            <img id="tradeoff-chart-img" style="display: none;" alt="Optimization Tradeoffs Bar Chart">
+                        </div>
+                    </div>
+
+                    <!-- Chat Copilot Console -->
+                    <div class="card chat-card-container">
+                        <h2>💬 Interactive Copilot Chat</h2>
+                        <div class="chat-area">
+                            <div class="chat-messages" id="chat-box">
+                                <div class="message system-msg">
+                                    <strong>Copilot:</strong> Welcome! Load a case study above or input custom materials to run. I can explain GWP hotspots, justify trade-offs, or execute substitutions (e.g. try saying <em>"What if we replace steel with scrap steel?"</em>).
+                                </div>
+                            </div>
+                            <div class="chat-input-area">
+                                <input type="text" id="chat-input" placeholder="Ask Copilot a question or request a feedstock swap..." disabled>
+                                <button type="button" class="btn btn-primary" id="chat-send-btn" disabled>Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LLM Engineering Justification Paper Card -->
+                <div class="card justification-card" id="justification-wrapper" style="display: none;">
+                    <h2>📝 Engineering Justification Report (LLM Generated)</h2>
+                    <blockquote class="justification-text" id="justification-content">
+                        <!-- Justification goes here -->
+                    </blockquote>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Script imports -->
+    <script src="/static/app.js"></script>
+</body>
+</html>
