@@ -77,9 +77,10 @@ class FlowMapper:
             
         print("TF-IDF mapping index built successfully!")
 
-    def search(self, query, top_k=5):
+    def search(self, query, top_k=5, flow_type_filter=None):
         """
         Searches the indexed database flows using cosine similarity.
+        Optionally filters results by o.FlowType.
         Returns a list of tuples: (flow_descriptor, similarity_score)
         """
         query_tokens = self._tokenize(query)
@@ -117,6 +118,14 @@ class FlowMapper:
             # Retrieve descriptor
             flow_desc = next((f for f in self.flows if f.id == flow_id), None)
             if flow_desc:
+                # Apply flow type filter if specified
+                if flow_type_filter:
+                    ft = getattr(flow_desc, "flow_type", None)
+                    if ft:
+                        ft_name = ft.name if hasattr(ft, "name") else str(ft)
+                        filter_name = flow_type_filter.name if hasattr(flow_type_filter, "name") else str(flow_type_filter)
+                        if ft_name != filter_name:
+                            continue
                 results.append((flow_desc, similarity))
                 
         # Sort results by similarity score
