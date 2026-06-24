@@ -110,3 +110,63 @@ Output only the JSON array and nothing else.
                 return [f"{hotspot_flow_name.split(',')[0]} recycled"]
         except Exception:
             return [f"{hotspot_flow_name.split(',')[0]} recycled"]
+
+    def parse_chat_command(self, user_query, exchanges_list, report=None):
+        """
+        Parses a user chat query in the context of the current process exchanges list.
+        Returns a JSON dictionary containing the action ('substitute' or 'chat') and values.
+        """
+        if not self.is_ollama_active():
+            return {
+                "action": "chat",
+                "response": "Local LLM Agent is offline. Cannot process natural language chat commands."
+            }
+
+        # Format the list of exchanges for the LLM
+        flows_str = "\n".join([f"- ID: {ex['id']} | Name: {ex['name']} | Amount: {ex['amount']} {ex['unit']}" for ex in exchanges_list])
+        
+        prompt = f"""
+You are the brain of an interactive LCA Copilot.
+The user has asked: "{user_query}"
+
+Here are the input exchanges in the current synthesized manufacturing process:
+{flows_str}
+
+LCA Report Data (Carbon footprint, water, cost):
+{json.dumps(report) if report else 'No calculation report available yet.'}
+
+Your task:
+1. Determine if the user wants to test a material substitution (e.g. "replace steel with scrap steel" or "what if we use recycled plastic?").
+2. If they want to test a substitution:
+   - Identify which virgin flow from the list above they want to replace. Choose the exact matching name from the list.
+   - Formulate a search query to look up the recycled/green substitute in the flow database.
+   - Respond in JSON format: {{"action": "substitute", "virgin_flow_name": "exact_name_from_list", "substitute_search_query": "search_term_for_substitute"}}
+3. If they are asking a question, seeking help, explaining results, or asking for next steps:
+   - Respond in JSON format: {{"action": "chat", "response": "Your helpful, expert response explaining the LCA results or guiding the user on their next step."}}
+
+Respond only with a valid JSON object. Do not add any conversational text before or after the JSON.
+"""
+
+        payload = {
+            "model": self.model,
+            "prompt": prompt,
+            "stream": False,
+            "format": "json"
+        }
+
+        try:
+            response = requests.post(f"{self.ollama_url}/api/generate", json=payload, timeout=20)
+            if response.status_code == 200:
+                result_json = response.json()
+                content = result_json.get("response", "").strip()
+                return json.loads(content)
+        except Exception as e:
+            return {
+                "action": "chat",
+                "response": f"Failed to parse LLM command: {e}"
+            }
+        return {
+            "action": "chat",
+            "response": "I didn't understand that command. Try asking a question or request a substitution (e.g., 'replace glass fibre with glass cullet')."
+        }
+

@@ -1,4 +1,5 @@
 import csv
+import sys
 import uuid
 import olca_schema as o
 import time
@@ -9,8 +10,10 @@ from agentic_lca import (
     SensitivityAnalyzer, 
     CostRegistry, 
     MultiObjectiveEvaluator,
-    LcaLlmAgent
+    LcaLlmAgent,
+    LcaVisualizer
 )
+
 
 
 def get_unit_refs(client):
@@ -325,6 +328,140 @@ def main():
             print(" -> Local LLM Agent is offline (Ollama not responding on port 11434).")
             print("    To enable this: download Ollama and run 'ollama run qwen2.5-coder:7b' on your Mac.")
         print("="*80)
+        
+        # 9. Generate Visualization Chart
+        print("\n[9/9] Generating trade-off visualization comparison chart...")
+        LcaVisualizer.generate_tradeoff_chart(report, "optimization_tradeoffs.png")
+        LcaVisualizer.generate_tradeoff_chart(
+            report, 
+            "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs.png"
+        )
+        print("="*80)
+
+        # 10. Check if interactive chat mode is requested
+        is_chat_mode = "--chat" in sys.argv or "--interactive" in sys.argv
+        
+        if is_chat_mode:
+            print("\n" + "="*80)
+            print("         WELCOME TO THE AGENTIC LCA INTERACTIVE COPILOT")
+            print("="*80)
+            print("Ask questions about the results, request next steps, or substitute materials.")
+            print("Examples:")
+            print(" - 'Why does glass cullet have less carbon impact?'")
+            print(" - 'What if we substitute steel with scrap steel?'")
+            print(" - 'Tell me the main hotspots.'")
+            print("Type 'exit' or 'quit' to end the session.")
+            print("="*80)
+            
+            # Prepare exchanges list for the LLM context
+            exchanges_list = []
+            for ex in process.exchanges:
+                if ex.is_input and ex.flow:
+                    exchanges_list.append({
+                        "id": ex.flow.id,
+                        "name": ex.flow.name,
+                        "amount": ex.amount,
+                        "unit": ex.unit.name if ex.unit else ""
+                    })
+                    
+            active_report = report
+            
+            while True:
+                try:
+                    user_query = input("\nLCA-Copilot> ").strip()
+                    if not user_query:
+                        continue
+                    if user_query.lower() in ["exit", "quit"]:
+                        print("Ending interactive session. Goodbye!")
+                        break
+                        
+                    print("Processing query...")
+                    llm_command = llm_agent.parse_chat_command(user_query, exchanges_list, active_report)
+                    
+                    action = llm_command.get("action", "chat")
+                    
+                    if action == "substitute":
+                        virgin_name = llm_command.get("virgin_flow_name")
+                        substitute_query = llm_command.get("substitute_search_query")
+                        
+                        print(f"\n[LLM Command] Requesting feedstock substitution:")
+                        print(f" - Target Virgin material:  '{virgin_name}'")
+                        print(f" - Proposed substitute search: '{substitute_query}'")
+                        
+                        # Find the target exchange index and flow ID
+                        target_ex = next((ex for ex in process.exchanges if ex.is_input and ex.flow and ex.flow.name == virgin_name), None)
+                        if not target_ex:
+                            print(f"Error: Material '{virgin_name}' not found in current process exchanges.")
+                            continue
+                            
+                        # Search FlowMapper for substitute
+                        matches = mapper.search(substitute_query, top_k=5)
+                        sub_desc = None
+                        for flow_desc, score in matches:
+                            if flow_desc.id != target_ex.flow.id:
+                                sub_desc = flow_desc
+                                break
+                        if not sub_desc:
+                            sub_desc = next((f for f, s in matches if f.id != target_ex.flow.id), None)
+                            
+                        if not sub_desc:
+                            print(f"Error: No suitable substitute flow found for search term '{substitute_query}'.")
+                            continue
+                            
+                        print(f" -> Selected substitute: '{sub_desc.name}' (ID: {sub_desc.id})")
+                        
+                        # Run evaluation
+                        print("Evaluating substitution trade-offs...")
+                        sub_report = evaluator.evaluate_substitution(
+                            process_id=temp_proc_id,
+                            system_id=temp_sys_id,
+                            method_id=method_desc.id,
+                            target_flow_id=target_ex.flow.id,
+                            substitute_flow_desc=sub_desc
+                        )
+                        
+                        if sub_report.get("status") != "SUCCESS":
+                            print(f"Substitution failed: {sub_report.get('message')}")
+                        else:
+                            active_report = sub_report
+                            print("\n" + "-"*80)
+                            print("                 UPDATED LCA CALCULATIONS REPORT")
+                            print("-" * 80)
+                            print(f"Substitute: '{sub_report['substituted_from']}' \n             -> '{sub_report['substituted_to']}'")
+                            print("-" * 80)
+                            print(f"{'Indicator':<25} | {'Baseline':<12} | {'Optimized':<12} | {'Change (%)':<12} | {'Unit':<10}")
+                            print("-" * 80)
+                            for k, v in sub_report["metrics"].items():
+                                print(f"{k:<25} | {v['baseline']:<12.6f} | {v['optimized']:<12.6f} | {v['percentage_change']:<+11.2f}% | {v['unit']:<10}")
+                            print("-" * 80)
+                            
+                            # Re-generate charts with new substitution
+                            LcaVisualizer.generate_tradeoff_chart(sub_report, "optimization_tradeoffs.png")
+                            LcaVisualizer.generate_tradeoff_chart(
+                                sub_report, 
+                                "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs.png"
+                            )
+                            
+                            # Ask LLM for new justification
+                            print("Generating updated engineering explanation...")
+                            new_just = llm_agent.generate_engineering_justification(sub_report)
+                            print("\nLLM Justification:")
+                            print(new_just)
+                            
+                    else:
+                        # Standard chat query explanation
+                        print(f"\nLCA-Copilot Response:")
+                        print("-" * 80)
+                        print(llm_command.get("response", "No response content returned."))
+                        print("-" * 80)
+                        
+                except KeyboardInterrupt:
+                    print("\nEnding session. Goodbye!")
+                    break
+                except Exception as ex_loop:
+                    print(f"Error during chat interaction: {ex_loop}")
+
+
 
         
     except Exception as e:
