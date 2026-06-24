@@ -62,19 +62,26 @@ To enable the automated natural language report justifications and interactive c
 
 ## 💻 Running the Tool
 
-You can run the calculations in two modes:
+You can run the calculations in three modes:
 
 ### Mode A: Standard Ingestion & Pareto Optimization
-Runs bulk BOM ingestion, TVL mass checks, sensitivity hotspot scans, feedstock optimization, and outputs a normalized comparison chart:
+Runs bulk BOM Ingestion, TVL mass checks, sensitivity scans, feedstock optimization, and outputs a trade-offs chart:
 ```bash
 python3 run_pipeline.py
 ```
 
-### Mode B: Interactive LCA-Copilot (Recommended)
-Enters an interactive command-line chat session where you can talk to the LLM agent and run calculations dynamically:
+### Mode B: Interactive CLI Copilot (Recommended)
+Enters an interactive command-line chat session to run feedstock substitutions dynamically:
 ```bash
 python3 run_pipeline.py --chat
 ```
+
+### Mode C: Graphical Web Dashboard
+Launches the premium, theme-toggleable web dashboard with dynamic BOM table editing and visual chat copilot support:
+```bash
+python3 app.py
+```
+After starting the server, open your web browser and navigate to: **`http://127.0.0.1:5000/`**
 
 ---
 
