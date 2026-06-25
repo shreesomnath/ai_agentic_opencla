@@ -34,4 +34,4 @@ This Code of Conduct applies within all community spaces, and also applies when 
 
 ## Contact Information
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the project maintainers at **somnath.luitel@wku.edu**. All complaints will be reviewed and investigated promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the project maintainers at **somnath.luitel416@topper.wku.edu** or **somnathluitel360@gmail.com**. All complaints will be reviewed and investigated promptly and fairly.
