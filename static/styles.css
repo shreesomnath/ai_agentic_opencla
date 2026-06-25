@@ -1416,3 +1416,46 @@ body.light-theme .user-msg {
     .justification-panel { width: 100% !important; border: 1px solid #cbd5e1 !important; background: #ffffff !important; color: #000000 !important; page-break-inside: avoid !important; }
     #justification-content { color: #000000 !important; border-left: 3px solid #64748b !important; background: #f8fafc !important; padding: 10px !important; margin: 0 !important; font-style: italic !important; }
 }
+
+/* Drag and Drop Upload Styles */
+.drag-drop-container {
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    background-color: var(--bg-card);
+    transition: border-color 0.2s, background-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+.drag-drop-container.dragover {
+    border-color: var(--signal);
+    background-color: rgba(var(--signal-rgb), 0.05);
+}
+.upload-icon {
+    color: var(--text-muted);
+}
+.upload-label-btn {
+    color: var(--signal);
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: none;
+    letter-spacing: normal;
+}
+.upload-label-btn:hover {
+    text-decoration: underline;
+}
+
+/* Smart Text Ingestion Styles */
+.input-with-button {
+    display: flex;
+    gap: 8px;
+}
+.input-with-button input[type="text"] {
+    flex-grow: 1;
+}

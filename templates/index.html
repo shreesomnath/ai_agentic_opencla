@@ -93,12 +93,27 @@
 
                     <!-- Panel 1: Flat List BOM Ingestion -->
                     <div id="panel-flat" class="tab-panel active">
-                        <div class="workspace-section">
+                        <div class="workspace-section" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                             <div class="form-group">
                                 <label for="sample-select">Load study template</label>
-                                <select id="sample-select">
+                                <select id="sample-select" style="width: 100%;">
                                     <option value="">-- Choose case study --</option>
                                 </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="smart-text-input">Smart Text Ingestion</label>
+                                <div class="input-with-button">
+                                    <input type="text" id="smart-text-input" placeholder="e.g. 10kg steel, 2kg polyethylene" style="width: 100%;">
+                                    <button type="button" class="btn btn-secondary" id="smart-text-btn" style="padding: 9px 12px;">Parse</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="workspace-section drag-drop-section" id="csv-drop-zone" style="margin-bottom: 12px;">
+                            <div class="drag-drop-container">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="upload-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                <span>Drag & Drop BOM CSV or <label for="csv-file-input" class="upload-label-btn">Browse</label> to import</span>
+                                <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
                             </div>
                         </div>
 

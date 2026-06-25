@@ -445,6 +445,137 @@ document.addEventListener("DOMContentLoaded", () => {
 
     addRowBtn.addEventListener("click", () => addBomRow());
 
+    // CSV File Importer (Drag & Drop + Browse)
+    const csvDropZone = document.getElementById("csv-drop-zone");
+    const csvFileInput = document.getElementById("csv-file-input");
+    
+    if (csvDropZone && csvFileInput) {
+        csvDropZone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            csvDropZone.classList.add("dragover");
+        });
+        
+        csvDropZone.addEventListener("dragleave", () => {
+            csvDropZone.classList.remove("dragover");
+        });
+        
+        csvDropZone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            csvDropZone.classList.remove("dragover");
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleCSVFile(files[0]);
+            }
+        });
+        
+        csvFileInput.addEventListener("change", (e) => {
+            if (e.target.files.length > 0) {
+                handleCSVFile(e.target.files[0]);
+            }
+        });
+        
+        function handleCSVFile(file) {
+            if (!file.name.endsWith(".csv")) {
+                alert("Only CSV files are supported.");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                parseAndPopulateCSV(evt.target.result);
+            };
+            reader.readAsText(file);
+        }
+        
+        function parseAndPopulateCSV(csvText) {
+            const lines = csvText.split(/\r?\n/);
+            if (lines.length < 2) return;
+            
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+            const flowNameIdx = headers.indexOf("flow_name");
+            const amountIdx = headers.indexOf("amount");
+            const unitIdx = headers.indexOf("unit");
+            
+            if (flowNameIdx === -1 || amountIdx === -1 || unitIdx === -1) {
+                alert("CSV must have 'flow_name', 'amount', and 'unit' columns.");
+                return;
+            }
+            
+            bomTbody.innerHTML = "";
+            if (activeAssemblyIndicator) {
+                activeAssemblyIndicator.style.display = "none";
+            }
+            
+            let loadedCount = 0;
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
+                if (cols.length <= Math.max(flowNameIdx, amountIdx, unitIdx)) continue;
+                
+                const flowName = cols[flowNameIdx];
+                const amount = parseFloat(cols[amountIdx]) || 0;
+                const unit = cols[unitIdx].toLowerCase();
+                
+                addBomRow(flowName, amount, unit);
+                loadedCount++;
+            }
+            
+            alert(`Successfully imported ${loadedCount} feedstock items from CSV.`);
+        }
+    }
+
+    // Smart Text natural language parser
+    const smartTextInput = document.getElementById("smart-text-input");
+    const smartTextBtn = document.getElementById("smart-text-btn");
+    
+    if (smartTextBtn && smartTextInput) {
+        smartTextBtn.addEventListener("click", () => {
+            const val = smartTextInput.value.trim();
+            if (!val) return;
+            
+            const regex = /(\d+(?:\.\d+)?)\s*(kg|g|m3|t|l|liters?|meters?|cubic\s+meters?)\s*(?:of\s+)?([^,]+)/gi;
+            let match;
+            let parsedCount = 0;
+            
+            const parsedItems = [];
+            while ((match = regex.exec(val)) !== null) {
+                const amount = parseFloat(match[1]);
+                let unit = match[2].toLowerCase();
+                const material = match[3].trim();
+                
+                if (unit.startsWith("liter")) unit = "m3";
+                if (unit.startsWith("cubic")) unit = "m3";
+                if (unit === "t") unit = "kg";
+                
+                parsedItems.push({ material, amount, unit });
+                parsedCount++;
+            }
+            
+            if (parsedItems.length > 0) {
+                bomTbody.innerHTML = "";
+                if (activeAssemblyIndicator) {
+                    activeAssemblyIndicator.style.display = "none";
+                }
+                
+                parsedItems.forEach(item => {
+                    addBomRow(item.material, item.amount, item.unit);
+                });
+                
+                alert(`Successfully parsed ${parsedCount} items from text input!`);
+                smartTextInput.value = "";
+            } else {
+                alert("Could not parse any feedstocks. Use format like: '15kg glass, 2.2kg polyethylene'");
+            }
+        });
+        
+        smartTextInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                smartTextBtn.click();
+            }
+        });
+    }
+
     // 4. Ingest and Optimize BOM exchanges
     optimizeBtn.addEventListener("click", () => {
         const rows = bomTbody.querySelectorAll("tr");
