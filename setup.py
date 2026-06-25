@@ -9,7 +9,8 @@ setup(
         "olca-schema>=2.0.0",
         "requests>=2.25.0",
         "matplotlib>=3.0.0",
-        "numpy>=1.20.0"
+        "numpy>=1.20.0",
+        "flask>=2.0.0"
     ],
     entry_points={
         "console_scripts": [
