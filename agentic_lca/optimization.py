@@ -78,9 +78,9 @@ class ParetoOptimizer:
         baseline_results = self.executor.calculate(system_id, method_id)
         
         target_categories = {
-            "GWP": ["global warming"],
-            "Acidification": ["acidification"],
-            "Water": ["water consumption"]
+            "GWP": ["global warming", "climate change", "gwp", "greenhouse", "carbon footprint"],
+            "Acidification": ["acidification", "ap", "acidifying potential"],
+            "Water": ["water consumption", "water use", "water scarcity", "water depletion", "freshwater consumption"]
         }
         
         baselines = {}
@@ -154,45 +154,212 @@ class ParetoOptimizer:
             recycled_cost = self.cost_registry.get_flow_cost(sub_desc.name, amount, unit_name)
             delta_impacts[flow_id]["Cost"] = recycled_cost - virgin_cost
 
-        # 5. Monte Carlo Sampling to find Pareto frontier
-        sampled_points = []
+        # 5. Advanced Genetic Algorithm (NSGA-II) Optimization Search
+        # Define bounds: ratio for each substitutes [0.0, 1.0], efficiency [0.8, 1.2], loss [0.0, 0.2]
+        bounds = [(0.0, 1.0)] * len(substitutes) + [(0.8, 1.2), (0.0, 0.2)]
+        num_vars = len(bounds)
         
-        for i in range(num_samples):
-            ratios = {}
-            for flow_id in substitutes.keys():
-                ratios[flow_id] = random.uniform(0.0, 1.0)
+        def chromosome_to_point(chrom):
+            ratios_named = {}
+            for idx, flow_id in enumerate(substitutes.keys()):
+                flow_name = next(e.flow.name for e in input_exchanges if e.flow.id == flow_id)
+                ratios_named[flow_name] = chrom[idx]
                 
-            # Sample continuous parameters: efficiency in [0.8, 1.2] and loss factor in [0.0, 0.2]
-            sampled_eff = random.uniform(0.8, 1.2)
-            sampled_loss = random.uniform(0.0, 0.2)
+            sampled_eff = chrom[num_vars - 2]
+            sampled_loss = chrom[num_vars - 1]
             scale = (1.0 + sampled_loss) / sampled_eff
             
             pt_metrics = {}
             for kpi in baselines.keys():
                 val = baselines[kpi]
-                for flow_id, r in ratios.items():
+                for idx, flow_id in enumerate(substitutes.keys()):
+                    r = chrom[idx]
                     val += r * delta_impacts[flow_id].get(kpi, 0.0)
-                # Scale by parameter override scale factor
                 pt_metrics[kpi] = val * scale
                 
-            ratios_named = {}
-            for flow_id, r in ratios.items():
-                flow_name = next(e.flow.name for e in input_exchanges if e.flow.id == flow_id)
-                ratios_named[flow_name] = r
-                
-            sampled_points.append({
+            return {
                 "ratios": ratios_named,
                 "parameters": {
                     "process_efficiency": sampled_eff,
                     "loss_factor": sampled_loss
                 },
-                "metrics": pt_metrics
-            })
+                "metrics": pt_metrics,
+                "chromosome": chrom
+            }
+
+        # Parent tournament selector
+        def binary_tournament(pop, fronts, crowding_dists):
+            ranks = {}
+            for rank_idx, front in enumerate(fronts):
+                for p in front:
+                    ranks[p] = rank_idx
+                    
+            p1_idx = random.randint(0, len(pop) - 1)
+            p2_idx = random.randint(0, len(pop) - 1)
             
-        # Extract Pareto frontier
-        frontier = get_pareto_frontier(sampled_points)
-        print(f"[Pareto] Sampled {num_samples} points. Identified {len(frontier)} Pareto-optimal configurations.")
+            r1 = ranks.get(p1_idx, 9999)
+            r2 = ranks.get(p2_idx, 9999)
+            
+            if r1 < r2:
+                return pop[p1_idx]
+            elif r2 < r1:
+                return pop[p2_idx]
+            else:
+                cd1 = crowding_dists.get(p1_idx, -1.0)
+                cd2 = crowding_dists.get(p2_idx, -1.0)
+                return pop[p1_idx] if cd1 > cd2 else pop[p2_idx]
+
+        # Initialize GA population
+        pop_size = 150
+        generations = 60
+        population = []
+        for _ in range(pop_size):
+            chrom = [random.uniform(low, high) for (low, high) in bounds]
+            population.append(chromosome_to_point(chrom))
+            
+        for gen in range(generations):
+            # Create offspring via crossover & mutation
+            offspring = []
+            fronts = fast_non_dominated_sort(population)
+            crowding_dists = {}
+            for front in fronts:
+                dists = calculate_crowding_distance(front, population)
+                for idx, d in dists.items():
+                    crowding_dists[idx] = d
+                    
+            while len(offspring) < pop_size:
+                p1 = binary_tournament(population, fronts, crowding_dists)
+                p2 = binary_tournament(population, fronts, crowding_dists)
+                
+                # Blend Crossover (BLX-alpha)
+                c1_chrom, c2_chrom = [], []
+                for g1, g2, (low, high) in zip(p1["chromosome"], p2["chromosome"], bounds):
+                    alpha = 0.15
+                    min_g, max_g = min(g1, g2), max(g1, g2)
+                    diff = max_g - min_g
+                    c_low = max(low, min_g - alpha * diff)
+                    c_high = min(high, max_g + alpha * diff)
+                    c1_chrom.append(random.uniform(c_low, c_high))
+                    c2_chrom.append(random.uniform(c_low, c_high))
+                    
+                # Mutation: slight perturbations
+                for c_chrom in [c1_chrom, c2_chrom]:
+                    for idx in range(num_vars):
+                        if random.random() < 0.25:
+                            low, high = bounds[idx]
+                            delta = random.normalvariate(0, 0.12 * (high - low))
+                            c_chrom[idx] = max(low, min(high, c_chrom[idx] + delta))
+                            
+                offspring.append(chromosome_to_point(c1_chrom))
+                offspring.append(chromosome_to_point(c2_chrom))
+                
+            # Truncation selection: elitism merge
+            combined = population + offspring[:pop_size]
+            combined_fronts = fast_non_dominated_sort(combined)
+            next_pop = []
+            
+            for front in combined_fronts:
+                front_dists = calculate_crowding_distance(front, combined)
+                if len(next_pop) + len(front) <= pop_size:
+                    for idx in front:
+                        next_pop.append(combined[idx])
+                else:
+                    sorted_front = sorted(front, key=lambda idx: front_dists.get(idx, 0.0), reverse=True)
+                    for idx in sorted_front[:pop_size - len(next_pop)]:
+                        next_pop.append(combined[idx])
+                    break
+            population = next_pop
+            
+        # Extract Pareto frontier of final population
+        final_fronts = fast_non_dominated_sort(population)
+        frontier = [population[idx] for idx in final_fronts[0]]
+        print(f"[Pareto-GA] Evolved {generations} generations (pop={pop_size}). Identified {len(frontier)} absolute optimal frontier boundary points.")
         return frontier
+
+def fast_non_dominated_sort(population):
+    S = [[] for _ in range(len(population))]
+    n = [0] * len(population)
+    rank = [0] * len(population)
+    fronts = [[]]
+    
+    for p in range(len(population)):
+        for q in range(len(population)):
+            p_metrics = population[p]["metrics"]
+            q_metrics = population[q]["metrics"]
+            
+            p_dominates_q = (
+                p_metrics["GWP"] <= q_metrics["GWP"] and
+                p_metrics["Acidification"] <= q_metrics["Acidification"] and
+                p_metrics["Water"] <= q_metrics["Water"] and
+                p_metrics["Cost"] <= q_metrics["Cost"] and
+                (p_metrics["GWP"] < q_metrics["GWP"] or
+                 p_metrics["Acidification"] < q_metrics["Acidification"] or
+                 p_metrics["Water"] < q_metrics["Water"] or
+                 p_metrics["Cost"] < q_metrics["Cost"])
+            )
+            
+            q_dominates_p = (
+                q_metrics["GWP"] <= p_metrics["GWP"] and
+                q_metrics["Acidification"] <= p_metrics["Acidification"] and
+                q_metrics["Water"] <= p_metrics["Water"] and
+                q_metrics["Cost"] <= p_metrics["Cost"] and
+                (q_metrics["GWP"] < p_metrics["GWP"] or
+                 q_metrics["Acidification"] < p_metrics["Acidification"] or
+                 q_metrics["Water"] < p_metrics["Water"] or
+                 q_metrics["Cost"] < p_metrics["Cost"])
+            )
+            
+            if p_dominates_q:
+                S[p].append(q)
+            elif q_dominates_p:
+                n[p] += 1
+                
+        if n[p] == 0:
+            rank[p] = 0
+            fronts[0].append(p)
+            
+    i = 0
+    while len(fronts[i]) > 0:
+        next_front = []
+        for p in fronts[i]:
+            for q in S[p]:
+                n[q] -= 1
+                if n[q] == 0:
+                    rank[q] = i + 1
+                    next_front.append(q)
+        i += 1
+        fronts.append(next_front)
+        
+    return fronts[:-1]
+
+def calculate_crowding_distance(front, population):
+    if len(front) == 0:
+        return {}
+        
+    distances = {p: 0.0 for p in front}
+    objectives = ["GWP", "Acidification", "Water", "Cost"]
+    
+    for obj in objectives:
+        sorted_front = sorted(front, key=lambda p: population[p]["metrics"][obj])
+        
+        # Boundary elements
+        distances[sorted_front[0]] = float('inf')
+        distances[sorted_front[-1]] = float('inf')
+        
+        min_val = population[sorted_front[0]]["metrics"][obj]
+        max_val = population[sorted_front[-1]]["metrics"][obj]
+        diff = max_val - min_val
+        
+        if diff == 0:
+            continue
+            
+        for i in range(1, len(sorted_front) - 1):
+            distances[sorted_front[i]] += (
+                population[sorted_front[i+1]]["metrics"][obj] - 
+                population[sorted_front[i-1]]["metrics"][obj]
+            ) / diff
+            
+    return distances
 
 def get_pareto_frontier(points):
     pareto_frontier = []

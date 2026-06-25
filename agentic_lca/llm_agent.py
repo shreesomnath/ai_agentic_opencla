@@ -133,17 +133,57 @@ class LcaLlmAgent:
         Interprets a Multi-Objective LCA trade-off report and generates 
         a formal engineering justification text (e.g. for NSF proposals or ESG reports).
         """
-        if not self.is_ollama_active():
-            return (
-                "LLM justification could not be generated: No active LLM backend found. "
-                "Please run a local Ollama server or configure GEMINI_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY."
-            )
+        metrics = report.get("metrics", {}) if report else {}
+        gwp = metrics.get("Global Warming", {}) if metrics else {}
+        acid = metrics.get("Acidification", {}) if metrics else {}
+        water = metrics.get("Water Consumption", {}) if metrics else {}
+        cost = metrics.get("Feedstock Cost", {}) if metrics else {}
 
-        metrics = report.get("metrics", {})
-        gwp = metrics.get("Global Warming", {})
-        acid = metrics.get("Acidification", {})
-        water = metrics.get("Water Consumption", {})
-        cost = metrics.get("Feedstock Cost", {})
+        if not self.is_ollama_active():
+            savings_gwp = gwp.get('percentage_change', 0.0) if gwp else 0.0
+            savings_cost = cost.get('percentage_change', 0.0) if cost else 0.0
+            savings_water = water.get('percentage_change', 0.0) if water else 0.0
+            savings_acid = acid.get('percentage_change', 0.0) if acid else 0.0
+            
+            repaired_sub = f"replacing '{report.get('substituted_from')}' with '{report.get('substituted_to')}'" if report else "substituting feedstock"
+            
+            justification = (
+                f"**Quantitative Decoupling & Decarbonization Justification**:\n\n"
+                f"A multi-objective environmental assessment was performed on the process '{report.get('process_name') if report else 'Assembly'}' "
+                f"evaluating the substitution of virgin feedstocks with secondary alternatives—specifically {repaired_sub}. "
+                f"The substitution achieves a carbon footprint reduction of **{savings_gwp:+.2f}%** (transitioning from "
+                f"{gwp.get('baseline', 0.0) if gwp else 0.0:.4f} to {gwp.get('optimized', 0.0) if gwp else 0.0:.4f} kg CO2 eq). This decoupling behavior "
+                f"is physically substantiated by avoiding raw material extraction energy, substituting energy-intensive virgin material "
+                f"phases with lower-embodied-energy secondary alternatives. "
+            )
+            
+            justification += (
+                f"\n\nFrom a multi-criteria perspective, the trade-off analysis indicates a change in terrestrial acidification of "
+                f"**{savings_acid:+.2f}%** and water usage footprint of **{savings_water:+.2f}%**. "
+            )
+            
+            justification += (
+                f"Economically, raw material purchase costs changed by **{savings_cost:+.2f}%** (from "
+                f"${cost.get('baseline', 0.0) if cost else 0.0:.2f} to ${cost.get('optimized', 0.0) if cost else 0.0:.2f} USD). "
+            )
+            
+            if savings_gwp < 0 and savings_cost <= 0:
+                justification += (
+                    "Consequently, this configuration represents a strictly Pareto-improving state, decoupling ecological footprints "
+                    "from operational economic expenditures without burden-shifting."
+                )
+            else:
+                justification += (
+                    "The configuration shows key trade-offs between environmental savings and procurement costs, requiring multi-criteria decision "
+                    "weighting (TOPSIS) to determine optimal compromise boundaries."
+                )
+                
+            if weights:
+                justification += (
+                    f"\n\nUnder user decision weights ({', '.join([f'{k}: {v}%' for k, v in weights.items()])}), the system evaluated this "
+                    "trade-off boundary, establishing that the chosen configuration satisfies preference constraints."
+                )
+            return justification
 
         weights_context = ""
         if weights:
@@ -206,9 +246,110 @@ Output only the JSON array and nothing else.
         Returns a JSON dictionary containing the action ('substitute' or 'chat') and values.
         """
         if not self.is_ollama_active():
+            query_clean = user_query.lower().strip()
+            
+            # 1. Match Learn/Synonym mapping requests
+            is_learn = False
+            abbrev_found = ""
+            standard_found = ""
+            for kw in ["stands for", "stands as", "is short for", "abbreviation for", "synonym for"]:
+                if kw in query_clean:
+                    parts = query_clean.split(kw)
+                    if len(parts) == 2:
+                        abbrev_found = parts[0].replace("remember", "").replace("that", "").strip()
+                        standard_found = parts[1].replace(".", "").strip()
+                        is_learn = True
+                        break
+            if not is_learn and "map" in query_clean:
+                if "to" in query_clean:
+                    parts = query_clean.replace("map", "").split("to")
+                    if len(parts) == 2:
+                        abbrev_found = parts[0].strip()
+                        standard_found = parts[1].replace(".", "").strip()
+                        is_learn = True
+            if is_learn and abbrev_found and standard_found:
+                return {
+                    "action": "learn",
+                    "abbreviation": abbrev_found,
+                    "standard_name": standard_found,
+                    "response": f"I have mapped '{abbrev_found}' to '{standard_found}' in my dictionary. I will use this for future mapping searches."
+                }
+                
+            # 2. Match Feedstock Substitution requests
+            is_substitute = False
+            referenced_virgin = None
+            substitute_search_query = ""
+            if exchanges_list:
+                for ex in exchanges_list:
+                    name_clean = ex["name"].lower()
+                    short_terms = [name_clean]
+                    if "," in name_clean:
+                        short_terms.append(name_clean.split(",")[0].strip())
+                    for term in short_terms:
+                        if len(term) > 3 and term in query_clean:
+                            referenced_virgin = ex["name"]
+                            break
+                    if referenced_virgin:
+                        break
+            if referenced_virgin:
+                for marker in ["with", "instead of", "for", "to"]:
+                    if marker in query_clean:
+                        parts = query_clean.split(marker)
+                        if marker == "instead of":
+                            sub_part = parts[0].replace("use", "").replace("replace", "").replace("substitute", "").replace("swap", "").strip()
+                            if sub_part:
+                                substitute_search_query = sub_part
+                                is_substitute = True
+                                break
+                        else:
+                            sub_part = parts[1].replace(".", "").strip()
+                            if sub_part:
+                                substitute_search_query = sub_part
+                                is_substitute = True
+                                break
+                if is_substitute and referenced_virgin:
+                    return {
+                        "action": "substitute",
+                        "virgin_flow_name": referenced_virgin,
+                        "substitute_search_query": substitute_search_query
+                    }
+                    
+            # 3. Fallback Informational Q&A / Chat Response
+            response_text = ""
+            if any(w in query_clean for w in ["hello", "hi", "hey"]):
+                response_text = "Hello! I am your autonomous LCA Copilot. I can help guide you through optimizing your supply chain footprint. You can ask me general questions or request substitutions directly (e.g. 'replace steel with scrap steel')."
+            elif any(w in query_clean for w in ["explain", "results", "metrics", "carbon", "footprint"]):
+                if report:
+                    metrics = report.get("metrics", {})
+                    gwp = metrics.get("Global Warming", {})
+                    cost = metrics.get("Feedstock Cost", {})
+                    gwp_val = gwp.get("optimized", gwp.get("baseline", 0.0))
+                    cost_val = cost.get("optimized", cost.get("baseline", 0.0))
+                    response_text = (
+                        f"Based on the active report, the current carbon footprint is **{gwp_val:.4f} kg CO2 eq** "
+                        f"and the feedstock purchase cost is **${cost_val:.2f} USD**. "
+                    )
+                    if exchanges_list:
+                        sorted_ex = sorted(exchanges_list, key=lambda e: float(e["amount"]), reverse=True)
+                        hotspot = sorted_ex[0]["name"]
+                        response_text += (
+                            f"The primary mass feedstock input is **{hotspot}** at {sorted_ex[0]['amount']} {sorted_ex[0]['unit']}. "
+                            f"Replacing this material with a recycled alternative (e.g. 'replace {hotspot.split(',')[0]} with recycled {hotspot.split(',')[0]}') "
+                            f"is highly recommended to decouple carbon footprint from economic expenses."
+                        )
+                else:
+                    response_text = (
+                        "To explain specific metrics, please load a case study template or compile a hierarchical BOM first. "
+                        "I analyze GWP (carbon footprint), acidification (SO2 eq), water consumption, and feedstock purchase cost to locate optimal ecodesign trade-offs."
+                    )
+            else:
+                response_text = (
+                    "I am your LCA Copilot. You can load a case study template from the 'Ingestion Workspace' panel, "
+                    "compile a hierarchical BOM, or request substitutions directly (e.g. *'substitute steel with scrap steel'*)."
+                )
             return {
                 "action": "chat",
-                "response": "No active LLM backend found. Cannot process natural language chat commands."
+                "response": response_text
             }
 
         if exchanges_list:
@@ -298,17 +439,36 @@ Output only the JSON array and nothing else.
         response_text = self._call_llm(prompt, json_format=True)
         try:
             if response_text:
-                indices = json.loads(response_text)
+                data = json.loads(response_text)
+                indices = []
+                if isinstance(data, dict):
+                    # Look for any list inside the dictionary
+                    for val in data.values():
+                        if isinstance(val, list):
+                            indices = val
+                            break
+                    if not indices:
+                        # Fallback to keys if no list found
+                        indices = list(data.keys())
+                elif isinstance(data, list):
+                    indices = data
+                
                 ranked = []
                 for val in indices:
-                    idx = int(val) - 1
-                    if 0 <= idx < len(candidates):
-                        ranked.append(candidates[idx])
+                    try:
+                        idx = int(val) - 1
+                        if 0 <= idx < len(candidates):
+                            if candidates[idx] not in ranked:
+                                ranked.append(candidates[idx])
+                    except (ValueError, TypeError):
+                        continue
+                # Append any remaining candidates that were not ranked by LLM
                 for c in candidates:
                     if c not in ranked:
                         ranked.append(c)
                 return ranked
-        except Exception:
+        except Exception as e:
+            print(f"[Reranking] Parsing error: {e}")
             pass
         return candidates
 

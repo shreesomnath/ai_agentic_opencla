@@ -76,18 +76,46 @@ document.addEventListener("DOMContentLoaded", () => {
     const openlcaPortInput = document.getElementById("openlca-port-input");
     const openlcaSyncBtn = document.getElementById("openlca-sync-btn");
     const ollamaStatus = document.getElementById("ollama-status");
+    const lciaMethodSelect = document.getElementById("lcia-method-select");
 
-    function updateConnectionUI(connected, port, flowsCount, processesCount, errorMsg) {
+    function loadImpactMethods() {
+        if (!lciaMethodSelect) return;
+        fetch("/api/impact-methods")
+            .then(res => res.json())
+            .then(methods => {
+                lciaMethodSelect.innerHTML = '<option value="">-- Auto-select (ReCiPe Midpoint) --</option>';
+                if (methods && methods.length > 0) {
+                    methods.forEach(m => {
+                        const opt = document.createElement("option");
+                        opt.value = m.id;
+                        opt.textContent = m.name;
+                        lciaMethodSelect.appendChild(opt);
+                    });
+                }
+            })
+            .catch(err => console.error("Error loading impact methods:", err));
+    }
+
+    function updateConnectionUI(connected, port, flowsCount, processesCount, errorMsg, isEmptyDb) {
         if (connected) {
             if (openlcaStatusDot) {
                 openlcaStatusDot.classList.remove("offline");
                 openlcaStatusDot.classList.add("online");
             }
-            if (openlcaStatusText) openlcaStatusText.textContent = "openLCA: Connected";
+            if (openlcaStatusText) {
+                if (isEmptyDb) {
+                    openlcaStatusText.textContent = "openLCA: Connected (Empty DB - Simulation Active)";
+                } else {
+                    openlcaStatusText.textContent = "openLCA: Connected";
+                }
+            }
             if (openlcaPortInput) openlcaPortInput.value = port;
             if (openlcaDbStats) openlcaDbStats.style.display = "inline-block";
             if (openlcaFlowsCount) openlcaFlowsCount.textContent = flowsCount.toLocaleString();
             if (openlcaProcessesCount) openlcaProcessesCount.textContent = processesCount.toLocaleString();
+            
+            // Re-fetch impact methods whenever successfully connected
+            loadImpactMethods();
         } else {
             if (openlcaStatusDot) {
                 openlcaStatusDot.classList.remove("online");
@@ -106,13 +134,13 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    updateConnectionUI(data.connected, data.port, data.flows_count, data.processes_count, data.error);
+                    updateConnectionUI(data.connected, data.port, data.flows_count, data.processes_count, data.error, data.is_empty_db);
                 } else {
-                    updateConnectionUI(false, 8080, 0, 0, data.error);
+                    updateConnectionUI(false, 8080, 0, 0, data.error, false);
                 }
             })
             .catch(err => {
-                updateConnectionUI(false, 8080, 0, 0, err.message);
+                updateConnectionUI(false, 8080, 0, 0, err.message, false);
             });
     }
 
@@ -154,10 +182,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (openlcaPortInput) openlcaPortInput.disabled = false;
                 
                 if (data.success) {
-                    updateConnectionUI(true, data.port, data.flows_count, data.processes_count, null);
-                    appendChatMessage("Copilot", `Sync successful! Re-established connection on port **${data.port}** with ecoinvent database context. Indexed **${data.flows_count.toLocaleString()}** flow descriptions and **${data.processes_count.toLocaleString()}** processes. TF-IDF search space initialized and optimized.`);
+                    updateConnectionUI(true, data.port, data.flows_count, data.processes_count, null, data.is_empty_db);
+                    if (data.is_empty_db) {
+                        appendChatMessage("Copilot", `Sync successful! Connected to port **${data.port}** but the active database is empty. Fallback Simulation mode has been activated so you can test all features.`);
+                    } else {
+                        appendChatMessage("Copilot", `Sync successful! Re-established connection on port **${data.port}** with ecoinvent database context. Indexed **${data.flows_count.toLocaleString()}** flow descriptions and **${data.processes_count.toLocaleString()}** processes. TF-IDF search space initialized and optimized.`);
+                    }
                 } else {
-                    updateConnectionUI(false, port, 0, 0, data.error);
+                    updateConnectionUI(false, port, 0, 0, data.error, false);
                     appendChatMessage("System Error", `Sync failed on port ${port}: ${data.error}`);
                     alert(`Sync failed: ${data.error}`);
                 }
@@ -443,6 +475,7 @@ document.addEventListener("DOMContentLoaded", () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
                 items: items,
+                method_id: lciaMethodSelect ? lciaMethodSelect.value : "",
                 parameters: {
                     process_efficiency: parseFloat(paramProcessEfficiency.value),
                     recycle_rate: parseFloat(paramRecycleRate.value),
@@ -525,6 +558,7 @@ document.addEventListener("DOMContentLoaded", () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
                 items: items, 
+                method_id: lciaMethodSelect ? lciaMethodSelect.value : "",
                 num_samples: 500,
                 weights: {
                     GWP: parseFloat(weightGwp.value),
@@ -667,6 +701,57 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             tvlBadge.textContent = "Failed";
             tvlBadge.className = "tvl-indicator failed";
+        }
+
+        // Elemental Verification Update
+        const tvlElementalContainer = document.getElementById("tvl-elemental-container");
+        const tvlElementalBadge = document.getElementById("tvl-elemental-badge");
+        const tvlElementalList = document.getElementById("tvl-elemental-list");
+        
+        if (tvlElementalContainer && tvlElementalBadge && tvlElementalList) {
+            tvlElementalList.innerHTML = "";
+            
+            if (tvl.elemental_discrepancies && Object.keys(tvl.elemental_discrepancies).length > 0) {
+                tvlElementalContainer.style.display = "block";
+                tvlElementalBadge.textContent = "Failed";
+                tvlElementalBadge.className = "tvl-status-badge failed";
+                
+                for (const [el, desc] of Object.entries(tvl.elemental_discrepancies)) {
+                    const row = document.createElement("div");
+                    row.style.display = "flex";
+                    row.style.justifyContent = "space-between";
+                    row.style.alignItems = "center";
+                    row.style.fontSize = "10px";
+                    row.style.padding = "4px 6px";
+                    row.style.background = "var(--bg-card)";
+                    row.style.border = "1px solid var(--border-color)";
+                    row.style.borderRadius = "4px";
+                    row.style.fontFamily = "var(--font-mono)";
+                    row.style.marginTop = "3px";
+                    
+                    const pctErr = (desc.relative_error * 100).toFixed(1);
+                    row.innerHTML = `
+                        <span style="font-weight: bold; color: var(--accent-red);">${el}</span>
+                        <span style="color: var(--text-muted);">${desc.input_kg.toFixed(3)} → ${desc.output_kg.toFixed(3)} kg</span>
+                        <span style="color: var(--accent-red); font-weight: 600;">Δ ${pctErr}%</span>
+                    `;
+                    tvlElementalList.appendChild(row);
+                }
+            } else if (tvl.total_input_mass_kg > 0) {
+                tvlElementalContainer.style.display = "block";
+                tvlElementalBadge.textContent = "Passed";
+                tvlElementalBadge.className = "tvl-status-badge passed";
+                
+                const successMsg = document.createElement("div");
+                successMsg.style.fontSize = "10px";
+                successMsg.style.color = "var(--accent-emerald)";
+                successMsg.style.padding = "4px";
+                successMsg.style.textAlign = "center";
+                successMsg.innerHTML = "✓ Elemental stoichiometry balanced";
+                tvlElementalList.appendChild(successMsg);
+            } else {
+                tvlElementalContainer.style.display = "none";
+            }
         }
 
         // 2. Update Metrics cards (Baseline, Optimized, Change)
@@ -1273,7 +1358,7 @@ document.addEventListener("DOMContentLoaded", () => {
         fetch("/api/compile", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ bom: bomJson })
+            body: JSON.stringify({ bom: bomJson, method_id: lciaMethodSelect ? lciaMethodSelect.value : "" })
         })
         .then(res => res.json())
         .then(data => {
@@ -1302,16 +1387,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 tradeoffChartImg.style.display = "none";
                 justificationWrapper.style.display = "none";
                 
-                const mockTvl = {
+                const realTvl = data.tvl_report || {
                     total_input_mass_kg: bomJson.amount,
                     total_output_mass_kg: bomJson.amount,
                     relative_error: 0.0,
-                    is_balanced: true
+                    is_balanced: true,
+                    elemental_discrepancies: {}
                 };
                 
                 updateDashboardUI({
                     report: { metrics: data.metrics },
-                    tvl_report: mockTvl
+                    tvl_report: realTvl
                 });
                 
                 chatInput.disabled = false;

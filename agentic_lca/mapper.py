@@ -66,8 +66,9 @@ class FlowMapper:
         """Tokenizes text and filters out short words."""
         if not text:
             return []
-        # Lowercase, replace punctuation with spaces, and split
-        text_clean = re.sub(r'[^\w\s\-\.]', ' ', text.lower())
+        # Lowercase, replace hyphens and punctuation with spaces, and split
+        clean_text = text.lower().replace('-', ' ')
+        text_clean = re.sub(r'[^\w\s\.]', ' ', clean_text)
         tokens = text_clean.split()
         return [t for t in tokens if len(t) > 1]
 
@@ -114,7 +115,7 @@ class FlowMapper:
             
         print("TF-IDF mapping index built successfully!")
 
-    def search(self, query, top_k=5, flow_type_filter=None):
+    def search(self, query, top_k=5, flow_type_filter="NOT_ELEMENTARY"):
         """
         Searches the indexed database flows using cosine similarity, enhanced with
         synonym expansions and LLM standard nomenclature translations (RAG-lite).
@@ -146,8 +147,8 @@ class FlowMapper:
             except Exception:
                 pass
                 
-        # Fallback to original query if no expansions
-        if not expanded_queries:
+        # Always include original query to ensure raw term matches are evaluated
+        if query not in expanded_queries:
             expanded_queries.append(query)
             
         combined_scores = {}
@@ -190,18 +191,25 @@ class FlowMapper:
         for flow_id, score in combined_scores.items():
             flow_desc = next((f for f in self.flows if f.id == flow_id), None)
             if flow_desc:
-                if flow_type_filter:
+                if flow_type_filter and flow_type_filter != "ALL":
                     ft = getattr(flow_desc, "flow_type", None)
                     if ft:
                         ft_name = ft.name if hasattr(ft, "name") else str(ft)
-                        filter_name = flow_type_filter.name if hasattr(flow_type_filter, "name") else str(flow_type_filter)
-                        if ft_name != filter_name:
-                            continue
+                        if flow_type_filter == "NOT_ELEMENTARY":
+                            if ft_name == "ELEMENTARY_FLOW":
+                                continue
+                        else:
+                            filter_name = flow_type_filter.name if hasattr(flow_type_filter, "name") else str(flow_type_filter)
+                            if ft_name != filter_name:
+                                continue
                 results.append((flow_desc, score))
                 
         # Sort results by similarity score
         results = sorted(results, key=lambda x: x[1], reverse=True)
-        top_candidates = results[:top_k]
+        
+        # Retrieve a larger candidate pool for LLM re-ranking to allow lower raw TF-IDF matches to be promoted
+        candidate_pool_size = max(15, top_k * 3)
+        top_candidates = results[:candidate_pool_size]
         
         # Apply Generative LLM Re-ranking (Task 1) if LLM is active and we have candidates
         if len(top_candidates) > 1 and self.llm_agent.is_ollama_active():
@@ -210,4 +218,4 @@ class FlowMapper:
             except Exception:
                 pass
                 
-        return top_candidates
+        return top_candidates[:top_k]

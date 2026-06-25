@@ -661,9 +661,12 @@ Output only the JSON object. Do not add any conversational text before or after.
                 "Water": ["water consumption"]
             }
             category_full_names = {}
+            baselines = {}
             for kpi, queries in target_categories.items():
                 found = next((item for item in baseline_results if any(q in item["category_name"].lower() for q in queries)), None)
                 category_full_names[kpi] = found["category_name"] if found else kpi
+                baselines[kpi] = found["amount"] if found else 0.0
+            baselines["Cost"] = baseline_cost
                 
             for item in leaf_items:
                 ex = item["exchange"]
@@ -714,41 +717,114 @@ Output only the JSON object. Do not add any conversational text before or after.
                 recycled_cost = self.cost_registry.get_flow_cost(sub_desc.name, ex.amount, "kg")
                 delta_impacts[flow_id]["Cost"] = recycled_cost - virgin_cost
                 
-            # Step 6: Monte Carlo sampling to find Pareto blends
-            print("\n[Coordinator] Step 6: SAA-Agent - Run surrogate Monte Carlo sorting...")
-            sampled_points = []
-            baselines = {
-                "GWP": baseline_gwp,
-                "Acidification": next((r["amount"] for r in baseline_results if r["category_name"] == category_full_names["Acidification"]), 0.0),
-                "Water": next((r["amount"] for r in baseline_results if r["category_name"] == category_full_names["Water"]), 0.0),
-                "Cost": baseline_cost
-            }
+            # Step 6: NSGA-II Genetic Algorithm Optimization to find Pareto blends
+            print("\n[Coordinator] Step 6: SAA-Agent - Run surrogate NSGA-II genetic optimization...")
+            bounds = [(0.0, 1.0)] * len(substitutes)
+            num_vars = len(bounds)
             
-            import random
-            for _ in range(500):
-                ratios = {}
-                for flow_id in substitutes.keys():
-                    ratios[flow_id] = random.random()
+            sub_ids_list = list(substitutes.keys())
+            
+            def chromosome_to_point(chrom):
+                ratios_named = {}
+                for idx, flow_id in enumerate(sub_ids_list):
+                    flow_name = next(item["exchange"].flow.name for item in leaf_items if item["exchange"].flow.id == flow_id)
+                    ratios_named[flow_name] = chrom[idx]
                     
                 pt_metrics = {}
                 for kpi in baselines.keys():
                     val = baselines[kpi]
-                    for flow_id, r in ratios.items():
+                    for idx, flow_id in enumerate(sub_ids_list):
+                        r = chrom[idx]
                         val += r * delta_impacts[flow_id].get(kpi, 0.0)
                     pt_metrics[kpi] = val
                     
-                ratios_named = {}
-                for flow_id, r in ratios.items():
-                    flow_name = next(item["exchange"].flow.name for item in leaf_items if item["exchange"].flow.id == flow_id)
-                    ratios_named[flow_name] = r
-                    
-                sampled_points.append({
+                return {
                     "ratios": ratios_named,
-                    "metrics": pt_metrics
-                })
+                    "metrics": pt_metrics,
+                    "chromosome": chrom
+                }
                 
-            frontier = get_pareto_frontier(sampled_points)
-            print(f" -> Sampled 500 points. Identified {len(frontier)} Pareto configurations.")
+            # Helper sorting & distance routines
+            from .optimization import fast_non_dominated_sort, calculate_crowding_distance
+            import random
+            
+            def binary_tournament(pop, fronts, crowding_dists):
+                ranks = {}
+                for rank_idx, front in enumerate(fronts):
+                    for p in front:
+                        ranks[p] = rank_idx
+                p1_idx = random.randint(0, len(pop) - 1)
+                p2_idx = random.randint(0, len(pop) - 1)
+                r1 = ranks.get(p1_idx, 9999)
+                r2 = ranks.get(p2_idx, 9999)
+                if r1 < r2:
+                    return pop[p1_idx]
+                elif r2 < r1:
+                    return pop[p2_idx]
+                else:
+                    cd1 = crowding_dists.get(p1_idx, -1.0)
+                    cd2 = crowding_dists.get(p2_idx, -1.0)
+                    return pop[p1_idx] if cd1 > cd2 else pop[p2_idx]
+
+            pop_size = 120
+            generations = 50
+            population = []
+            for _ in range(pop_size):
+                chrom = [random.random() for _ in range(num_vars)]
+                population.append(chromosome_to_point(chrom))
+                
+            for gen in range(generations):
+                offspring = []
+                fronts = fast_non_dominated_sort(population)
+                crowding_dists = {}
+                for front in fronts:
+                    dists = calculate_crowding_distance(front, population)
+                    for idx, d in dists.items():
+                        crowding_dists[idx] = d
+                        
+                while len(offspring) < pop_size:
+                    p1 = binary_tournament(population, fronts, crowding_dists)
+                    p2 = binary_tournament(population, fronts, crowding_dists)
+                    
+                    # Blend Crossover (BLX-alpha)
+                    c1_chrom, c2_chrom = [], []
+                    for g1, g2 in zip(p1["chromosome"], p2["chromosome"]):
+                        alpha = 0.15
+                        min_g, max_g = min(g1, g2), max(g1, g2)
+                        diff = max_g - min_g
+                        c_low = max(0.0, min_g - alpha * diff)
+                        c_high = min(1.0, max_g + alpha * diff)
+                        c1_chrom.append(random.uniform(c_low, c_high))
+                        c2_chrom.append(random.uniform(c_low, c_high))
+                        
+                    # Mutation
+                    for c_chrom in [c1_chrom, c2_chrom]:
+                        for idx in range(num_vars):
+                            if random.random() < 0.25:
+                                delta = random.normalvariate(0, 0.12)
+                                c_chrom[idx] = max(0.0, min(1.0, c_chrom[idx] + delta))
+                                
+                    offspring.append(chromosome_to_point(c1_chrom))
+                    offspring.append(chromosome_to_point(c2_chrom))
+                    
+                combined = population + offspring[:pop_size]
+                combined_fronts = fast_non_dominated_sort(combined)
+                next_pop = []
+                for front in combined_fronts:
+                    front_dists = calculate_crowding_distance(front, combined)
+                    if len(next_pop) + len(front) <= pop_size:
+                        for idx in front:
+                            next_pop.append(combined[idx])
+                    else:
+                        sorted_front = sorted(front, key=lambda idx: front_dists.get(idx, 0.0), reverse=True)
+                        for idx in sorted_front[:pop_size - len(next_pop)]:
+                            next_pop.append(combined[idx])
+                        break
+                population = next_pop
+                
+            final_fronts = fast_non_dominated_sort(population)
+            frontier = [population[idx] for idx in final_fronts[0]]
+            print(f" -> Evolved {generations} generations (pop={pop_size}). Identified {len(frontier)} optimal Pareto configurations.")
             
             # Step 7: LLM Selection (with TOPSIS assistance)
             print("\n[Coordinator] Step 7: Consensus - TOPSIS-Weighted LLM Selection...")

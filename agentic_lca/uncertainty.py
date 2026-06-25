@@ -118,9 +118,9 @@ class UncertaintyPropagator:
         
         # We target GWP, Acidification, and Water Consumption
         target_categories = {
-            "Global Warming": ["global warming"],
-            "Acidification": ["acidification"],
-            "Water Consumption": ["water consumption"]
+            "Global Warming": ["global warming", "climate change", "gwp", "greenhouse", "carbon footprint"],
+            "Acidification": ["acidification", "ap", "acidifying potential"],
+            "Water Consumption": ["water consumption", "water use", "water scarcity", "water depletion", "freshwater consumption"]
         }
         
         baselines = {}

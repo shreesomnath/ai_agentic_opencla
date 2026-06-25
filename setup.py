@@ -14,7 +14,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "lca-copilot=run_pipeline:main"
+            "lca-copilot=agentic_lca.cli:main"
         ]
     },
     author="Somnath Luitel, Dr. Jani Das, Dr. Manmeet Singh",

@@ -64,21 +64,45 @@ class LcaCompiler:
         unit_str = node.get("unit", "kg")
         inputs = node.get("inputs", [])
         
-        # Leaf Node: Match to existing database flow
+        # Leaf Node: Match to existing database flow, or auto-bootstrap if clean database
         if not inputs:
             print(f"[Compiler] Leaf node '{name}' detected. Mapping to database flow...")
             matches = self.mapper.search(name, top_k=1)
             if not matches:
-                raise ValueError(f"Could not map leaf node '{name}' to database flows.")
-            flow_desc, score = matches[0]
-            
-            # Return descriptor reference
-            flow_ref = o.Ref(
-                ref_type=o.RefType.Flow,
-                id=flow_desc.id,
-                name=flow_desc.name,
-                ref_unit=flow_desc.ref_unit
-            )
+                print(f"[Compiler] Flow '{name}' not found. Programmatically bootstrapping new Flow...")
+                flow_id = str(uuid.uuid4())
+                new_flow = o.Flow()
+                new_flow.id = flow_id
+                new_flow.name = name
+                new_flow.flow_type = o.FlowType.PRODUCT_FLOW
+                new_flow.flow_properties = [
+                    o.FlowPropertyFactor(
+                        is_ref_flow_property=True,
+                        conversion_factor=1.0,
+                        flow_property=o.Ref(
+                            ref_type=o.RefType.FlowProperty,
+                            id="93a60a56-a3c8-11da-a746-0800200b9a66", # Mass
+                            name="Mass"
+                        )
+                    )
+                ]
+                self.client.put(new_flow)
+                self.created_flows.append(o.Ref(ref_type=o.RefType.Flow, id=flow_id))
+                
+                flow_ref = o.Ref(
+                    ref_type=o.RefType.Flow,
+                    id=flow_id,
+                    name=name,
+                    ref_unit=unit_str
+                )
+            else:
+                flow_desc, score = matches[0]
+                flow_ref = o.Ref(
+                    ref_type=o.RefType.Flow,
+                    id=flow_desc.id,
+                    name=flow_desc.name,
+                    ref_unit=flow_desc.ref_unit
+                )
             return flow_ref, None
             
         # Intermediate Assembly Node: Compile sub-inputs recursively
