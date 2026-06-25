@@ -34,6 +34,13 @@ def get_unit_refs(client):
     return unit_map
 
 def main():
+    # Check if web dashboard mode is requested
+    if "--web" in sys.argv or "--dashboard" in sys.argv:
+        print("Launching Agentic LCA Web Dashboard...")
+        from app import app
+        app.run(port=5000, debug=False)
+        sys.exit(0)
+
     # Initialize references to clean up in case of failure
     temp_sys_id = None
     temp_proc_id = None

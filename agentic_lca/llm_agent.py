@@ -1,11 +1,13 @@
 import requests
 import json
+import os
 
 class LcaLlmAgent:
     """
     Interfaces with a local Ollama server running open-source LLMs 
     (such as qwen2.5-coder:7b) to provide natural language reasoning,
     hotspot interpretation, and engineering reports.
+    Falls back to cloud APIs (Gemini or OpenAI) if environment keys are set.
     """
     def __init__(self, ollama_url="http://localhost:11434", model="qwen2.5-coder:7b"):
         self.ollama_url = ollama_url
@@ -13,13 +15,89 @@ class LcaLlmAgent:
 
     def is_ollama_active(self):
         """
-        Checks if the local Ollama server is active and accessible.
+        Checks if the local Ollama server is active and accessible,
+        or if a cloud LLM fallback API key (GEMINI_API_KEY or OPENAI_API_KEY) is configured.
         """
+        if os.environ.get("GEMINI_API_KEY") or os.environ.get("OPENAI_API_KEY"):
+            return True
         try:
             response = requests.get(f"{self.ollama_url}/api/tags", timeout=2)
             return response.status_code == 200
         except requests.exceptions.RequestException:
             return False
+
+    def _call_llm(self, prompt, json_format=False):
+        """
+        Unified LLM client caller. Tries local Ollama first, then falls back
+        to cloud APIs if environment keys are set.
+        """
+        # 1. Try local Ollama
+        try:
+            payload = {
+                "model": self.model,
+                "prompt": prompt,
+                "stream": False
+            }
+            if json_format:
+                payload["format"] = "json"
+            response = requests.post(f"{self.ollama_url}/api/generate", json=payload, timeout=20)
+            if response.status_code == 200:
+                return response.json().get("response", "").strip()
+        except Exception:
+            pass
+
+        # 2. Try Gemini API (Using requests directly to keep dependencies zero-install)
+        gemini_key = os.environ.get("GEMINI_API_KEY")
+        if gemini_key:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}]
+            }
+            if json_format:
+                payload["generationConfig"] = {"responseMimeType": "application/json"}
+            try:
+                res = requests.post(url, json=payload, timeout=15)
+                if res.status_code == 200:
+                    data = res.json()
+                    text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                    # Strip markdown code blocks if the LLM wrapped it
+                    if text.startswith("```json") and text.endswith("```"):
+                        text = text[7:-3].strip()
+                    elif text.startswith("```") and text.endswith("```"):
+                        text = text[3:-3].strip()
+                    return text
+            except Exception as e:
+                print(f"[LLM Fallback] Gemini API Error: {e}")
+
+        # 3. Try OpenAI API
+        openai_key = os.environ.get("OPENAI_API_KEY")
+        if openai_key:
+            url = "https://api.openai.com/v1/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {openai_key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "gpt-4o-mini",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.2
+            }
+            if json_format:
+                payload["response_format"] = {"type": "json_object"}
+            try:
+                res = requests.post(url, headers=headers, json=payload, timeout=15)
+                if res.status_code == 200:
+                    text = res.json()["choices"][0]["message"]["content"].strip()
+                    # Strip markdown code blocks if the LLM wrapped it
+                    if text.startswith("```json") and text.endswith("```"):
+                        text = text[7:-3].strip()
+                    elif text.startswith("```") and text.endswith("```"):
+                        text = text[3:-3].strip()
+                    return text
+            except Exception as e:
+                print(f"[LLM Fallback] OpenAI API Error: {e}")
+
+        return None
 
     def generate_engineering_justification(self, report, weights=None):
         """
@@ -28,11 +106,10 @@ class LcaLlmAgent:
         """
         if not self.is_ollama_active():
             return (
-                "LLM justification could not be generated: Local Ollama server is offline. "
-                "Please run 'ollama run qwen2.5-coder:7b' in your terminal."
+                "LLM justification could not be generated: No active LLM backend found. "
+                "Please run a local Ollama server or configure GEMINI_API_KEY / OPENAI_API_KEY."
             )
 
-        # Formulate prompt from report metrics
         metrics = report.get("metrics", {})
         gwp = metrics.get("Global Warming", {})
         acid = metrics.get("Acidification", {})
@@ -64,22 +141,10 @@ Instructions:
 - Summarize the multi-dimensional savings (carbon, acidification, water, cost).
 - Keep the tone academic, precise, and professional. Output only the finished justification paragraph (no conversational prefixes like 'Here is your paragraph').
 """
-
-        payload = {
-            "model": self.model,
-            "prompt": prompt,
-            "stream": False
-        }
-
-        try:
-            response = requests.post(f"{self.ollama_url}/api/generate", json=payload, timeout=60)
-            if response.status_code == 200:
-                result_json = response.json()
-                return result_json.get("response", "").strip()
-            else:
-                return f"Ollama API Error: HTTP {response.status_code} - {response.text}"
-        except Exception as e:
-            return f"Failed to generate LLM text: {e}"
+        response_text = self._call_llm(prompt, json_format=False)
+        if response_text:
+            return response_text
+        return "Failed to generate LLM text: active backend did not return a response."
 
     def suggest_substitute_queries(self, hotspot_flow_name):
         """
@@ -98,24 +163,13 @@ For example, if the material is 'polyethylene, high density', terms might be: 'p
 Format your response as a simple JSON array of strings, for example: ["term 1", "term 2", "term 3"].
 Output only the JSON array and nothing else.
 """
-
-        payload = {
-            "model": self.model,
-            "prompt": prompt,
-            "stream": False,
-            "format": "json"
-        }
-
+        response_text = self._call_llm(prompt, json_format=True)
         try:
-            response = requests.post(f"{self.ollama_url}/api/generate", json=payload, timeout=15)
-            if response.status_code == 200:
-                result_json = response.json()
-                content = result_json.get("response", "").strip()
-                return json.loads(content)
-            else:
-                return [f"{hotspot_flow_name.split(',')[0]} recycled"]
+            if response_text:
+                return json.loads(response_text)
         except Exception:
-            return [f"{hotspot_flow_name.split(',')[0]} recycled"]
+            pass
+        return [f"{hotspot_flow_name.split(',')[0]} recycled"]
 
     def parse_chat_command(self, user_query, exchanges_list, report=None, weights=None):
         """
@@ -125,10 +179,9 @@ Output only the JSON array and nothing else.
         if not self.is_ollama_active():
             return {
                 "action": "chat",
-                "response": "Local LLM Agent is offline. Cannot process natural language chat commands."
+                "response": "No active LLM backend found. Cannot process natural language chat commands."
             }
 
-        # Format the list of exchanges for the LLM
         if exchanges_list:
             flows_str = "\n".join([f"- ID: {ex['id']} | Name: {ex['name']} | Amount: {ex['amount']} {ex['unit']}" for ex in exchanges_list])
             inventory_note = ""
@@ -174,20 +227,10 @@ Your task:
 
 Respond only with a valid JSON object. Do not add any conversational text before or after the JSON.
 """
-
-        payload = {
-            "model": self.model,
-            "prompt": prompt,
-            "stream": False,
-            "format": "json"
-        }
-
+        response_text = self._call_llm(prompt, json_format=True)
         try:
-            response = requests.post(f"{self.ollama_url}/api/generate", json=payload, timeout=20)
-            if response.status_code == 200:
-                result_json = response.json()
-                content = result_json.get("response", "").strip()
-                return json.loads(content)
+            if response_text:
+                return json.loads(response_text)
         except Exception as e:
             return {
                 "action": "chat",
@@ -223,27 +266,15 @@ Evaluate these candidates based on:
 Identify the best order of matches. Return a JSON array of integers representing the 1-based indices of the candidates in order of preference (best match first, e.g. [2, 1, 3, 4, 5]). 
 Output only the JSON array and nothing else.
 """
-        payload = {
-            "model": self.model,
-            "prompt": prompt,
-            "stream": False,
-            "format": "json"
-        }
-        
+        response_text = self._call_llm(prompt, json_format=True)
         try:
-            response = requests.post(f"{self.ollama_url}/api/generate", json=payload, timeout=12)
-            if response.status_code == 200:
-                content = response.json().get("response", "").strip()
-                indices = json.loads(content)
-                
-                # Parse indices list safely
+            if response_text:
+                indices = json.loads(response_text)
                 ranked = []
                 for val in indices:
                     idx = int(val) - 1
                     if 0 <= idx < len(candidates):
                         ranked.append(candidates[idx])
-                        
-                # Add any missing candidates that the LLM forgot to include
                 for c in candidates:
                     if c not in ranked:
                         ranked.append(c)
@@ -273,23 +304,13 @@ Respond ONLY with a JSON object containing the key "expansions" mapped to a list
 
 Do not write conversational text.
 """
-        payload = {
-            "model": self.model,
-            "prompt": prompt,
-            "stream": False,
-            "format": "json"
-        }
+        response_text = self._call_llm(prompt, json_format=True)
         try:
-            response = requests.post(f"{self.ollama_url}/api/generate", json=payload, timeout=10)
-            if response.status_code == 200:
-                content = response.json().get("response", "").strip()
-                import json
-                data = json.loads(content)
+            if response_text:
+                data = json.loads(response_text)
                 expanded = data.get("expansions", [])
                 if isinstance(expanded, list):
                     return [str(item) for item in expanded if item]
         except Exception:
             pass
         return [query]
-
-

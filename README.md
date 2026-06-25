@@ -28,19 +28,14 @@ Agentic LCA features a custom, premium web dashboard supporting dynamic Bill of 
 
 Follow these steps to set up **Agentic LCA** on your local machine:
 
-### 1. Clone & Set Up Python
-Navigate to the directory and install python dependencies using the provided package list:
+### 1. Clone & Install as a Single Python Library (Recommended)
+Register the library globally so you can use the unified `lca-copilot` command line tool directly:
 ```bash
 git clone https://github.com/shreesomnath/ai_agentic_opencla.git
 cd ai_agentic_opencla
-pip install -r requirements.txt
+pip install -e .
 ```
-
-> [!NOTE]
-> For development or to register the global shell command `lca-copilot`, run:
-> ```bash
-> pip install -e .
-> ```
+*(Alternatively, you can just install the requirements using `pip install -r requirements.txt` and run the scripts directly.)*
 
 ### 2. Configure OpenLCA 2.x
 1. Launch **OpenLCA 2.x** and activate your target database (e.g., `ecoinvent` or custom databases).
@@ -49,37 +44,46 @@ pip install -r requirements.txt
    * Set the port to `8080`.
    * Click **Start** (verify the status is "Running").
 
-### 3. Start Your Local LLM (Ollama)
-To enable the automated natural language report justifications and interactive chat copilot:
-1. Download and run **Ollama** from [ollama.com](https://ollama.com) (free, open-source).
-2. Pull the recommended coding and reasoning model in your terminal:
-   ```bash
-   ollama pull qwen2.5-coder:7b
-   ```
-3. Keep Ollama active. The pipeline will automatically connect to it at `http://localhost:11434`.
+### 3. Configure Your LLM Backend (Choose One)
+You have two options to enable the LLM copilot chat:
+
+* **Option A: Cloud API (Easiest - Zero Installation) 🌟**
+  Simply export your Gemini or OpenAI API Key. The library uses direct HTTP calls with zero extra python dependencies:
+  ```bash
+  export GEMINI_API_KEY="your-gemini-api-key"
+  # OR
+  export OPENAI_API_KEY="your-openai-api-key"
+  ```
+* **Option B: Offline/Local LLM (Ollama)**
+  1. Download and run **Ollama** from [ollama.com](https://ollama.com).
+  2. Pull the recommended coder model in your terminal:
+     ```bash
+     ollama pull qwen2.5-coder:7b
+     ```
+  3. Keep Ollama active. The pipeline automatically connects to `http://localhost:11434`.
 
 ---
 
 ## 💻 Running the Tool
 
-You can run the calculations in three modes:
+Once installed as a library, you can run all components using the single `lca-copilot` command:
 
 ### Mode A: Standard Ingestion & Pareto Optimization
 Runs bulk BOM Ingestion, TVL mass checks, sensitivity scans, feedstock optimization, and outputs a trade-offs chart:
 ```bash
-python3 run_pipeline.py
+lca-copilot
 ```
 
-### Mode B: Interactive CLI Copilot (Recommended)
-Enters an interactive command-line chat session to run feedstock substitutions dynamically:
+### Mode B: Interactive CLI Copilot (Command-Line Chat)
+Enters an interactive terminal chat session to ask questions or run feedstock substitutions dynamically:
 ```bash
-python3 run_pipeline.py --chat
+lca-copilot --chat
 ```
 
-### Mode C: Graphical Web Dashboard
+### Mode C: Graphical Web Dashboard (Easiest & Most Visual)
 Launches the premium, theme-toggleable web dashboard with dynamic BOM table editing and visual chat copilot support:
 ```bash
-python3 app.py
+lca-copilot --web
 ```
 After starting the server, open your web browser and navigate to: **`http://127.0.0.1:5000/`**
 
@@ -88,12 +92,30 @@ After starting the server, open your web browser and navigate to: **`http://127.
 ## 📋 Selecting Sample BOMs
 We have bundled pre-configured case studies representing key clean technologies in the `samples/` directory:
 
-| Technology Case Study | Command to Execute |
+| Technology Case Study | Direct CLI Command |
 | :--- | :--- |
-| **Silicon Solar Cell (Default)** | `python3 run_pipeline.py` |
-| **Perovskite Tandem Solar Cell** | `python3 run_pipeline.py --bom samples/perovskite_tandem_cell.csv --chat` |
-| **Wind Turbine Blade** | `python3 run_pipeline.py --bom samples/wind_turbine_blade.csv --chat` |
-| **Lithium-Ion Battery Pack** | `python3 run_pipeline.py --bom samples/lithium_ion_battery.csv --chat` |
+| **Silicon Solar Cell (Default)** | `lca-copilot` |
+| **Perovskite Tandem Solar Cell** | `lca-copilot --bom samples/perovskite_tandem_cell.csv --chat` |
+| **Wind Turbine Blade** | `lca-copilot --bom samples/wind_turbine_blade.csv --chat` |
+| **Lithium-Ion Battery Pack** | `lca-copilot --bom samples/lithium_ion_battery.csv --chat` |
+
+---
+
+## 🧭 Interactive Web Dashboard Guide
+
+When running in **Web Dashboard Mode (`lca-copilot --web`)**, here is how to use the dashboard:
+1. **Load a Case Study**: In the left column under "Case Study Select", choose one of the preloaded technologies (e.g. Silicon Solar Cell) and click "Load Case Study".
+2. **Review Feedstock & Mappings**:
+   - **Flat List**: Shows the flat bill of materials, ecoinvent mapped flows, mapping scores, unit, and prices.
+   - **Hierarchical JSON**: Shows/compiles a multi-level product system.
+   - **Autonomous Loop**: Auto-maps and runs optimization constraints programmatically.
+3. **Verify Thermodynamic Mass Balance**: The TVL indicators (e.g. mass conservation badge, elemental balance status) confirm if the raw inputs match output expectations.
+4. **Tune Scaling & Multi-Criteria Weights**:
+   - Adjust the **Process scaling** input.
+   - Set **TOPSIS weights** for Climate Change (GWP), Acidification, Water Consumption, and Cost to prioritize specific sustainability criteria.
+5. **Interactive Copilot Chat**:
+   - Type queries in the chat box on the right (e.g., *"Why does recycling glass cullet have less water impact?"*).
+   - Instruct the copilot to run feedstock substitutions dynamically: *"replace glass fibre with glass cullet"* or *"what if we use recycled plastic?"*. The chart and engineering justification report will update automatically in real-time!
 
 ---
 
