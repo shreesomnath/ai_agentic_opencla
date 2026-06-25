@@ -105,6 +105,7 @@ class LcaAutonomousCoordinator:
                 ref_unit=matched_flow.ref_unit
             )
             exchange.amount = amount
+            exchange.amount_formula = f"{amount} * (1 + loss_factor) / process_efficiency"
             exchange.unit = o.Ref(ref_type=o.RefType.Unit, id=kg_unit.id, name=kg_unit.name)
             exchange.flow_property = o.Ref(
                 ref_type=o.RefType.FlowProperty,
@@ -147,6 +148,19 @@ class LcaAutonomousCoordinator:
         process.id = process_id
         process.name = f"Autonomous Manufacturing - {process_id[:8]}"
         process.process_type = o.ProcessType.UNIT_PROCESS
+        
+        # Add process parameters
+        eff_param = o.Parameter()
+        eff_param.name = "process_efficiency"
+        eff_param.value = 1.0
+        eff_param.is_input_parameter = True
+        
+        loss_param = o.Parameter()
+        loss_param.name = "loss_factor"
+        loss_param.value = 0.0
+        loss_param.is_input_parameter = True
+        
+        process.parameters = [eff_param, loss_param]
         
         out_exchange = o.Exchange()
         out_exchange.is_input = False
@@ -227,9 +241,31 @@ class LcaAutonomousCoordinator:
                 print(" -> [Coordinator] No Pareto configurations found (no substitutes). Goal cannot be optimized.")
                 return {"success": False, "reason": "No circular feedstock substitutes identified."}
                 
-            # 7. Consensus Decision Making (Ollama LLM)
-            print("\n[Coordinator] Step 7: LCI & SAA Agents Consensus - LLM Optimal Point Selection...")
-            selected_point = self._select_best_point_via_llm(frontier, goal_description)
+            # 7. Consensus Decision Making (Ollama LLM + TOPSIS MCDA)
+            print("\n[Coordinator] Step 7: LCI & SAA Agents Consensus - TOPSIS-Weighted LLM Selection...")
+            from .decision import TopsisDecisionEngine
+            
+            # Simple heuristic mapping from natural language goal to TOPSIS priority weights
+            topsis_weights = {"GWP": 0.25, "Acidification": 0.25, "Water": 0.25, "Cost": 0.25}
+            goal_lower = goal_description.lower()
+            if "carbon" in goal_lower or "gwp" in goal_lower or "emission" in goal_lower or "warming" in goal_lower:
+                topsis_weights["GWP"] = 0.55
+                topsis_weights["Cost"] = 0.15
+            if "cost" in goal_lower or "price" in goal_lower or "cheap" in goal_lower or "economic" in goal_lower:
+                topsis_weights["Cost"] = 0.55
+                topsis_weights["GWP"] = 0.15
+            if "water" in goal_lower or "h2o" in goal_lower:
+                topsis_weights["Water"] = 0.55
+                topsis_weights["GWP"] = 0.15
+                topsis_weights["Cost"] = 0.15
+            if "acid" in goal_lower:
+                topsis_weights["Acidification"] = 0.55
+                topsis_weights["GWP"] = 0.15
+                topsis_weights["Cost"] = 0.15
+                
+            print(f" -> Mapping autonomous goal to TOPSIS weights: {topsis_weights}")
+            ranked_frontier = TopsisDecisionEngine.rank_alternatives(frontier, topsis_weights)
+            selected_point = self._select_best_point_via_llm(ranked_frontier, goal_description)
             print("\n[Coordinator] Optimal Blend selected by Agent Brain:")
             for flow_name, ratio in selected_point["ratios"].items():
                 print(f"  - {flow_name}: {ratio:.2%} recycled alternative")
@@ -239,8 +275,20 @@ class LcaAutonomousCoordinator:
                 
             # 8. LCA-Exe Agent: Commit Redesigned Process
             if commit_to_db:
-                print("\n[Coordinator] Step 8: LCA-Exe Agent - Redesigning Process in Database...")
+                print("\n[Coordinator] Step 8: LCA-Exe Agent - Redesigning Process & Parameters in Database...")
                 self._apply_optimal_blend_permanently(process, selected_point["ratios"])
+                
+                # Apply optimal parameters if present
+                if "parameters" in selected_point and process.parameters:
+                    params = selected_point["parameters"]
+                    print(f" -> Applying optimal parameters: process_efficiency={params.get('process_efficiency', 1.0):.4f}, loss_factor={params.get('loss_factor', 0.0):.4f}")
+                    # Update process parameters values in database
+                    for param in process.parameters:
+                        if param.name == "process_efficiency":
+                            param.value = float(params.get("process_efficiency", 1.0))
+                        elif param.name == "loss_factor":
+                            param.value = float(params.get("loss_factor", 0.0))
+                    self.client.put(process)
                 print(" -> Redesigned process saved permanently.")
                 
                 # Re-build product system to commit links
@@ -681,9 +729,30 @@ Output only the JSON object. Do not add any conversational text before or after.
             frontier = get_pareto_frontier(sampled_points)
             print(f" -> Sampled 500 points. Identified {len(frontier)} Pareto configurations.")
             
-            # Step 7: LLM Selection
-            print("\n[Coordinator] Step 7: Consensus - LLM Optimal Point Selection...")
-            selected_point = self._select_best_point_via_llm(frontier, goal_description)
+            # Step 7: LLM Selection (with TOPSIS assistance)
+            print("\n[Coordinator] Step 7: Consensus - TOPSIS-Weighted LLM Selection...")
+            from .decision import TopsisDecisionEngine
+            
+            topsis_weights = {"GWP": 0.25, "Acidification": 0.25, "Water": 0.25, "Cost": 0.25}
+            goal_lower = goal_description.lower()
+            if "carbon" in goal_lower or "gwp" in goal_lower or "emission" in goal_lower or "warming" in goal_lower:
+                topsis_weights["GWP"] = 0.55
+                topsis_weights["Cost"] = 0.15
+            if "cost" in goal_lower or "price" in goal_lower or "cheap" in goal_lower or "economic" in goal_lower:
+                topsis_weights["Cost"] = 0.55
+                topsis_weights["GWP"] = 0.15
+            if "water" in goal_lower or "h2o" in goal_lower:
+                topsis_weights["Water"] = 0.55
+                topsis_weights["GWP"] = 0.15
+                topsis_weights["Cost"] = 0.15
+            if "acid" in goal_lower:
+                topsis_weights["Acidification"] = 0.55
+                topsis_weights["GWP"] = 0.15
+                topsis_weights["Cost"] = 0.15
+                
+            print(f" -> Mapping autonomous goal to TOPSIS weights: {topsis_weights}")
+            ranked_frontier = TopsisDecisionEngine.rank_alternatives(frontier, topsis_weights)
+            selected_point = self._select_best_point_via_llm(ranked_frontier, goal_description)
             print("\n[Coordinator] Optimal Blend selected by Agent Brain:")
             for flow_name, ratio in selected_point["ratios"].items():
                 print(f"  - {flow_name}: {ratio:.2%} recycled alternative")

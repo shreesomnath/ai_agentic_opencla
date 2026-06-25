@@ -479,6 +479,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         .map(([name, r]) => `${name.split(',')[0]}: ${(r * 100).toFixed(0)}% recycled`)
                         .join(", ");
                     
+                    if (pt.parameters) {
+                        blendStr += ` <span style="color: var(--text-muted); font-size: 11px;">(Eff: ${(pt.parameters.process_efficiency * 100).toFixed(0)}%, Loss: ${(pt.parameters.loss_factor * 100).toFixed(0)}%)</span>`;
+                    }
+                    
                     html += `
                         <tr style="border-bottom: 1px solid var(--border-color); transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--card-bg-hover)'" onmouseout="this.style.backgroundColor='transparent'">
                             <td style="padding: 10px 12px; font-weight: 500;">

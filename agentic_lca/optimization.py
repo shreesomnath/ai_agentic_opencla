@@ -160,14 +160,20 @@ class ParetoOptimizer:
         for i in range(num_samples):
             ratios = {}
             for flow_id in substitutes.keys():
-                ratios[flow_id] = random.random()
+                ratios[flow_id] = random.uniform(0.0, 1.0)
                 
+            # Sample continuous parameters: efficiency in [0.8, 1.2] and loss factor in [0.0, 0.2]
+            sampled_eff = random.uniform(0.8, 1.2)
+            sampled_loss = random.uniform(0.0, 0.2)
+            scale = (1.0 + sampled_loss) / sampled_eff
+            
             pt_metrics = {}
             for kpi in baselines.keys():
                 val = baselines[kpi]
                 for flow_id, r in ratios.items():
                     val += r * delta_impacts[flow_id].get(kpi, 0.0)
-                pt_metrics[kpi] = val
+                # Scale by parameter override scale factor
+                pt_metrics[kpi] = val * scale
                 
             ratios_named = {}
             for flow_id, r in ratios.items():
@@ -176,6 +182,10 @@ class ParetoOptimizer:
                 
             sampled_points.append({
                 "ratios": ratios_named,
+                "parameters": {
+                    "process_efficiency": sampled_eff,
+                    "loss_factor": sampled_loss
+                },
                 "metrics": pt_metrics
             })
             

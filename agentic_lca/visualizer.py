@@ -262,11 +262,15 @@ class LcaVisualizer:
         # Highlight the optimal configuration
         ax.scatter(opt_cost, opt_gwp, color='#fbbf24', edgecolors='black', marker='*', s=250, zorder=5, label=f"TOPSIS Optimal (Score: {opt_pt.get('topsis_score', 0.0):.4f})")
 
-        # Annotate the optimal point with ratio summaries
+        # Annotate the optimal point with ratio summaries and continuous parameters
         blend_summary = []
         for name, r in opt_pt["ratios"].items():
             short_name = name.split(',')[0]
             blend_summary.append(f"{short_name}: {r*100:.0f}%")
+        if "parameters" in opt_pt:
+            params = opt_pt["parameters"]
+            blend_summary.append(f"Eff: {params.get('process_efficiency', 1.0)*100:.0f}%")
+            blend_summary.append(f"Loss: {params.get('loss_factor', 0.0)*100:.0f}%")
         blend_label = "\n".join(blend_summary)
 
         ax.annotate(f"Optimal Blend:\n{blend_label}",
