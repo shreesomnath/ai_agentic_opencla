@@ -171,6 +171,29 @@
 
 
                 </div>
+
+                <!-- Chat Copilot Panel (Moved to Sidebar to balance whitespace) -->
+                <div class="visual-panel chat-panel" style="margin-top: 24px;">
+                    <div class="panel-header">
+                        <h3>
+                            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                            Copilot Decision Chat
+                        </h3>
+                    </div>
+                    <div class="chat-terminal" style="min-height: 320px;">
+                        <div class="chat-logs" id="chat-box" style="max-height: 250px;">
+                            <div class="message system-msg">
+                                <strong>Copilot:</strong> Welcome! Load a study template or build a custom BOM flow. Once optimized, I can explain emission tradeoffs, identify hotspots, or run automated substitutions (e.g. try: <em>"What if we substitute steel with scrap steel?"</em>).
+                            </div>
+                        </div>
+                        <div class="chat-terminal-bar">
+                            <input type="text" id="chat-input" placeholder="Ask Copilot a question...">
+                            <button type="button" id="chat-send-btn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </aside>
 
             <!-- Main Analytics Canvas -->
@@ -290,28 +313,6 @@
                         </div>
                     </div>
 
-                    <!-- Chat Copilot Panel -->
-                    <div class="visual-panel chat-panel">
-                        <div class="panel-header">
-                            <h3>
-                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                                Copilot Decision Chat
-                            </h3>
-                        </div>
-                        <div class="chat-terminal">
-                            <div class="chat-logs" id="chat-box">
-                                <div class="message system-msg">
-                                    <strong>Copilot:</strong> Welcome! Load a study template or build a custom BOM flow. Once optimized, I can explain emission tradeoffs, identify hotspots, or run automated substitutions (e.g. try: <em>"What if we substitute steel with scrap steel?"</em>).
-                                </div>
-                            </div>
-                            <div class="chat-terminal-bar">
-                                <input type="text" id="chat-input" placeholder="Ask Copilot a question or request feedstock swap...">
-                                <button type="button" id="chat-send-btn">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Controls & Verification Grid -->
