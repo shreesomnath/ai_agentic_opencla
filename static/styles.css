@@ -21,6 +21,7 @@
     --text-primary: #F3F4F6;
     --text-secondary: #9EB0C6;
     --text-muted: #6D7E96;
+    --wku-red: #E52E4F;
 
     /* Metric family — desaturated, instrument-grade tones, not Tailwind neons */
     --accent-emerald: #3FA88B;  /* GWP / carbon */
@@ -63,6 +64,7 @@ body.light-theme {
     --text-primary: #111827;
     --text-secondary: #374151;
     --text-muted: #4B5563;
+    --wku-red: #C60C30;
 
     --accent-emerald: #2E8470;
     --accent-violet:  #7C699E;
@@ -1066,9 +1068,9 @@ input[type="range"].custom-slider::-moz-range-thumb {
 body.light-theme .user-msg { color: #ffffff; }
 .copilot-msg {
     align-self: flex-start;
-    background-color: rgba(63, 168, 139, 0.05);
-    border: 1px solid rgba(63, 168, 139, 0.16);
-    border-left: 2px solid var(--accent-emerald);
+    background-color: rgba(198, 12, 48, 0.04);
+    border: 1px solid rgba(198, 12, 48, 0.12);
+    border-left: 3px solid var(--wku-red);
     color: var(--text-primary);
 }
 /* "System Error" sender → app.js emits classes "system" + "error-msg" */
@@ -1144,16 +1146,16 @@ body.light-theme .user-msg { color: #ffffff; }
     gap: 8px;
 }
 
-.app-footer strong { color: var(--text-secondary); font-weight: 600; }
+.app-footer strong { color: var(--wku-red); font-weight: 600; }
 
 .footer-link {
-    color: var(--text-secondary);
+    color: var(--wku-red);
     text-decoration: none;
-    font-weight: 600;
-    border-bottom: 1px solid var(--border-color);
+    font-weight: 700;
+    border-bottom: 1.5px solid transparent;
     transition: color 0.15s ease, border-color 0.15s ease;
 }
-.footer-link:hover { color: var(--signal); border-bottom-color: var(--signal); }
+.footer-link:hover { color: var(--wku-red); border-bottom-color: var(--wku-red); }
 
 /* ============================================================
    Responsive
