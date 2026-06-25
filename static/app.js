@@ -75,15 +75,37 @@ document.addEventListener("DOMContentLoaded", () => {
         method_id: null,
         chart_url_dark: null,
         chart_url_light: null,
-        unc_url_dark: null,
-        unc_url_light: null,
-        active_chart_tab: "tradeoff" // "tradeoff" or "uncertainty"
+        unc_urls_dark: null,
+        unc_urls_light: null,
+        active_chart_tab: "tradeoff", // "tradeoff" or "uncertainty"
+        selected_kpi: "Global Warming" // Default active KPI
     };
 
     // Chart Tab Selection Elements
     const tradeoffTabBtn = document.getElementById("chart-tab-tradeoff");
     const uncertaintyTabBtn = document.getElementById("chart-tab-uncertainty");
     const uncertaintyChartImg = document.getElementById("uncertainty-chart-img");
+
+    // KPI Cards Elements for Uncertainty Chart Toggling
+    const cardGwp = document.getElementById("card-gwp");
+    const cardAcid = document.getElementById("card-acid");
+    const cardWater = document.getElementById("card-water");
+    const cardCost = document.getElementById("card-cost");
+    
+    function selectKpiCard(kpiName, cardElem) {
+        activeState.selected_kpi = kpiName;
+        
+        // Remove 'selected' class from all cards
+        [cardGwp, cardAcid, cardWater, cardCost].forEach(card => {
+            if (card) card.classList.remove("selected");
+        });
+        
+        // Add 'selected' class to the clicked card
+        if (cardElem) cardElem.classList.add("selected");
+        
+        // Update the chart image if uncertainty distribution is visible
+        updateChartImageSource();
+    }
 
     if (tradeoffTabBtn && uncertaintyTabBtn) {
         tradeoffTabBtn.addEventListener("click", () => {
@@ -100,6 +122,11 @@ document.addEventListener("DOMContentLoaded", () => {
             updateChartImageSource();
         });
     }
+
+    if (cardGwp) cardGwp.addEventListener("click", () => selectKpiCard("Global Warming", cardGwp));
+    if (cardAcid) cardAcid.addEventListener("click", () => selectKpiCard("Acidification", cardAcid));
+    if (cardWater) cardWater.addEventListener("click", () => selectKpiCard("Water Consumption", cardWater));
+    if (cardCost) cardCost.addEventListener("click", () => selectKpiCard("Feedstock Cost", cardCost));
 
     // Theme Switcher Logic
     const savedTheme = localStorage.getItem("theme") || "light"; // Default is light/normal theme
@@ -119,6 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function updateChartImageSource() {
         if (!tradeoffChartImg || !uncertaintyChartImg) return;
         const isLight = document.body.classList.contains("light-theme");
+        const chartTitleElem = document.getElementById("chart-active-title");
         
         if (activeState.active_chart_tab === "tradeoff") {
             tradeoffChartImg.style.display = "block";
@@ -127,14 +155,30 @@ document.addEventListener("DOMContentLoaded", () => {
             if (url) {
                 const base = url.split("?")[0];
                 tradeoffChartImg.src = `${base}?t=${Date.now()}`;
+                if (chartTitleElem) {
+                    chartTitleElem.textContent = "Optimization Impact Trade-Offs (Normalized Baseline vs. Optimized)";
+                    chartTitleElem.style.display = "block";
+                }
+            } else {
+                if (chartTitleElem) chartTitleElem.style.display = "none";
             }
         } else {
             tradeoffChartImg.style.display = "none";
             uncertaintyChartImg.style.display = "block";
-            const url = isLight ? activeState.unc_url_light : activeState.unc_url_dark;
-            if (url) {
+            const urls = isLight ? activeState.unc_urls_light : activeState.unc_urls_dark;
+            if (urls && urls[activeState.selected_kpi]) {
+                const url = urls[activeState.selected_kpi];
                 const base = url.split("?")[0];
                 uncertaintyChartImg.src = `${base}?t=${Date.now()}`;
+                if (chartTitleElem) {
+                    chartTitleElem.textContent = `Uncertainty Propagation: ${activeState.selected_kpi} (Monte Carlo Frequency Distribution)`;
+                    chartTitleElem.style.display = "block";
+                }
+            } else {
+                if (chartTitleElem) {
+                    chartTitleElem.textContent = "No uncertainty distribution charts available. Run optimization first.";
+                    chartTitleElem.style.display = "block";
+                }
             }
         }
     }
@@ -239,8 +283,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 activeState.method_id = data.method_id;
                 activeState.chart_url_dark = data.chart_url_dark;
                 activeState.chart_url_light = data.chart_url_light;
-                activeState.unc_url_dark = data.unc_url_dark;
-                activeState.unc_url_light = data.unc_url_light;
+                activeState.unc_urls_dark = data.unc_urls_dark;
+                activeState.unc_urls_light = data.unc_urls_light;
                 
                 // Enable chat console
                 chatInput.disabled = false;
@@ -399,6 +443,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const report = data.report;
         const tvl = data.tvl_report;
         
+        // Select GWP card by default on new calculations to highlight visual selection
+        selectKpiCard("Global Warming", cardGwp);
+        
         // 1. Update TVL Verification Card
         tvlInputMass.textContent = `${tvl.total_input_mass_kg.toFixed(3)} kg`;
         tvlOutputMass.textContent = `${tvl.total_output_mass_kg.toFixed(3)} kg`;
@@ -427,8 +474,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // 3. Update comparison trade-off and uncertainty chart images
         activeState.chart_url_dark = data.chart_url_dark;
         activeState.chart_url_light = data.chart_url_light;
-        activeState.unc_url_dark = data.unc_url_dark;
-        activeState.unc_url_light = data.unc_url_light;
+        activeState.unc_urls_dark = data.unc_urls_dark;
+        activeState.unc_urls_light = data.unc_urls_light;
         
         chartPlaceholder.style.display = "none";
         updateChartImageSource();
@@ -514,8 +561,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     activeState.temp_sys_id = data.temp_sys_id;
                     activeState.chart_url_dark = data.chart_url_dark;
                     activeState.chart_url_light = data.chart_url_light;
-                    activeState.unc_url_dark = data.unc_url_dark;
-                    activeState.unc_url_light = data.unc_url_light;
+                    activeState.unc_urls_dark = data.unc_urls_dark;
+                    activeState.unc_urls_light = data.unc_urls_light;
                     
                     // Update UI elements
                     updateDashboardUI(data);
