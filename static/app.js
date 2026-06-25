@@ -874,40 +874,143 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Load Hierarchical Sample BOM
+    // Load Hierarchical Sample BOM and bind Tree Previewer
+    const bomFileInput = document.getElementById("bom-file-input");
+    const treePreviewSection = document.getElementById("tree-preview-section");
+    const bomTreeContainer = document.getElementById("bom-tree-container");
+
     loadHierarchicalSampleBtn.addEventListener("click", () => {
-        const sampleBom = {
-            "name": "Composite Wind Turbine Blade Model",
-            "amount": 5000.0,
-            "unit": "kg",
-            "inputs": [
-                {
-                    "name": "Fiberglass Composite Structure",
-                    "amount": 3000.0,
+        fetch("/static/wind_turbine_blade_hierarchical.json")
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to fetch sample");
+                return res.text();
+            })
+            .then(text => {
+                bomJsonTextarea.value = text;
+                triggerTreeRender();
+            })
+            .catch(err => {
+                // Fallback to embedded string if network issues
+                const fallbackJson = {
+                    "name": "Composite Wind Turbine Blade Model",
+                    "amount": 5000.0,
                     "unit": "kg",
                     "inputs": [
-                        {"name": "glass cullet, sorted", "amount": 2500.0, "unit": "kg"},
-                        {"name": "polyethylene, high density, granulate", "amount": 500.0, "unit": "kg"}
+                        {
+                            "name": "Fiberglass Composite Structure",
+                            "amount": 3000.0,
+                            "unit": "kg",
+                            "inputs": [
+                                {"name": "glass cullet, sorted", "amount": 2500.0, "unit": "kg"},
+                                {"name": "polyethylene, high density, granulate", "amount": 500.0, "unit": "kg"}
+                            ]
+                        },
+                        {
+                            "name": "Reinforced Structural Steel Core",
+                            "amount": 1500.0,
+                            "unit": "kg",
+                            "inputs": [
+                                {"name": "steel, low-alloyed", "amount": 1400.0, "unit": "kg"},
+                                {"name": "tap water", "amount": 100.0, "unit": "kg"}
+                            ]
+                        },
+                        {
+                            "name": "polyethylene, high density, granulate",
+                            "amount": 500.0,
+                            "unit": "kg"
+                        }
                     ]
-                },
-                {
-                    "name": "Reinforced Structural Steel Core",
-                    "amount": 1500.0,
-                    "unit": "kg",
-                    "inputs": [
-                        {"name": "steel, low-alloyed", "amount": 1400.0, "unit": "kg"},
-                        {"name": "tap water", "amount": 100.0, "unit": "kg"}
-                    ]
-                },
-                {
-                    "name": "polyethylene, high density, granulate",
-                    "amount": 500.0,
-                    "unit": "kg"
-                }
-            ]
-        };
-        bomJsonTextarea.value = JSON.stringify(sampleBom, null, 2);
+                };
+                bomJsonTextarea.value = JSON.stringify(fallbackJson, null, 2);
+                triggerTreeRender();
+            });
     });
+
+    if (bomFileInput) {
+        bomFileInput.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                bomJsonTextarea.value = evt.target.result;
+                triggerTreeRender();
+            };
+            reader.readAsText(file);
+        });
+    }
+
+    if (bomJsonTextarea) {
+        bomJsonTextarea.addEventListener("input", triggerTreeRender);
+    }
+
+    function triggerTreeRender() {
+        const text = bomJsonTextarea.value.trim();
+        if (!text) {
+            treePreviewSection.style.display = "none";
+            return;
+        }
+        try {
+            const json = JSON.parse(text);
+            bomTreeContainer.innerHTML = renderBOMTree(json, 0);
+            treePreviewSection.style.display = "block";
+        } catch (e) {
+            // Keep hidden if JSON is currently invalid
+            treePreviewSection.style.display = "none";
+        }
+    }
+
+    function renderBOMTree(node, depth = 0) {
+        if (!node || typeof node !== "object") return "";
+        const name = node.name || "Unnamed Node";
+        const amount = node.amount !== undefined ? node.amount : 1.0;
+        const unit = node.unit || "kg";
+        const inputs = node.inputs || [];
+        
+        const isAssembly = inputs.length > 0;
+        
+        let html = `<div class="tree-node" style="padding-left: ${depth * 14}px; display: flex; align-items: center; gap: 6px; margin: 4px 0;">`;
+        
+        if (isAssembly) {
+            html += `<span class="tree-toggle" style="cursor: pointer; font-size: 10px; color: var(--accent-indigo); user-select: none;">▼</span>`;
+            html += `<span class="tree-icon">📂</span>`;
+            html += `<span class="tree-name" style="font-weight: 600; color: var(--text-primary);">${name}</span>`;
+        } else {
+            html += `<span class="tree-toggle" style="visibility: hidden; font-size: 10px;">•</span>`;
+            html += `<span class="tree-icon">📄</span>`;
+            html += `<span class="tree-name" style="color: var(--text-secondary);">${name}</span>`;
+        }
+        
+        html += `<span class="tree-qty" style="color: var(--accent-emerald); font-family: monospace; font-size: 10px; margin-left: auto;">${amount.toLocaleString()} ${unit}</span>`;
+        html += `</div>`;
+        
+        if (isAssembly) {
+            html += `<div class="tree-children">`;
+            inputs.forEach(child => {
+                html += renderBOMTree(child, depth + 1);
+            });
+            html += `</div>`;
+        }
+        
+        return html;
+    }
+
+    if (bomTreeContainer) {
+        bomTreeContainer.addEventListener("click", (e) => {
+            if (e.target.classList.contains("tree-toggle")) {
+                const nodeDiv = e.target.closest(".tree-node");
+                const childrenDiv = nodeDiv.nextElementSibling;
+                if (childrenDiv && childrenDiv.classList.contains("tree-children")) {
+                    if (childrenDiv.style.display === "none") {
+                        childrenDiv.style.display = "block";
+                        e.target.textContent = "▼";
+                    } else {
+                        childrenDiv.style.display = "none";
+                        e.target.textContent = "▶";
+                    }
+                }
+            }
+        });
+    }
 
     // Compile & Calculate Hierarchical BOM
     compileHierarchicalBtn.addEventListener("click", () => {

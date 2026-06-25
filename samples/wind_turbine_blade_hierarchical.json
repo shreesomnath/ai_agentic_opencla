@@ -1,0 +1,30 @@
+{
+  "name": "Composite Wind Turbine Blade Model",
+  "amount": 5000.0,
+  "unit": "kg",
+  "inputs": [
+    {
+      "name": "Fiberglass Composite Structure",
+      "amount": 3000.0,
+      "unit": "kg",
+      "inputs": [
+        {"name": "glass cullet, sorted", "amount": 2500.0, "unit": "kg"},
+        {"name": "polyethylene, high density, granulate", "amount": 500.0, "unit": "kg"}
+      ]
+    },
+    {
+      "name": "Reinforced Structural Steel Core",
+      "amount": 1500.0,
+      "unit": "kg",
+      "inputs": [
+        {"name": "steel, low-alloyed", "amount": 1400.0, "unit": "kg"},
+        {"name": "tap water", "amount": 100.0, "unit": "kg"}
+      ]
+    },
+    {
+      "name": "polyethylene, high density, granulate",
+      "amount": 500.0,
+      "unit": "kg"
+    }
+  ]
+}

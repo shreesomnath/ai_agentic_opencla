@@ -122,10 +122,25 @@
                     <!-- Panel 2: Hierarchical BOM Compiler -->
                     <div id="panel-hierarchical" class="tab-panel">
                         <div class="workspace-section">
-                            <label for="bom-json-textarea">Hierarchical BOM Schema (JSON)</label>
-                            <textarea id="bom-json-textarea" class="bom-textarea" rows="14" placeholder="Paste custom nested BOM tree here..."></textarea>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <label for="bom-json-textarea" style="margin: 0; font-weight: 600;">Hierarchical BOM Schema (JSON)</label>
+                                <label for="bom-file-input" style="font-size: 11px; color: var(--accent-indigo); cursor: pointer; text-decoration: underline; margin: 0; font-weight: 600;">
+                                    Upload JSON
+                                    <input type="file" id="bom-file-input" accept=".json" style="display: none;">
+                                </label>
+                            </div>
+                            <textarea id="bom-json-textarea" class="bom-textarea" rows="8" placeholder="Paste or upload custom nested BOM JSON here..."></textarea>
                         </div>
-                        <div class="bom-actions">
+                        
+                        <!-- Visual Tree Previewer -->
+                        <div class="workspace-section" id="tree-preview-section" style="display: none; border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 12px;">
+                            <label style="font-weight: 600; margin-bottom: 6px; display: block;">Visual Assembly Tree Preview</label>
+                            <div id="bom-tree-container" style="background: #18181b; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; max-height: 185px; overflow-y: auto; font-family: monospace; font-size: 11px; line-height: 1.5; color: var(--text-primary);">
+                                <!-- Rendered recursively -->
+                            </div>
+                        </div>
+
+                        <div class="bom-actions" style="margin-top: 12px;">
                             <button type="button" class="btn btn-secondary" id="load-hierarchical-sample-btn">
                                 Wind Blade Sample
                             </button>
