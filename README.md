@@ -122,17 +122,31 @@ When running in **Web Dashboard Mode (`lca-copilot --web`)**, here is how to use
 
 ## 🐳 Reproducibility with Apptainer (Singularity)
 
-For multi-user clusters or zero-install deployments, you can compile and run the system inside an Apptainer container:
+For multi-user clusters or zero-install deployments, you can run the prebuilt container image hosted on GitHub Container Registry (GHCR) using ORAS, or compile it locally:
 
+### Option A: Run Prebuilt Container from GHCR (Recommended)
+You do not need to download the source repository or build the image. Simply run it directly using `apptainer run`:
+```bash
+# 1. Run the default optimization pipeline (uses host network to talk to openLCA)
+apptainer run --network host oras://ghcr.io/shreesomnath/ai_agentic_opencla/lca_copilot:latest
+
+# 2. Launch in interactive chat mode
+apptainer run --network host oras://ghcr.io/shreesomnath/ai_agentic_opencla/lca_copilot:latest --chat
+
+# 3. Launch the graphical web dashboard
+apptainer run --network host oras://ghcr.io/shreesomnath/ai_agentic_opencla/lca_copilot:latest --web
+```
+
+### Option B: Build and Run Container Locally
+If you want to modify the container recipe, build the SIF image yourself:
 ```bash
 # 1. Build the single SIF container image
 apptainer build lca_copilot.sif Apptainer.def
 
-# 2. Run the default optimization pipeline (uses host network to talk to openLCA)
+# 2. Run locally
 apptainer run --network host lca_copilot.sif
-
-# 3. Launch in interactive chat mode
 apptainer run --network host lca_copilot.sif --chat
+apptainer run --network host lca_copilot.sif --web
 ```
 
 ---
