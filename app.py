@@ -907,6 +907,21 @@ def run_optimization():
                     "unit": ex.unit.name if ex.unit else ""
                 })
                 
+        # Save study report md file
+        try:
+            from agentic_lca.cli import write_lca_report_file
+            write_lca_report_file(
+                product_name="Web-Synthesized Product",
+                loaded_bom_path="Web Ingestion Panel",
+                exchanges_list=exchanges_list,
+                active_report=report,
+                simulation_mode=False,
+                port=executor.port if executor else 8080,
+                llm_agent=llm_agent
+            )
+        except Exception as e_rep:
+            print(f"[Warning] Web optimize failed to write study report: {e_rep}")
+
         return jsonify({
             "success": True,
             "report": report,
@@ -1776,6 +1791,20 @@ def chat():
                         "unit": ex_obj.unit.name if ex_obj.unit else ""
                     })
                     
+                try:
+                    from agentic_lca.cli import write_lca_report_file
+                    write_lca_report_file(
+                        product_name="Web-Rebuild Product",
+                        loaded_bom_path="Web Copilot Chat",
+                        exchanges_list=updated_exchanges,
+                        active_report=sub_report,
+                        simulation_mode=False,
+                        port=executor.port if executor else 8080,
+                        llm_agent=llm_agent
+                    )
+                except Exception as e_rep:
+                    print(f"[Warning] Web chat failed to write study report: {e_rep}")
+
                 return jsonify({
                     "action": "substitute",
                     "success": True,
