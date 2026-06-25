@@ -487,6 +487,16 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             justificationWrapper.style.display = "none";
         }
+
+        // 5. Toggle Export CSV button visibility
+        const exportCsvBtn = document.getElementById("export-csv-btn");
+        if (exportCsvBtn) {
+            if (activeState.exchanges && activeState.exchanges.length > 0) {
+                exportCsvBtn.style.display = "inline-flex";
+            } else {
+                exportCsvBtn.style.display = "none";
+            }
+        }
     }
 
     function updateMetricCard(metricData, baseElem, optElem, changeElem, baseUncElem, optUncElem) {
@@ -523,6 +533,43 @@ document.addEventListener("DOMContentLoaded", () => {
     chatInput.addEventListener("keypress", (e) => {
         if (e.key === "Enter") submitChatQuery();
     });
+
+    // 6.1 CSV Export and PDF Printing Listeners
+    const exportCsvBtn = document.getElementById("export-csv-btn");
+    const printReportBtn = document.getElementById("print-report-btn");
+
+    if (exportCsvBtn) {
+        exportCsvBtn.addEventListener("click", exportOptimizedBOMToCSV);
+    }
+    if (printReportBtn) {
+        printReportBtn.addEventListener("click", () => {
+            window.print();
+        });
+    }
+
+    function exportOptimizedBOMToCSV() {
+        if (!activeState.exchanges || activeState.exchanges.length === 0) {
+            alert("No optimized BOM loaded. Please run optimization first.");
+            return;
+        }
+        
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "flow_name,amount,unit\n";
+        
+        activeState.exchanges.forEach(ex => {
+            // Escape double quotes in names
+            const safeName = ex.name.replace(/"/g, '""');
+            csvContent += `"${safeName}",${ex.amount},"${ex.unit}"\n`;
+        });
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `optimized_bom_${activeState.temp_proc_id || "lca"}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 
     function submitChatQuery() {
         const queryText = chatInput.value.trim();
