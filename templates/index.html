@@ -169,95 +169,7 @@
                         </div>
                     </div>
 
-                    <!-- Dynamic Process Parameters (Sliders) -->
-                    <div class="workspace-section" style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 16px;">
-                        <div class="section-title-row">
-                            <h3>Dynamic Process Parameters</h3>
-                        </div>
-                        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                    <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary);">Process Efficiency</label>
-                                    <span id="val-process-efficiency" style="font-family: monospace; font-size: 11px; font-weight: 700; color: var(--accent-indigo);">1.00</span>
-                                </div>
-                                <input type="range" id="param-process-efficiency" min="0.5" max="1.2" step="0.05" value="1.0" style="width: 100%; accent-color: var(--accent-indigo);">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                    <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary);">Recycle Substitute Rate</label>
-                                    <span id="val-recycle-rate" style="font-family: monospace; font-size: 11px; font-weight: 700; color: var(--accent-indigo);">0.00</span>
-                                </div>
-                                <input type="range" id="param-recycle-rate" min="0.0" max="0.9" step="0.05" value="0.0" style="width: 100%; accent-color: var(--accent-indigo);">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                    <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary);">Loss/Scrap Factor</label>
-                                    <span id="val-loss-factor" style="font-family: monospace; font-size: 11px; font-weight: 700; color: var(--accent-indigo);">0.00</span>
-                                </div>
-                                <input type="range" id="param-loss-factor" min="0.0" max="0.3" step="0.05" value="0.0" style="width: 100%; accent-color: var(--accent-indigo);">
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Multi-Criteria Optimization Priorities (TOPSIS) -->
-                    <div class="workspace-section" style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 16px;">
-                        <div class="section-title-row">
-                            <h3>Optimization Priorities (MCDA)</h3>
-                        </div>
-                        <p class="section-desc">Adjust TOPSIS priority weights for multi-criteria tradeoffs scoring</p>
-                        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                    <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary);">Carbon Footprint (GWP) Weight</label>
-                                    <span id="val-weight-gwp" style="font-family: monospace; font-size: 11px; font-weight: 700; color: var(--accent-indigo);">40%</span>
-                                </div>
-                                <input type="range" id="weight-gwp" min="0" max="100" step="5" value="40" style="width: 100%; accent-color: var(--accent-indigo);">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                    <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary);">Acidification Weight</label>
-                                    <span id="val-weight-acid" style="font-family: monospace; font-size: 11px; font-weight: 700; color: var(--accent-indigo);">15%</span>
-                                </div>
-                                <input type="range" id="weight-acid" min="0" max="100" step="5" value="15" style="width: 100%; accent-color: var(--accent-indigo);">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                    <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary);">Water Consumption Weight</label>
-                                    <span id="val-weight-water" style="font-family: monospace; font-size: 11px; font-weight: 700; color: var(--accent-indigo);">15%</span>
-                                </div>
-                                <input type="range" id="weight-water" min="0" max="100" step="5" value="15" style="width: 100%; accent-color: var(--accent-indigo);">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                    <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary);">Financial Material Cost Weight</label>
-                                    <span id="val-weight-cost" style="font-family: monospace; font-size: 11px; font-weight: 700; color: var(--accent-indigo);">30%</span>
-                                </div>
-                                <input type="range" id="weight-cost" min="0" max="100" step="5" value="30" style="width: 100%; accent-color: var(--accent-indigo);">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Thermodynamic Mass Balance Check -->
-                    <div class="verification-status-panel">
-                        <div class="verification-header">
-                            <span>Mass Balance Verification (TVL)</span>
-                            <span class="tvl-status-badge" id="tvl-badge">Not Checked</span>
-                        </div>
-                        <div class="verification-stats">
-                            <div class="stat-pill">
-                                <label>Inputs</label>
-                                <span id="tvl-input-mass">0.00 kg</span>
-                            </div>
-                            <div class="stat-pill">
-                                <label>Outputs</label>
-                                <span id="tvl-output-mass">0.00 kg</span>
-                            </div>
-                            <div class="stat-pill">
-                                <label>Error</label>
-                                <span id="tvl-error">0.00%</span>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </aside>
 
@@ -397,6 +309,112 @@
                                 <button type="button" id="chat-send-btn">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls & Verification Grid -->
+                <div class="controls-row">
+                    <!-- Dynamic Process Parameters (Sliders) -->
+                    <div class="visual-panel control-panel-card">
+                        <div class="panel-header">
+                            <h3>
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                Process Scaling
+                            </h3>
+                        </div>
+                        <div class="control-card-body" style="display: flex; flex-direction: column; gap: 14px; flex: 1; justify-content: center;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Process Efficiency</label>
+                                    <span id="val-process-efficiency" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-emerald);">1.00</span>
+                                </div>
+                                <input type="range" id="param-process-efficiency" min="0.5" max="1.2" step="0.05" value="1.0" class="custom-slider">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Recycle Substitute Rate</label>
+                                    <span id="val-recycle-rate" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-emerald);">0.00</span>
+                                </div>
+                                <input type="range" id="param-recycle-rate" min="0.0" max="0.9" step="0.05" value="0.0" class="custom-slider">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Loss/Scrap Factor</label>
+                                    <span id="val-loss-factor" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-emerald);">0.00</span>
+                                </div>
+                                <input type="range" id="param-loss-factor" min="0.0" max="0.3" step="0.05" value="0.0" class="custom-slider">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Multi-Criteria Optimization Priorities (TOPSIS) -->
+                    <div class="visual-panel control-panel-card">
+                        <div class="panel-header">
+                            <h3>
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                TOPSIS MCDA Weights
+                            </h3>
+                        </div>
+                        <div class="control-card-body" style="display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: center;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                                    <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Carbon (GWP) Weight</label>
+                                    <span id="val-weight-gwp" style="font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; color: var(--accent-violet);">40%</span>
+                                </div>
+                                <input type="range" id="weight-gwp" min="0" max="100" step="5" value="40" class="custom-slider">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                                    <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Acidification Weight</label>
+                                    <span id="val-weight-acid" style="font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; color: var(--accent-violet);">15%</span>
+                                </div>
+                                <input type="range" id="weight-acid" min="0" max="100" step="5" value="15" class="custom-slider">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                                    <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Water Weight</label>
+                                    <span id="val-weight-water" style="font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; color: var(--accent-violet);">15%</span>
+                                </div>
+                                <input type="range" id="weight-water" min="0" max="100" step="5" value="15" class="custom-slider">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                                    <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Material Cost Weight</label>
+                                    <span id="val-weight-cost" style="font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; color: var(--accent-violet);">30%</span>
+                                </div>
+                                <input type="range" id="weight-cost" min="0" max="100" step="5" value="30" class="custom-slider">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thermodynamic Mass Balance Check -->
+                    <div class="visual-panel control-panel-card">
+                        <div class="panel-header">
+                            <h3>
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                                TVL Mass Balance
+                            </h3>
+                        </div>
+                        <div class="control-card-body" style="display: flex; flex-direction: column; gap: 14px; flex: 1; justify-content: center;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                                <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Verification Status</span>
+                                <span class="tvl-status-badge" id="tvl-badge">Not Checked</span>
+                            </div>
+                            <div class="verification-stats" style="display: flex; gap: 8px; width: 100%;">
+                                <div class="stat-pill" style="flex: 1; padding: 8px 10px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; text-align: center;">
+                                    <label style="font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px;">Inputs</label>
+                                    <span id="tvl-input-mass" style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; color: var(--text-primary);">0.00 kg</span>
+                                </div>
+                                <div class="stat-pill" style="flex: 1; padding: 8px 10px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; text-align: center;">
+                                    <label style="font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px;">Outputs</label>
+                                    <span id="tvl-output-mass" style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; color: var(--text-primary);">0.00 kg</span>
+                                </div>
+                            </div>
+                            <div class="stat-pill" style="padding: 8px 10px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; text-align: center; width: 100%;">
+                                <label style="font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px;">Stoichiometric Balance Error</label>
+                                <span id="tvl-error" style="font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; color: var(--text-primary);">0.00%</span>
                             </div>
                         </div>
                     </div>
