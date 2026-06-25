@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const chatSendBtn = document.getElementById("chat-send-btn");
     const chatBox = document.getElementById("chat-box");
     const themeToggle = document.getElementById("theme-toggle");
+    const activeAssemblyIndicator = document.getElementById("active-assembly-indicator");
     
     // Dynamic Process Parameters Sliders
     const paramProcessEfficiency = document.getElementById("param-process-efficiency");
@@ -67,8 +68,115 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
     
-    const openlcaStatus = document.getElementById("openlca-status");
+    const openlcaStatusDot = document.getElementById("openlca-status-dot");
+    const openlcaStatusText = document.getElementById("openlca-status-text");
+    const openlcaDbStats = document.getElementById("openlca-db-stats");
+    const openlcaFlowsCount = document.getElementById("openlca-flows-count");
+    const openlcaProcessesCount = document.getElementById("openlca-processes-count");
+    const openlcaPortInput = document.getElementById("openlca-port-input");
+    const openlcaSyncBtn = document.getElementById("openlca-sync-btn");
     const ollamaStatus = document.getElementById("ollama-status");
+
+    function updateConnectionUI(connected, port, flowsCount, processesCount, errorMsg) {
+        if (connected) {
+            if (openlcaStatusDot) {
+                openlcaStatusDot.classList.remove("offline");
+                openlcaStatusDot.classList.add("online");
+            }
+            if (openlcaStatusText) openlcaStatusText.textContent = "openLCA: Connected";
+            if (openlcaPortInput) openlcaPortInput.value = port;
+            if (openlcaDbStats) openlcaDbStats.style.display = "inline-block";
+            if (openlcaFlowsCount) openlcaFlowsCount.textContent = flowsCount.toLocaleString();
+            if (openlcaProcessesCount) openlcaProcessesCount.textContent = processesCount.toLocaleString();
+        } else {
+            if (openlcaStatusDot) {
+                openlcaStatusDot.classList.remove("online");
+                openlcaStatusDot.classList.add("offline");
+            }
+            if (openlcaStatusText) openlcaStatusText.textContent = "openLCA: Offline";
+            if (openlcaDbStats) openlcaDbStats.style.display = "none";
+            if (errorMsg) {
+                console.warn("openLCA Connection Error:", errorMsg);
+            }
+        }
+    }
+
+    function checkInitialConnectionStatus() {
+        fetch("/api/status")
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    updateConnectionUI(data.connected, data.port, data.flows_count, data.processes_count, data.error);
+                } else {
+                    updateConnectionUI(false, 8080, 0, 0, data.error);
+                }
+            })
+            .catch(err => {
+                updateConnectionUI(false, 8080, 0, 0, err.message);
+            });
+    }
+
+    function checkOllamaStatus() {
+        fetch("/api/samples")
+            .then(() => {
+                if (ollamaStatus) {
+                    ollamaStatus.classList.remove("offline");
+                    ollamaStatus.classList.add("online");
+                }
+            })
+            .catch(() => {
+                if (ollamaStatus) {
+                    ollamaStatus.classList.remove("online");
+                    ollamaStatus.classList.add("offline");
+                }
+            });
+    }
+
+    if (openlcaSyncBtn) {
+        openlcaSyncBtn.addEventListener("click", () => {
+            const port = parseInt(openlcaPortInput.value) || 8080;
+            
+            openlcaSyncBtn.classList.add("syncing");
+            openlcaSyncBtn.disabled = true;
+            if (openlcaPortInput) openlcaPortInput.disabled = true;
+            
+            appendChatMessage("System", `Syncing and rebuilding TF-IDF search cache with openLCA on port ${port}...`);
+            
+            fetch("/api/sync", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ port: port })
+            })
+            .then(res => res.json())
+            .then(data => {
+                openlcaSyncBtn.classList.remove("syncing");
+                openlcaSyncBtn.disabled = false;
+                if (openlcaPortInput) openlcaPortInput.disabled = false;
+                
+                if (data.success) {
+                    updateConnectionUI(true, data.port, data.flows_count, data.processes_count, null);
+                    appendChatMessage("Copilot", `Sync successful! Re-established connection on port **${data.port}** with ecoinvent database context. Indexed **${data.flows_count.toLocaleString()}** flow descriptions and **${data.processes_count.toLocaleString()}** processes. TF-IDF search space initialized and optimized.`);
+                } else {
+                    updateConnectionUI(false, port, 0, 0, data.error);
+                    appendChatMessage("System Error", `Sync failed on port ${port}: ${data.error}`);
+                    alert(`Sync failed: ${data.error}`);
+                }
+            })
+            .catch(err => {
+                openlcaSyncBtn.classList.remove("syncing");
+                openlcaSyncBtn.disabled = false;
+                if (openlcaPortInput) openlcaPortInput.disabled = false;
+                
+                updateConnectionUI(false, port, 0, 0, err.message);
+                appendChatMessage("System Error", `Sync failed due to network error: ${err.message}`);
+                alert(`Network error during sync: ${err.message}`);
+            });
+        });
+    }
+
+    // Run connection status verification
+    checkInitialConnectionStatus();
+    checkOllamaStatus();
     
     // Tabs & Panels
     const tabFlat = document.getElementById("tab-flat");
@@ -137,6 +245,8 @@ document.addEventListener("DOMContentLoaded", () => {
         active_chart_tab: "tradeoff", // "tradeoff" or "uncertainty"
         selected_kpi: "Global Warming" // Default active KPI
     };
+
+    let activeCustomParameterOverrides = {};
 
     // Chart Tab Selection Elements
     const tradeoffTabBtn = document.getElementById("chart-tab-tradeoff");
@@ -267,6 +377,9 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(data => {
                 if (data.success) {
                     bomTbody.innerHTML = ""; // Clear table
+                    if (activeAssemblyIndicator) {
+                        activeAssemblyIndicator.style.display = "none";
+                    }
                     data.items.forEach(item => addBomRow(item.flow_name, item.amount, item.unit));
                 } else {
                     alert("Error loading BOM study: " + data.error);
@@ -340,7 +453,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     Acidification: parseFloat(weightAcid.value),
                     Water: parseFloat(weightWater.value),
                     Cost: parseFloat(weightCost.value)
-                }
+                },
+                custom_parameters: Object.values(activeCustomParameterOverrides)
             })
         })
         .then(res => res.json())
@@ -697,7 +811,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     Acidification: parseFloat(weightAcid.value),
                     Water: parseFloat(weightWater.value),
                     Cost: parseFloat(weightCost.value)
-                }
+                },
+                custom_parameters: Object.values(activeCustomParameterOverrides)
             })
         })
         .then(res => res.json())
@@ -736,10 +851,22 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    function formatMarkdown(text) {
+        if (!text) return "";
+        return text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>');
+    }
+
     function appendChatMessage(sender, text) {
         const msgDiv = document.createElement("div");
-        msgDiv.className = `message ${sender.toLowerCase()}-msg`;
-        msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
+        const className = sender.toLowerCase().replace(/\s+/g, '-');
+        if (className === "system-error") {
+            msgDiv.className = `message system error-msg`;
+        } else {
+            msgDiv.className = `message ${className}-msg`;
+        }
+        msgDiv.innerHTML = `<strong>${sender}:</strong> ${formatMarkdown(text)}`;
         chatBox.appendChild(msgDiv);
         
         // Auto-scroll chat box to bottom
@@ -1013,6 +1140,9 @@ document.addEventListener("DOMContentLoaded", () => {
         bomJsonTextarea.addEventListener("input", triggerTreeRender);
     }
 
+    let nodeIndex = 0;
+    window.currentBOMTreeNodes = {};
+
     function triggerTreeRender() {
         const text = bomJsonTextarea.value.trim();
         if (!text) {
@@ -1021,6 +1151,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         try {
             const json = JSON.parse(text);
+            nodeIndex = 0;
+            window.currentBOMTreeNodes = {};
             bomTreeContainer.innerHTML = renderBOMTree(json, 0);
             treePreviewSection.style.display = "block";
         } catch (e) {
@@ -1037,6 +1169,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const inputs = node.inputs || [];
         
         const isAssembly = inputs.length > 0;
+        const nodeId = "node-" + nodeIndex++;
+        window.currentBOMTreeNodes[nodeId] = node;
         
         let html = `<div class="tree-node" style="padding-left: ${depth * 14}px; display: flex; align-items: center; gap: 6px; margin: 4px 0;">`;
         
@@ -1044,6 +1178,7 @@ document.addEventListener("DOMContentLoaded", () => {
             html += `<span class="tree-toggle" style="cursor: pointer; font-size: 10px; color: var(--accent-indigo); user-select: none;">▼</span>`;
             html += `<span class="tree-icon">📂</span>`;
             html += `<span class="tree-name" style="font-weight: 600; color: var(--text-primary);">${name}</span>`;
+            html += `<span class="optimize-target-action" data-node-id="${nodeId}" style="margin-left: 8px; font-size: 9px; cursor: pointer; color: var(--accent-indigo); text-decoration: underline; font-weight: 500; border: 1px solid var(--border-color); border-radius: 4px; padding: 1px 4px; background: var(--bg-card); transition: all 0.2s;" title="Click to optimize this assembly in Flat List">Target for optimization</span>`;
         } else {
             html += `<span class="tree-toggle" style="visibility: hidden; font-size: 10px;">•</span>`;
             html += `<span class="tree-icon">📄</span>`;
@@ -1077,6 +1212,45 @@ document.addEventListener("DOMContentLoaded", () => {
                         childrenDiv.style.display = "none";
                         e.target.textContent = "▶";
                     }
+                }
+            }
+            
+            if (e.target.classList.contains("optimize-target-action")) {
+                const nodeId = e.target.getAttribute("data-node-id");
+                const node = window.currentBOMTreeNodes[nodeId];
+                if (node) {
+                    // Remove highlight from previous target
+                    document.querySelectorAll(".tree-node").forEach(el => el.classList.remove("selected-target-node"));
+                    
+                    // Add highlight to current target
+                    const nodeDiv = e.target.closest(".tree-node");
+                    if (nodeDiv) {
+                        nodeDiv.classList.add("selected-target-node");
+                    }
+                    
+                    const inputs = node.inputs || [];
+                    if (inputs.length === 0) {
+                        alert(`Leaf node '${node.name}' has no child inputs to optimize. Please select an assembly node.`);
+                        return;
+                    }
+                    
+                    // Populate Flat BOM table with this assembly's inputs
+                    bomTbody.innerHTML = "";
+                    inputs.forEach(inp => {
+                        addBomRow(inp.name, inp.amount, inp.unit || "kg");
+                    });
+                    
+                    // Update active assembly indicator in Flat List tab
+                    if (activeAssemblyIndicator) {
+                        activeAssemblyIndicator.textContent = `🎯 Active Target: ${node.name} (Sub-assembly of Compiled BOM)`;
+                        activeAssemblyIndicator.style.display = "block";
+                    }
+                    
+                    // Switch tab to Flat List
+                    tabFlat.click();
+                    
+                    // Push a message to Copilot chat to inform user
+                    appendChatMessage("System", `Loaded sub-inputs of intermediate assembly **${node.name}** into the Flat List editor. You can now tweak the parameters or run multi-objective Pareto optimization specifically for this part of the supply chain tree.`);
                 }
             }
         });
@@ -1156,4 +1330,242 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Calculation network error: " + err);
         });
     });
+
+    // Custom Database Parameters Override Logic
+    const customParamFeedstockSelect = document.getElementById("custom-param-feedstock-select");
+    const customParametersSlidersList = document.getElementById("custom-parameters-sliders-list");
+
+    function updateCustomParamFeedstockDropdown() {
+        if (!customParamFeedstockSelect) return;
+        
+        const currentSel = customParamFeedstockSelect.value;
+        customParamFeedstockSelect.innerHTML = `<option value="">-- Tune background feedstock --</option>`;
+        
+        const uniqueNames = new Set();
+        const rows = bomTbody.querySelectorAll("tr");
+        rows.forEach(row => {
+            const flowNameInput = row.querySelector(".row-flow-name");
+            if (flowNameInput) {
+                const name = flowNameInput.value.trim();
+                if (name) uniqueNames.add(name);
+            }
+        });
+        
+        uniqueNames.forEach(name => {
+            const opt = document.createElement("option");
+            opt.value = name;
+            opt.textContent = name;
+            if (name === currentSel) opt.selected = true;
+            customParamFeedstockSelect.appendChild(opt);
+        });
+    }
+
+    sampleSelect.addEventListener("change", () => {
+        setTimeout(updateCustomParamFeedstockDropdown, 400);
+    });
+    addRowBtn.addEventListener("click", () => {
+        setTimeout(updateCustomParamFeedstockDropdown, 100);
+    });
+    bomTbody.addEventListener("click", (e) => {
+        if (e.target.classList.contains("delete-row-btn")) {
+            setTimeout(updateCustomParamFeedstockDropdown, 100);
+        }
+    });
+
+    if (customParamFeedstockSelect) {
+        customParamFeedstockSelect.addEventListener("change", () => {
+            const flowName = customParamFeedstockSelect.value;
+            if (!flowName) {
+                customParametersSlidersList.innerHTML = `<div style="font-size: 11px; text-align: center; color: var(--text-muted); padding: 8px 0; font-family: var(--font-sans);">No database parameters loaded.</div>`;
+                return;
+            }
+            
+            customParametersSlidersList.innerHTML = `<div style="font-size: 11px; text-align: center; color: var(--text-secondary); padding: 8px 0; font-family: var(--font-sans);">Loading parameters...</div>`;
+            
+            fetch(`/api/process-parameters?flow_name=${encodeURIComponent(flowName)}`)
+                .then(res => res.json())
+                .then(data => {
+                    customParametersSlidersList.innerHTML = "";
+                    if (data.success && data.parameters && data.parameters.length > 0) {
+                        data.parameters.forEach(param => {
+                            const minVal = param.value > 0 ? param.value * 0.5 : -5.0;
+                            const maxVal = param.value > 0 ? param.value * 1.5 : 5.0;
+                            const stepVal = (maxVal - minVal) / 20.0;
+                            
+                            const currentVal = activeCustomParameterOverrides[param.name] 
+                                ? activeCustomParameterOverrides[param.name].value 
+                                : param.value;
+                                
+                            const row = document.createElement("div");
+                            row.className = "slider-row";
+                            row.innerHTML = `
+                                <div class="slider-row-head">
+                                    <span class="slider-label" title="${param.description || param.name}">${param.name}</span>
+                                    <span class="slider-value" id="val-custom-${param.name}">${currentVal.toFixed(3)}</span>
+                                </div>
+                                <input type="range" min="${minVal}" max="${maxVal}" step="${stepVal}" value="${currentVal}" class="custom-slider" id="slider-custom-${param.name}">
+                            `;
+                            
+                            row.querySelector("input").addEventListener("input", (evt) => {
+                                const val = parseFloat(evt.target.value);
+                                document.getElementById(`val-custom-${param.name}`).textContent = val.toFixed(3);
+                                activeCustomParameterOverrides[param.name] = {
+                                    name: param.name,
+                                    value: val,
+                                    process_id: param.process_id,
+                                    process_name: param.process_name
+                                };
+                            });
+                            
+                            customParametersSlidersList.appendChild(row);
+                        });
+                    } else {
+                        customParametersSlidersList.innerHTML = `<div style="font-size: 11px; text-align: center; color: var(--text-muted); padding: 8px 0; font-family: var(--font-sans);">No adjustable parameters found in this process.</div>`;
+                    }
+                })
+                .catch(err => {
+                    customParametersSlidersList.innerHTML = `<div style="font-size: 11px; text-align: center; color: var(--accent-red); padding: 8px 0; font-family: var(--font-sans);">Error: ${err.message}</div>`;
+                });
+        });
+    }
+
+    setTimeout(updateCustomParamFeedstockDropdown, 500);
+
+    // Database Diagnostics (Database Doctor) UI Logic
+    const btnScanDb = document.getElementById("btn-scan-db");
+    const btnHealDb = document.getElementById("btn-heal-db");
+    const doctorHealthStatus = document.getElementById("doctor-health-status");
+    const doctorDefectsList = document.getElementById("doctor-defects-list");
+    let activeStateDefects = [];
+
+    if (btnScanDb) {
+        btnScanDb.addEventListener("click", () => {
+            let items = [];
+            if (activeBomMode === "flat") {
+                const rows = bomTbody.querySelectorAll("tr");
+                rows.forEach(row => {
+                    const flowNameInput = row.querySelector(".row-flow-name");
+                    if (flowNameInput && flowNameInput.value.trim()) {
+                        items.push({ flow_name: flowNameInput.value.trim() });
+                    }
+                });
+            } else {
+                const text = bomJsonTextarea.value.trim();
+                if (text) {
+                    try {
+                        const parsed = JSON.parse(text);
+                        function collectNames(node) {
+                            let list = [{ flow_name: node.name }];
+                            if (node.inputs) {
+                                node.inputs.forEach(child => {
+                                    list = list.concat(collectNames(child));
+                                });
+                            }
+                            return list;
+                        }
+                        items = collectNames(parsed);
+                    } catch(e) {
+                        alert("Invalid JSON schema in text editor. Cannot scan context.");
+                        return;
+                    }
+                }
+            }
+
+            if (items.length === 0) {
+                alert("BOM is empty. Load a case study or insert custom items first to scan their database context.");
+                return;
+            }
+
+            // UI feedback
+            btnScanDb.disabled = true;
+            btnScanDb.querySelector("span").textContent = "Scanning...";
+            doctorHealthStatus.textContent = "Scanning...";
+            doctorHealthStatus.className = "tvl-status-badge"; // Remove passed/failed classes
+            doctorDefectsList.style.display = "none";
+            btnHealDb.style.display = "none";
+
+            fetch("/api/diagnose", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ items: items })
+            })
+            .then(res => res.json())
+            .then(data => {
+                btnScanDb.disabled = false;
+                btnScanDb.querySelector("span").textContent = "Scan Context";
+
+                if (data.success) {
+                    activeStateDefects = data.defects;
+                    if (data.defects.length === 0) {
+                        doctorHealthStatus.textContent = "Healthy";
+                        doctorHealthStatus.className = "tvl-status-badge passed";
+                        doctorDefectsList.style.display = "none";
+                        btnHealDb.style.display = "none";
+                        appendChatMessage("System", `Database diagnostics complete. Scanned **${data.scanned_count}** process contexts. No anomalies or hollow technosphere inputs detected! Context database is clean.`);
+                    } else {
+                        doctorHealthStatus.textContent = `Defects (${data.defects.length})`;
+                        doctorHealthStatus.className = "tvl-status-badge failed";
+                        
+                        // Render defects list
+                        let html = "";
+                        data.defects.forEach(d => {
+                            html += `<div style="margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border-color);">
+                                <strong style="color: var(--wku-red);">${d.process_name || 'Process'}:</strong> [${d.type}] ${d.message}
+                            </div>`;
+                        });
+                        doctorDefectsList.innerHTML = html;
+                        doctorDefectsList.style.display = "block";
+                        btnHealDb.style.display = "inline-block";
+                        
+                        appendChatMessage("System", `Database diagnostics complete. Scanned **${data.scanned_count}** process contexts. Identified **${data.defects.length}** anomalies (e.g. missing mass factors, hollow inputs). You can click **Heal Defects** to repair them.`);
+                    }
+                } else {
+                    doctorHealthStatus.textContent = "Error";
+                    doctorHealthStatus.className = "tvl-status-badge failed";
+                    appendChatMessage("System Error", `Database diagnosis failed: ${data.error}`);
+                }
+            })
+            .catch(err => {
+                btnScanDb.disabled = false;
+                btnScanDb.querySelector("span").textContent = "Scan Context";
+                doctorHealthStatus.textContent = "Error";
+                doctorHealthStatus.className = "tvl-status-badge failed";
+                appendChatMessage("System Error", `Diagnostics network failure: ${err.message}`);
+            });
+        });
+    }
+
+    if (btnHealDb) {
+        btnHealDb.addEventListener("click", () => {
+            if (activeStateDefects.length === 0) return;
+
+            btnHealDb.disabled = true;
+            btnHealDb.querySelector("span").textContent = "Healing...";
+
+            fetch("/api/heal", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ defects: activeStateDefects })
+            })
+            .then(res => res.json())
+            .then(data => {
+                btnHealDb.disabled = false;
+                btnHealDb.querySelector("span").textContent = "Heal Defects";
+
+                if (data.success) {
+                    appendChatMessage("Copilot", `Database Doctor: **${data.message}** Re-evaluating database health...`);
+                    btnScanDb.click(); // Re-scan context to verify healing
+                } else {
+                    appendChatMessage("System Error", `Self-healing failed: ${data.error}`);
+                    alert("Healing failed: " + data.error);
+                }
+            })
+            .catch(err => {
+                btnHealDb.disabled = false;
+                btnHealDb.querySelector("span").textContent = "Heal Defects";
+                appendChatMessage("System Error", `Healing network error: ${err.message}`);
+                alert("Network error during self-healing: " + err.message);
+            });
+        });
+    }
 });

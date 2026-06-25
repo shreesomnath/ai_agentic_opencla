@@ -46,9 +46,117 @@ def get_cached_units(client):
                 UNIT_MAP[ex.unit.name.lower()] = ex.unit
     return UNIT_MAP
 
+# Connection configurations & global variables
+CURRENT_IPC_PORT = 8080
+executor = None
+mapper = None
+CONNECTION_SUCCESS = False
+CONNECTION_ERROR = None
+
+def init_ipc_connection(port=8080):
+    global executor, mapper, CURRENT_IPC_PORT, CONNECTION_SUCCESS, CONNECTION_ERROR
+    CURRENT_IPC_PORT = port
+    print(f"Initializing global LcaExecutor and FlowMapper on port {port}...")
+    try:
+        executor = LcaExecutor(port=port)
+        # Test connection by querying a quick descriptor
+        executor.client.get_descriptors(o.FlowProperty)
+        mapper = FlowMapper(executor)
+        CONNECTION_SUCCESS = True
+        CONNECTION_ERROR = None
+        print(" -> Global IPC Connection established and database indexed successfully!")
+        return True
+    except Exception as e:
+        executor = None
+        mapper = None
+        CONNECTION_SUCCESS = False
+        CONNECTION_ERROR = str(e)
+        print(f" -> Global IPC Connection failed: {e}")
+        return False
+
+# Initialize connection on startup
+init_ipc_connection(8080)
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/api/status', methods=['GET'])
+def get_connection_status():
+    """
+    Returns current connection status, port, and database statistics.
+    """
+    global CONNECTION_SUCCESS, CURRENT_IPC_PORT, CONNECTION_ERROR, mapper, executor
+    if CONNECTION_SUCCESS and mapper and executor:
+        try:
+            flows_count = len(mapper.flows)
+            processes_count = len(list(executor.client.get_descriptors(o.Process)))
+            return jsonify({
+                "success": True,
+                "connected": True,
+                "port": CURRENT_IPC_PORT,
+                "flows_count": flows_count,
+                "processes_count": processes_count
+            })
+        except Exception as e:
+            return jsonify({
+                "success": True,
+                "connected": False,
+                "port": CURRENT_IPC_PORT,
+                "error": f"Connected but stats query failed: {e}"
+            })
+    else:
+        return jsonify({
+            "success": True,
+            "connected": False,
+            "port": CURRENT_IPC_PORT,
+            "error": CONNECTION_ERROR or "No active connection"
+        })
+
+@app.route('/api/process-parameters', methods=['GET'])
+def get_process_parameters():
+    """
+    Given a flow name, searches for the corresponding process in the database,
+    and returns its input parameters list.
+    """
+    global executor, mapper, CONNECTION_SUCCESS
+    if not CONNECTION_SUCCESS or not executor or not mapper:
+        return jsonify({"success": False, "error": "openLCA is not connected"}), 500
+        
+    flow_name = request.args.get("flow_name", "").strip()
+    if not flow_name:
+        return jsonify({"success": False, "error": "flow_name is required"}), 400
+        
+    try:
+        matches = mapper.search(flow_name, top_k=1, flow_type_filter=o.FlowType.PRODUCT_FLOW)
+        if not matches:
+            return jsonify({"success": True, "parameters": []})
+            
+        flow_desc, score = matches[0]
+        processes = list(executor.client.get_descriptors(o.Process))
+        matching_proc_desc = next((p for p in processes if flow_name.lower() in p.name.lower()), None)
+        if not matching_proc_desc:
+            matching_proc_desc = next((p for p in processes if flow_desc.name.lower() in p.name.lower()), None)
+            
+        if not matching_proc_desc:
+            return jsonify({"success": True, "parameters": []})
+            
+        proc = executor.client.get(o.Process, matching_proc_desc.id)
+        params = []
+        if proc.parameters:
+            for p in proc.parameters:
+                if p.is_input_parameter:
+                    params.append({
+                        "name": p.name,
+                        "value": p.value,
+                        "description": p.description or "",
+                        "process_id": proc.id,
+                        "process_name": proc.name
+                    })
+        return jsonify({"success": True, "parameters": params})
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/samples', methods=['GET'])
 def get_samples():
@@ -60,6 +168,37 @@ def get_samples():
         "Lithium-Ion Battery Pack": "samples/lithium_ion_battery.csv"
     }
     return jsonify(samples)
+
+@app.route('/api/sync', methods=['POST'])
+def sync_database():
+    """
+    Re-establishes connection to openLCA IPC on the specified port,
+    re-caches flows/index, and returns active database stats.
+    """
+    data = request.json or {}
+    port = int(data.get("port", 8080))
+    
+    success = init_ipc_connection(port)
+    if success:
+        try:
+            flows_count = len(mapper.flows)
+            processes_count = len(list(executor.client.get_descriptors(o.Process)))
+            return jsonify({
+                "success": True,
+                "port": port,
+                "flows_count": flows_count,
+                "processes_count": processes_count
+            })
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "error": f"Connection succeeded but active database statistics query failed: {e}"
+            }), 500
+    else:
+        return jsonify({
+            "success": False,
+            "error": CONNECTION_ERROR
+        }), 500
 
 @app.route('/api/load-sample', methods=['GET'])
 def load_sample():
@@ -108,15 +247,16 @@ def run_optimization():
         return jsonify({"success": False, "error": f"Failed to write temporary BOM: {e}"}), 500
         
     # Run optimization logic
-    executor = None
     temp_sys_id = None
     temp_proc_id = None
     temp_flow_id = None
     
+    global executor, mapper
+    if not CONNECTION_SUCCESS:
+        return jsonify({"success": False, "error": f"openLCA IPC is not connected. Error: {CONNECTION_ERROR}"}), 500
+        
     try:
-        executor = LcaExecutor()
         verifier = ThermodynamicVerifier(tolerance=0.01)
-        mapper = FlowMapper(executor)
         cost_registry = CostRegistry()
         evaluator = MultiObjectiveEvaluator(executor, verifier, cost_registry)
         analyzer = SensitivityAnalyzer(executor)
@@ -259,6 +399,18 @@ def run_optimization():
                 context=o.Ref(ref_type=o.RefType.Process, id=temp_proc_id, name="Web-Synthesized Product Manufacturing")
             )
         ]
+        
+        # Ingest custom database parameters overrides from client UI
+        custom_params = data.get("custom_parameters", [])
+        for cp in custom_params:
+            if cp.get("name") and cp.get("value") is not None:
+                parameter_redefs.append(
+                    o.ParameterRedef(
+                        name=cp["name"],
+                        value=float(cp["value"]),
+                        context=o.Ref(ref_type=o.RefType.Process, id=cp["process_id"], name=cp["process_name"]) if cp.get("process_id") else None
+                    )
+                )
         
         # 5. Run sensitivities to identify hotspot
         sensitivities = analyzer.analyze_sensitivities(
@@ -552,15 +704,16 @@ def run_pareto_optimization():
     num_samples = int(data.get("num_samples", 2000))
     weights = data.get("weights") or {}
     
-    executor = None
     temp_sys_id = None
     temp_proc_id = None
     temp_flow_id = None
     
+    global executor, mapper
+    if not CONNECTION_SUCCESS:
+        return jsonify({"success": False, "error": f"openLCA IPC is not connected. Error: {CONNECTION_ERROR}"}), 500
+        
     try:
-        executor = LcaExecutor()
         verifier = ThermodynamicVerifier(tolerance=0.01)
-        mapper = FlowMapper(executor)
         cost_registry = CostRegistry()
         optimizer = ParetoOptimizer(executor, mapper, verifier, cost_registry)
         
@@ -749,15 +902,16 @@ def compile_hierarchical_bom():
     if not bom_data:
         return jsonify({"success": False, "error": "BOM data is empty"}), 400
         
-    executor = None
     flow_ref = None
     proc_ref = None
     sys_ref = None
     
+    global executor, mapper
+    if not CONNECTION_SUCCESS:
+        return jsonify({"success": False, "error": f"openLCA IPC is not connected. Error: {CONNECTION_ERROR}"}), 500
+        
     try:
-        executor = LcaExecutor()
         verifier = ThermodynamicVerifier(tolerance=0.01)
-        mapper = FlowMapper(executor)
         compiler = LcaCompiler(executor, mapper, verifier)
         
         # Compile hierarchical BOM
@@ -847,6 +1001,106 @@ def compile_hierarchical_bom():
                 try: executor.client.delete(o.Ref(ref_type=o.RefType.Flow, id=flow_ref.id))
                 except: pass
 
+@app.route('/api/diagnose', methods=['POST'])
+def diagnose_database():
+    """
+    Scans the database processes associated with the current BOM items
+    for structural anomalies (hollow inputs, missing conversion factors, etc.)
+    """
+    global executor, mapper, CONNECTION_SUCCESS
+    if not CONNECTION_SUCCESS or not executor or not mapper:
+        return jsonify({"success": False, "error": "openLCA is not connected"}), 500
+        
+    data = request.json or {}
+    items = data.get("items", [])
+    
+    if not items:
+        return jsonify({"success": False, "error": "No BOM items provided to map and scan"}), 400
+        
+    from agentic_lca.self_healing import DatabaseDoctor
+    doctor = DatabaseDoctor(executor)
+    
+    all_defects = []
+    scanned_processes = set()
+    
+    for item in items:
+        flow_name = item.get("flow_name")
+        if not flow_name:
+            continue
+            
+        # Search for product flow
+        matches = mapper.search(flow_name, top_k=1, flow_type_filter=o.FlowType.PRODUCT_FLOW)
+        if not matches:
+            continue
+            
+        flow_desc, score = matches[0]
+        try:
+            processes = list(executor.client.get_descriptors(o.Process))
+            matching_procs = [p for p in processes if flow_name.lower() in p.name.lower()]
+            if not matching_procs:
+                matching_procs = [p for p in processes if flow_desc.name.lower() in p.name.lower()]
+                
+            for proc_desc in matching_procs[:2]:
+                if proc_desc.id in scanned_processes:
+                    continue
+                scanned_processes.add(proc_desc.id)
+                defects = doctor.diagnose_process(proc_desc.id)
+                for d in defects:
+                    d["process_name"] = proc_desc.name
+                    d["process_id"] = proc_desc.id
+                    all_defects.append(d)
+        except Exception as e:
+            print(f"Error scanning process for {flow_name}: {e}")
+            
+    return jsonify({
+        "success": True,
+        "defects": all_defects,
+        "scanned_count": len(scanned_processes)
+    })
+
+@app.route('/api/heal', methods=['POST'])
+def heal_database():
+    """
+    Applies repairs to the specified database processes/defects.
+    """
+    global executor, CONNECTION_SUCCESS
+    if not CONNECTION_SUCCESS or not executor:
+        return jsonify({"success": False, "error": "openLCA is not connected"}), 500
+        
+    data = request.json or {}
+    defects = data.get("defects", [])
+    
+    if not defects:
+        return jsonify({"success": True, "message": "No defects to heal"}), 200
+        
+    from agentic_lca.self_healing import DatabaseDoctor
+    doctor = DatabaseDoctor(executor)
+    
+    by_process = {}
+    for d in defects:
+        pid = d.get("process_id")
+        if pid:
+            if pid not in by_process:
+                by_process[pid] = []
+            by_process[pid].append(d)
+            
+    healed_count = 0
+    try:
+        for pid, process_defects in by_process.items():
+            success = doctor.heal_process(pid, process_defects)
+            if success:
+                healed_count += len(process_defects)
+        return jsonify({
+            "success": True,
+            "message": f"Successfully healed {healed_count} anomalies in the active database.",
+            "healed_count": healed_count
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Error during database healing: {e}"
+        }), 500
+
 @app.route('/api/chat', methods=['POST'])
 def chat():
     """
@@ -867,10 +1121,12 @@ def chat():
     if not message:
         return jsonify({"error": "Message is empty"}), 400
         
+    global executor, mapper
+    if not CONNECTION_SUCCESS:
+        return jsonify({"action": "chat", "response": f"I cannot process chat substitutions because openLCA IPC is not connected. Error: {CONNECTION_ERROR}"}), 500
+        
     try:
-        executor = LcaExecutor()
         verifier = ThermodynamicVerifier(tolerance=0.01)
-        mapper = FlowMapper(executor)
         cost_registry = CostRegistry()
         evaluator = MultiObjectiveEvaluator(executor, verifier, cost_registry)
         llm_agent = LcaLlmAgent()
@@ -1048,6 +1304,18 @@ def chat():
                         context=o.Ref(ref_type=o.RefType.Process, id=rebuild_proc_id, name="Web-Rebuild Manufacturing")
                     )
                 ]
+                
+                # Ingest custom database parameters overrides from client UI
+                custom_params = data.get("custom_parameters", [])
+                for cp in custom_params:
+                    if cp.get("name") and cp.get("value") is not None:
+                        parameter_redefs.append(
+                            o.ParameterRedef(
+                                name=cp["name"],
+                                value=float(cp["value"]),
+                                context=o.Ref(ref_type=o.RefType.Process, id=cp["process_id"], name=cp["process_name"]) if cp.get("process_id") else None
+                            )
+                        )
                 
                 # Calculate updated metrics
                 sub_report = evaluator.evaluate_substitution(

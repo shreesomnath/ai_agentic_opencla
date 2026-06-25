@@ -7,7 +7,7 @@
    the optimum on the Pareto plot, the active KPI, the agent's CTA.
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=DM+Sans:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
 /* ---------- Dark theme (default): "Instrument" ---------- */
 :root {
@@ -47,7 +47,9 @@
 
     --grid-line: rgba(255, 255, 255, 0.035);
 
-    --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-serif: 'Playfair Display', Georgia, serif;
+    --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-ui: 'Rajdhani', sans-serif;
     --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     --font-display: 'Space Grotesk', var(--font-sans);
 }
@@ -219,20 +221,22 @@ textarea:focus-visible,
 }
 
 .credit-label {
-    font-family: var(--font-mono);
-    font-size: 9.5px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    color: var(--text-muted);
-    margin-bottom: 1px;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--wku-red);
+    margin-bottom: 2px;
     text-transform: uppercase;
 }
 
 .names {
-    font-family: var(--font-sans);
-    font-size: 13.5px;
+    font-family: var(--font-ui);
+    font-size: 14px;
     font-weight: 600;
-    color: var(--text-secondary);
+    letter-spacing: 0.04em;
+    color: var(--text-primary);
+    text-transform: uppercase;
 }
 
 .server-status {
@@ -265,6 +269,137 @@ textarea:focus-visible,
     box-shadow: 0 0 0 2px rgba(63, 168, 139, 0.18);
     animation: status-pulse 2.4s infinite;
     flex-shrink: 0;
+}
+
+#openlca-status-indicator::before {
+    display: none !important;
+}
+
+.connection-controller {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    padding: 4px 12px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+}
+
+.status-indicator-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    flex-shrink: 0;
+}
+
+.status-indicator-dot.online {
+    background-color: var(--accent-emerald);
+    box-shadow: 0 0 0 2px rgba(63, 168, 139, 0.18);
+    animation: status-pulse 2.4s infinite;
+}
+
+.status-indicator-dot.offline {
+    background-color: var(--accent-red);
+    box-shadow: 0 0 0 2px rgba(192, 96, 92, 0.18);
+    animation: none;
+}
+
+.db-stats-badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed var(--border-color);
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+body.light-theme .db-stats-badge {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.port-input-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    border-left: 1px solid var(--border-color);
+    padding-left: 10px;
+}
+
+.port-input-prefix {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-family: var(--font-ui);
+    font-weight: 600;
+}
+
+.port-input-field {
+    width: 62px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    padding: 3px 6px;
+    border-radius: 4px;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.port-input-field:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 2px rgba(91, 134, 201, 0.15);
+}
+
+.btn-sync-action {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--wku-red);
+    color: white !important;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-family: var(--font-ui);
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+}
+
+.btn-sync-action:hover {
+    background: var(--wku-red-dark);
+    box-shadow: 0 2px 8px rgba(198, 12, 48, 0.25);
+}
+
+.btn-sync-action:active {
+    transform: scale(0.95);
+}
+
+.sync-action-icon {
+    width: 12px;
+    height: 12px;
+    stroke-width: 2.8px;
+    transition: transform 0.3s;
+}
+
+.syncing .sync-action-icon {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 @keyframes status-pulse {
@@ -772,6 +907,12 @@ input[type="range"].custom-slider::-moz-range-thumb {
 
 .tree-toggle:hover { color: var(--signal) !important; }
 .tree-children { border-left: 1px dashed var(--border-color); margin-left: 4px; }
+.tree-node.selected-target-node {
+    background: rgba(99, 102, 241, 0.15) !important;
+    border-left: 3px solid var(--accent-indigo) !important;
+    border-radius: 4px;
+    padding-left: 6px !important;
+}
 
 /* ---------- Autonomous agent terminal ---------- */
 .agent-terminal {
@@ -1063,30 +1204,72 @@ input[type="range"].custom-slider::-moz-range-thumb {
 }
 
 .message {
+    font-family: var(--font-sans);
     font-size: 13.5px;
-    padding: 9px 12px;
-    border-radius: 7px;
+    padding: 10px 14px;
+    border-radius: 8px;
     max-width: 92%;
-    line-height: 1.5;
+    line-height: 1.55;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-.system-msg { align-self: flex-start; background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-secondary); }
-.user-msg { align-self: flex-end; background-color: var(--text-primary); color: var(--bg-page); font-weight: 600; }
-body.light-theme .user-msg { color: #ffffff; }
+.system-msg {
+    align-self: flex-start;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.system-msg strong {
+    color: var(--accent-indigo);
+    font-family: var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.user-msg {
+    align-self: flex-end;
+    background-color: var(--text-primary);
+    color: var(--bg-page);
+    font-weight: 600;
+}
+
+body.light-theme .user-msg {
+    color: #ffffff;
+    background-color: var(--accent-indigo);
+}
+
 .copilot-msg {
     align-self: flex-start;
-    background-color: rgba(198, 12, 48, 0.04);
-    border: 1px solid rgba(198, 12, 48, 0.12);
-    border-left: 3px solid var(--wku-red);
+    background-color: rgba(198, 12, 48, 0.06);
+    border: 1px solid rgba(198, 12, 48, 0.18);
+    border-left: 4px solid var(--wku-red);
     color: var(--text-primary);
+    box-shadow: 0 2px 6px rgba(198, 12, 48, 0.05);
 }
+
+.copilot-msg strong {
+    color: var(--wku-red);
+    font-family: var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+}
+
 /* "System Error" sender → app.js emits classes "system" + "error-msg" */
 .message.error-msg {
     align-self: flex-start;
-    background-color: rgba(192, 96, 92, 0.06);
-    border: 1px solid rgba(192, 96, 92, 0.2);
-    border-left: 2px solid var(--accent-red);
+    background-color: rgba(192, 96, 92, 0.08);
+    border: 1px solid rgba(192, 96, 92, 0.25);
+    border-left: 4px solid var(--accent-red);
     color: var(--text-primary);
+}
+
+.message.error-msg strong {
+    color: var(--accent-red);
+    font-family: var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
 .chat-terminal-bar {
@@ -1147,22 +1330,38 @@ body.light-theme .user-msg { color: #ffffff; }
     border-top: 1px solid var(--border-color);
     padding-top: 16px;
     margin-top: 8px;
-    font-size: 13px;
+    font-family: var(--font-sans);
+    font-size: 12.5px;
     color: var(--text-muted);
     flex-wrap: wrap;
     gap: 8px;
 }
 
-.app-footer strong { color: var(--wku-red); font-weight: 600; }
+.app-footer strong {
+    font-family: var(--font-ui);
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--wku-red);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
 
 .footer-link {
+    font-family: var(--font-ui);
+    font-size: 13.5px;
     color: var(--wku-red);
     text-decoration: none;
     font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     border-bottom: 1.5px solid transparent;
     transition: color 0.15s ease, border-color 0.15s ease;
 }
-.footer-link:hover { color: var(--wku-red); border-bottom-color: var(--wku-red); }
+
+.footer-link:hover {
+    color: var(--wku-red);
+    border-bottom-color: var(--wku-red);
+}
 
 /* ============================================================
    Responsive

@@ -6,7 +6,7 @@
     <title>Agentic LCA | Sustainability Ingestion & Optimization</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=DM+Sans:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -27,10 +27,27 @@
                     <span class="names">Somnath Luitel &amp; Manmeet Singh</span>
                 </div>
 
-                <div class="server-status">
-                    <div class="status-indicator online" id="openlca-status">OpenLCA Server</div>
-                    <div class="status-indicator online" id="ollama-status">Ollama LLM</div>
+                <div class="connection-controller">
+                    <div class="status-indicator" id="openlca-status-indicator">
+                        <span class="status-indicator-dot offline" id="openlca-status-dot"></span>
+                        <span class="status-indicator-text" id="openlca-status-text">openLCA: Offline</span>
+                    </div>
+                    <div class="db-stats-badge" id="openlca-db-stats" style="display: none;">
+                        <span id="openlca-flows-count">0</span> flows · <span id="openlca-processes-count">0</span> processes
+                    </div>
+                    <div class="port-input-container">
+                        <span class="port-input-prefix">Port:</span>
+                        <input type="number" id="openlca-port-input" value="8080" class="port-input-field" min="1" max="65535" step="1">
+                    </div>
+                    <button type="button" id="openlca-sync-btn" class="btn-sync-action" title="Re-establish openLCA connection and rebuild TF-IDF search index">
+                        <svg class="sync-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                        </svg>
+                        <span class="sync-action-label">Sync</span>
+                    </button>
                 </div>
+
+                <div class="status-indicator online" id="ollama-status">Ollama LLM</div>
 
                 <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
                     <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
@@ -80,6 +97,7 @@
                                 <h3>BOM Feedstock Inventory</h3>
                                 <span class="rows-indicator" id="rows-count">0 items</span>
                             </div>
+                            <div id="active-assembly-indicator" style="font-size: 11px; color: var(--accent-indigo); margin-bottom: 8px; font-weight: 500; display: none;"></div>
 
                             <div class="bom-table-container">
                                 <table id="bom-table">
@@ -323,6 +341,17 @@
                         </div>
                         <input type="range" id="param-loss-factor" min="0.0" max="0.3" step="0.05" value="0.0" class="custom-slider">
                     </div>
+                    
+                    <!-- Database Parameter overrides -->
+                    <div style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--border-color);">
+                        <label for="custom-param-feedstock-select" style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 6px; font-family: var(--font-ui);">Database Parameter Tuning</label>
+                        <select id="custom-param-feedstock-select" style="width: 100%; font-size: 11.5px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); padding: 4px; border-radius: 4px; outline: none; margin-bottom: 8px; font-family: var(--font-sans);">
+                            <option value="">-- Select background process --</option>
+                        </select>
+                        <div id="custom-parameters-sliders-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 100px; overflow-y: auto;">
+                            <div style="font-size: 11px; text-align: center; color: var(--text-muted); padding: 8px 0; font-family: var(--font-sans);">No database parameters loaded.</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -392,6 +421,35 @@
                     <div class="stat-pill">
                         <label>Stoichiometric balance error</label>
                         <span id="tvl-error">0.00%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Database Diagnostics & Doctor -->
+            <div class="visual-panel control-panel-card" id="db-doctor-card">
+                <div class="panel-header">
+                    <h3>
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                        </svg>
+                        Database Diagnostics
+                    </h3>
+                </div>
+                <div class="control-card-body">
+                    <div class="verification-header">
+                        <span>Database health</span>
+                        <span class="tvl-status-badge info-badge" id="doctor-health-status">Unchecked</span>
+                    </div>
+                    <div id="doctor-defects-list" class="doctor-defects-box" style="display: none; max-height: 110px; overflow-y: auto; font-size: 11.5px; color: var(--text-secondary); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px; margin: 8px 0; background: var(--bg-input); line-height: 1.45; font-family: var(--font-sans);">
+                        <!-- Dynamic defects report -->
+                    </div>
+                    <div class="doctor-actions" style="margin-top: 8px; display: flex; gap: 8px; width: 100%;">
+                        <button type="button" class="btn btn-secondary" id="btn-scan-db" style="flex: 1; padding: 6px 12px; font-size: 11.5px; height: 32px; border-radius: 6px;">
+                            <span>Scan Context</span>
+                        </button>
+                        <button type="button" class="btn btn-accent" id="btn-heal-db" style="flex: 1; padding: 6px 12px; font-size: 11.5px; height: 32px; border-radius: 6px; display: none;">
+                            <span>Heal Defects</span>
+                        </button>
                     </div>
                 </div>
             </div>
