@@ -13,7 +13,11 @@ class LcaVisualizer:
         """
         Creates a side-by-side normalized bar chart comparing baseline and optimized
         performance across GWP, Acidification, Water, and Feedstock Cost. Supports both light/dark theme styles.
+        If the report contains a 'frontier' key, it generates a Pareto scatter plot instead.
         """
+        if "frontier" in report:
+            return LcaVisualizer._generate_pareto_scatter_plot(report, output_path, theme)
+
         metrics = report.get("metrics", {})
         if not metrics:
             print("No metrics found in report for visualization.")
@@ -199,4 +203,99 @@ class LcaVisualizer:
         plt.savefig(output_path, bbox_inches='tight', facecolor=fig.get_facecolor(), edgecolor='none')
         plt.close()
         print(f" -> Uncertainty distribution chart generated for '{metric_name}' and saved to: {output_path} (theme: {theme})")
+        return True
+
+    @staticmethod
+    def _generate_pareto_scatter_plot(report, output_path, theme="dark"):
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        frontier = report.get("frontier", [])
+        weights = report.get("weights", {})
+        process_name = report.get("process_name", "Process Optimization")
+
+        if not frontier:
+            print("No frontier data for Pareto scatter plot.")
+            return False
+
+        # Extract metrics: Cost on X axis, GWP on Y axis
+        costs = [pt["metrics"]["Cost"] for pt in frontier]
+        gwps = [pt["metrics"]["GWP"] for pt in frontier]
+        scores = [pt.get("topsis_score", 0.5) for pt in frontier]
+
+        # Identify the optimal point (topsis_rank == 1 or max score)
+        opt_idx = 0
+        max_score = -1.0
+        for idx, pt in enumerate(frontier):
+            if pt.get("topsis_rank") == 1:
+                opt_idx = idx
+                break
+            if pt.get("topsis_score", 0.0) > max_score:
+                max_score = pt.get("topsis_score", 0.0)
+                opt_idx = idx
+
+        opt_pt = frontier[opt_idx]
+        opt_cost = opt_pt["metrics"]["Cost"]
+        opt_gwp = opt_pt["metrics"]["GWP"]
+
+        is_light = (theme == "light")
+        bg_color = '#ffffff' if is_light else '#09090b'
+        card_color = '#ffffff' if is_light else '#18181b'
+        border_color = '#cbd5e1' if is_light else '#27272a'
+        text_primary = '#1e1e38' if is_light else '#fafafa'
+        text_secondary = '#3730a3' if is_light else '#a1a1aa'
+        grid_color = '#cbd5e1' if is_light else '#27272a'
+
+        fig, ax = plt.subplots(figsize=(10, 5.5), dpi=150, facecolor=bg_color)
+        ax.set_facecolor(bg_color)
+
+        # Draw scatter points, color-coded by TOPSIS score
+        cmap = plt.cm.viridis if is_light else plt.cm.plasma
+        scatter = ax.scatter(costs, gwps, c=scores, cmap=cmap, s=50, alpha=0.8, edgecolors=border_color, linewidth=0.5, label="Pareto Alternatives")
+
+        # Color bar
+        cbar = fig.colorbar(scatter, ax=ax)
+        cbar.set_label("TOPSIS Closeness Score", color=text_primary, fontsize=9, fontweight='semibold')
+        cbar.ax.tick_params(labelsize=8, colors=text_secondary)
+        cbar.outline.set_edgecolor(border_color)
+
+        # Highlight the optimal configuration
+        ax.scatter(opt_cost, opt_gwp, color='#fbbf24', edgecolors='black', marker='*', s=250, zorder=5, label=f"TOPSIS Optimal (Score: {opt_pt.get('topsis_score', 0.0):.4f})")
+
+        # Annotate the optimal point with ratio summaries
+        blend_summary = []
+        for name, r in opt_pt["ratios"].items():
+            short_name = name.split(',')[0]
+            blend_summary.append(f"{short_name}: {r*100:.0f}%")
+        blend_label = "\n".join(blend_summary)
+
+        ax.annotate(f"Optimal Blend:\n{blend_label}",
+                    xy=(opt_cost, opt_gwp),
+                    xytext=(15, -15),
+                    textcoords="offset points",
+                    arrowprops=dict(arrowstyle="->", color='#fbbf24', connectionstyle="arc3,rad=0.2"),
+                    fontsize=9, fontweight='bold', color='#fbbf24',
+                    bbox=dict(boxstyle="round,pad=0.3", fc=card_color, ec='#fbbf24', alpha=0.9))
+
+        # Titles and labels
+        ax.set_title(f"Pareto Frontier & TOPSIS Decision Support\nProcess: {process_name}", fontsize=12, fontweight='bold', pad=15, color=text_primary)
+        ax.set_xlabel("Financial feedstock Cost (USD)", fontsize=11, fontweight='bold', labelpad=10, color=text_primary)
+        ax.set_ylabel("Carbon Footprint (GWP, kg CO₂ eq)", fontsize=11, fontweight='bold', labelpad=10, color=text_primary)
+
+        # Legend style
+        legend = ax.legend(frameon=True, facecolor=card_color, edgecolor=border_color, loc='upper right')
+        for text in legend.get_texts():
+            text.set_color(text_primary)
+
+        # Style axes and spines
+        ax.tick_params(colors=text_secondary, which='both', labelsize=9)
+        for spine in ax.spines.values():
+            spine.set_color(border_color)
+
+        ax.grid(True, linestyle='--', color=grid_color, alpha=0.6)
+
+        fig.tight_layout()
+        plt.savefig(output_path, bbox_inches='tight', facecolor=fig.get_facecolor(), edgecolor='none')
+        plt.close()
+        print(f" -> Pareto scatter plot successfully generated and saved to: {output_path} (theme: {theme})")
         return True

@@ -21,7 +21,7 @@ class LcaLlmAgent:
         except requests.exceptions.RequestException:
             return False
 
-    def generate_engineering_justification(self, report):
+    def generate_engineering_justification(self, report, weights=None):
         """
         Interprets a Multi-Objective LCA trade-off report and generates 
         a formal engineering justification text (e.g. for NSF proposals or ESG reports).
@@ -39,6 +39,11 @@ class LcaLlmAgent:
         water = metrics.get("Water Consumption", {})
         cost = metrics.get("Feedstock Cost", {})
 
+        weights_context = ""
+        if weights:
+            weights_str = ", ".join([f"{k}: {v}%" for k, v in weights.items()])
+            weights_context = f"\nThe user has specified the following decision weights priorities: {weights_str}. Please quantitatively justify why this swap aligns with these user priorities (particularly emphasizing indicators with high priority weights)."
+
         prompt = f"""
 You are an expert environmental engineer and LCA scientist.
 Write a formal, highly technical engineering justification paragraph analyzing the following feedstock substitution scenario for a Next-Gen Silicon Solar Cell Module:
@@ -51,6 +56,7 @@ Trade-off Metrics Results:
 2. Terrestrial Acidification Potential: {acid.get('percentage_change', 0.0):+.2f}% change (from {acid.get('baseline', 0.0):.4f} to {acid.get('optimized', 0.0):.4f} kg SO2 eq)
 3. Water Consumption Footprint: {water.get('percentage_change', 0.0):+.2f}% change (from {water.get('baseline', 0.0):.4f} to {water.get('optimized', 0.0):.4f} m3)
 4. Raw Material Purchase Cost: {cost.get('percentage_change', 0.0):+.2f}% change (from {cost.get('baseline', 0.0):.4f} to {cost.get('optimized', 0.0):.4f} USD)
+{weights_context}
 
 Instructions:
 - Interpret whether this substitution is "Pareto-improving" (decoupling environmental footprints without raising costs).
@@ -111,7 +117,7 @@ Output only the JSON array and nothing else.
         except Exception:
             return [f"{hotspot_flow_name.split(',')[0]} recycled"]
 
-    def parse_chat_command(self, user_query, exchanges_list, report=None):
+    def parse_chat_command(self, user_query, exchanges_list, report=None, weights=None):
         """
         Parses a user chat query in the context of the current process exchanges list.
         Returns a JSON dictionary containing the action ('substitute' or 'chat') and values.
@@ -137,9 +143,14 @@ Output only the JSON array and nothing else.
                 "verification, multi-objective Pareto optimization, uncertainty histograms, and interactive substitutions."
             )
         
+        weights_info = ""
+        if weights:
+            weights_info = f"\nUser Multi-Criteria Decision Weights Priorities (TOPSIS): {json.dumps(weights)}"
+
         prompt = f"""
 You are the brain of an interactive LCA Copilot.
 The user has asked: "{user_query}"
+{weights_info}
 
 Here are the input exchanges in the current synthesized manufacturing process:
 {flows_str}

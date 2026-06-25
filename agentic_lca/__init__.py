@@ -8,6 +8,7 @@ from .visualizer import LcaVisualizer
 from .compiler import LcaCompiler
 from .optimization import ParetoOptimizer
 from .coordinator import LcaAutonomousCoordinator
+from .decision import TopsisDecisionEngine
 
 
 

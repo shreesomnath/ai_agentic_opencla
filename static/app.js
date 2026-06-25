@@ -35,6 +35,38 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
     
+    // Multi-Criteria Optimization Priorities Weights (TOPSIS)
+    const weightGwp = document.getElementById("weight-gwp");
+    const weightAcid = document.getElementById("weight-acid");
+    const weightWater = document.getElementById("weight-water");
+    const weightCost = document.getElementById("weight-cost");
+    
+    const valWeightGwp = document.getElementById("val-weight-gwp");
+    const valWeightAcid = document.getElementById("val-weight-acid");
+    const valWeightWater = document.getElementById("val-weight-water");
+    const valWeightCost = document.getElementById("val-weight-cost");
+
+    if (weightGwp && valWeightGwp) {
+        weightGwp.addEventListener("input", () => {
+            valWeightGwp.textContent = weightGwp.value + "%";
+        });
+    }
+    if (weightAcid && valWeightAcid) {
+        weightAcid.addEventListener("input", () => {
+            valWeightAcid.textContent = weightAcid.value + "%";
+        });
+    }
+    if (weightWater && valWeightWater) {
+        weightWater.addEventListener("input", () => {
+            valWeightWater.textContent = weightWater.value + "%";
+        });
+    }
+    if (weightCost && valWeightCost) {
+        weightCost.addEventListener("input", () => {
+            valWeightCost.textContent = weightCost.value + "%";
+        });
+    }
+    
     const openlcaStatus = document.getElementById("openlca-status");
     const ollamaStatus = document.getElementById("ollama-status");
     
@@ -181,7 +213,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 const base = url.split("?")[0];
                 tradeoffChartImg.src = `${base}?t=${Date.now()}`;
                 if (chartTitleElem) {
-                    chartTitleElem.textContent = "Optimization Impact Trade-Offs (Normalized Baseline vs. Optimized)";
+                    if (base.includes("pareto")) {
+                        chartTitleElem.textContent = "Pareto Frontier & TOPSIS Optimal Blend Highlight";
+                    } else {
+                        chartTitleElem.textContent = "Optimization Impact Trade-Offs (Normalized Baseline vs. Optimized)";
+                    }
                     chartTitleElem.style.display = "block";
                 }
             } else {
@@ -298,6 +334,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     process_efficiency: parseFloat(paramProcessEfficiency.value),
                     recycle_rate: parseFloat(paramRecycleRate.value),
                     loss_factor: parseFloat(paramLossFactor.value)
+                },
+                weights: {
+                    GWP: parseFloat(weightGwp.value),
+                    Acidification: parseFloat(weightAcid.value),
+                    Water: parseFloat(weightWater.value),
+                    Cost: parseFloat(weightCost.value)
                 }
             })
         })
@@ -367,7 +409,16 @@ document.addEventListener("DOMContentLoaded", () => {
         fetch("/api/pareto", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ items: items, num_samples: 500 })
+            body: JSON.stringify({ 
+                items: items, 
+                num_samples: 500,
+                weights: {
+                    GWP: parseFloat(weightGwp.value),
+                    Acidification: parseFloat(weightAcid.value),
+                    Water: parseFloat(weightWater.value),
+                    Cost: parseFloat(weightCost.value)
+                }
+            })
         })
         .then(res => res.json())
         .then(data => {
@@ -377,11 +428,18 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.success) {
                 const frontier = data.frontier;
                 
-                // Hide tradeoff image chart
-                tradeoffChartImg.style.display = "none";
-                chartPlaceholder.style.display = "block";
+                // Set activeState URLs for Pareto chart
+                activeState.chart_url_dark = data.chart_url_dark;
+                activeState.chart_url_light = data.chart_url_light;
+                activeState.active_chart_tab = "tradeoff";
+                
+                // Render the scatter plot
+                tradeoffChartImg.style.display = "block";
+                updateChartImageSource();
                 
                 if (frontier.length === 0) {
+                    tradeoffChartImg.style.display = "none";
+                    chartPlaceholder.style.display = "block";
                     chartPlaceholder.innerHTML = `
                         <div style="text-align: center; padding: 20px; font-family: var(--font-sans);">
                             <h4 style="margin-bottom: 6px; font-weight: 600; color: var(--text-primary);">No Substitutable Feedstocks Identified</h4>
@@ -452,6 +510,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                 `;
                 
+                // Show both image and placeholder containing table
+                chartPlaceholder.style.display = "block";
                 chartPlaceholder.innerHTML = html;
                 
                 // Formulate a beautiful summary explanation for the Chat Copilot
@@ -627,6 +687,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     process_efficiency: parseFloat(paramProcessEfficiency.value),
                     recycle_rate: parseFloat(paramRecycleRate.value),
                     loss_factor: parseFloat(paramLossFactor.value)
+                },
+                weights: {
+                    GWP: parseFloat(weightGwp.value),
+                    Acidification: parseFloat(weightAcid.value),
+                    Water: parseFloat(weightWater.value),
+                    Cost: parseFloat(weightCost.value)
                 }
             })
         })

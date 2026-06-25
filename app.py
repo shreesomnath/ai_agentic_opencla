@@ -94,6 +94,7 @@ def run_optimization():
     param_vals = data.get("parameters", {})
     efficiency = float(param_vals.get("process_efficiency", 1.0))
     loss_factor = float(param_vals.get("loss_factor", 0.0))
+    weights = data.get("weights")
     
     # Write items to a temporary BOM file
     temp_bom_path = "temp_bom_web.csv"
@@ -392,7 +393,7 @@ def run_optimization():
         # 9. LLM justification paragraph
         justification = ""
         if llm_agent.is_ollama_active():
-            justification = llm_agent.generate_engineering_justification(report)
+            justification = llm_agent.generate_engineering_justification(report, weights=weights)
             
         # Format exchanges for context list
         exchanges_list = []
@@ -544,11 +545,12 @@ def run_pareto_optimization():
     """
     Ingests a BOM, constructs a temporary process and product system, 
     runs Pareto optimization across GWP, Acidification, Water, and Cost,
-    and returns the list of Pareto-optimal configurations.
+    and returns the list of Pareto-optimal configurations ranked by TOPSIS.
     """
     data = request.json or {}
     items = data.get("items", [])
     num_samples = int(data.get("num_samples", 2000))
+    weights = data.get("weights") or {}
     
     executor = None
     temp_sys_id = None
@@ -675,9 +677,49 @@ def run_pareto_optimization():
             num_samples=num_samples
         )
         
+        # Rank configurations using TOPSIS
+        from agentic_lca.decision import TopsisDecisionEngine
+        topsis_weights = {
+            "GWP": float(weights.get("GWP", 40.0)),
+            "Acidification": float(weights.get("Acidification", 15.0)),
+            "Water": float(weights.get("Water", 15.0)),
+            "Cost": float(weights.get("Cost", 30.0))
+        }
+        
+        ranked_frontier = TopsisDecisionEngine.rank_alternatives(frontier, topsis_weights)
+        
+        # Generate Pareto scatter plot and save
+        chart_filename_dark = "pareto_tradeoffs_dark.png"
+        chart_filename_light = "pareto_tradeoffs_light.png"
+        chart_path_dark = os.path.join(app.root_path, 'static', chart_filename_dark)
+        chart_path_light = os.path.join(app.root_path, 'static', chart_filename_light)
+        
+        pareto_report = {
+            "frontier": ranked_frontier,
+            "weights": topsis_weights,
+            "process_name": process.name
+        }
+        
+        LcaVisualizer.generate_tradeoff_chart(pareto_report, chart_path_dark, theme="dark")
+        LcaVisualizer.generate_tradeoff_chart(pareto_report, chart_path_light, theme="light")
+        
+        # Save copies in artifacts directory too!
+        LcaVisualizer.generate_tradeoff_chart(
+            pareto_report, 
+            "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs_dark.png",
+            theme="dark"
+        )
+        LcaVisualizer.generate_tradeoff_chart(
+            pareto_report, 
+            "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs_light.png",
+            theme="light"
+        )
+        
         return jsonify({
             "success": True,
-            "frontier": frontier
+            "frontier": ranked_frontier,
+            "chart_url_dark": f"/static/{chart_filename_dark}",
+            "chart_url_light": f"/static/{chart_filename_light}"
         })
         
     except Exception as e:
@@ -832,8 +874,8 @@ def chat():
         cost_registry = CostRegistry()
         evaluator = MultiObjectiveEvaluator(executor, verifier, cost_registry)
         llm_agent = LcaLlmAgent()
-        
-        command = llm_agent.parse_chat_command(message, exchanges, report)
+        weights = data.get("weights")
+        command = llm_agent.parse_chat_command(message, exchanges, report, weights=weights)
         action = command.get("action", "chat")
         
         if action == "learn":
@@ -1080,7 +1122,7 @@ def chat():
                 # Fetch new LLM justification
                 new_just = ""
                 if llm_agent.is_ollama_active():
-                    new_just = llm_agent.generate_engineering_justification(sub_report)
+                    new_just = llm_agent.generate_engineering_justification(sub_report, weights=weights)
                     
                 # Reconstruct updated exchanges list
                 updated_exchanges = []
