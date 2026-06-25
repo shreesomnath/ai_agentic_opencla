@@ -318,25 +318,43 @@ def run_optimization():
             theme="light"
         )
 
-        # Generate uncertainty distribution charts
-        unc_filename_dark = "uncertainty_distribution_dark.png"
-        unc_filename_light = "uncertainty_distribution_light.png"
-        unc_path_dark = os.path.join(app.root_path, 'static', unc_filename_dark)
-        unc_path_light = os.path.join(app.root_path, 'static', unc_filename_light)
+        # Generate uncertainty distribution charts for all four KPIs
+        kpis_mapping = {
+            "Global Warming": "gwp",
+            "Acidification": "acid",
+            "Water Consumption": "water",
+            "Feedstock Cost": "cost"
+        }
         
-        LcaVisualizer.generate_uncertainty_chart(report, unc_path_dark, theme="dark")
-        LcaVisualizer.generate_uncertainty_chart(report, unc_path_light, theme="light")
+        unc_urls_dark = {}
+        unc_urls_light = {}
         
-        LcaVisualizer.generate_uncertainty_chart(
-            report, 
-            "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_distribution_dark.png",
-            theme="dark"
-        )
-        LcaVisualizer.generate_uncertainty_chart(
-            report, 
-            "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_distribution_light.png",
-            theme="light"
-        )
+        for kpi, short_name in kpis_mapping.items():
+            unc_filename_dark = f"uncertainty_{short_name}_dark.png"
+            unc_filename_light = f"uncertainty_{short_name}_light.png"
+            
+            unc_path_dark = os.path.join(app.root_path, 'static', unc_filename_dark)
+            unc_path_light = os.path.join(app.root_path, 'static', unc_filename_light)
+            
+            LcaVisualizer.generate_uncertainty_chart(report, unc_path_dark, metric_name=kpi, theme="dark")
+            LcaVisualizer.generate_uncertainty_chart(report, unc_path_light, metric_name=kpi, theme="light")
+            
+            # Save copy in artifacts
+            LcaVisualizer.generate_uncertainty_chart(
+                report, 
+                f"/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_{short_name}_dark.png",
+                metric_name=kpi,
+                theme="dark"
+            )
+            LcaVisualizer.generate_uncertainty_chart(
+                report, 
+                f"/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_{short_name}_light.png",
+                metric_name=kpi,
+                theme="light"
+            )
+            
+            unc_urls_dark[kpi] = f"/static/{unc_filename_dark}"
+            unc_urls_light[kpi] = f"/static/{unc_filename_light}"
         
         # 9. LLM justification paragraph
         justification = ""
@@ -365,8 +383,8 @@ def run_optimization():
             "method_id": method_desc.id,
             "chart_url_dark": f"/static/{chart_filename_dark}",
             "chart_url_light": f"/static/{chart_filename_light}",
-            "unc_url_dark": f"/static/{unc_filename_dark}",
-            "unc_url_light": f"/static/{unc_filename_light}"
+            "unc_urls_dark": unc_urls_dark,
+            "unc_urls_light": unc_urls_light
         })
 
     except Exception as e:
@@ -933,25 +951,43 @@ def chat():
                     theme="light"
                 )
 
-                # Generate new uncertainty distribution charts
-                unc_filename_dark = "uncertainty_distribution_dark.png"
-                unc_filename_light = "uncertainty_distribution_light.png"
-                unc_path_dark = os.path.join(app.root_path, 'static', unc_filename_dark)
-                unc_path_light = os.path.join(app.root_path, 'static', unc_filename_light)
+                # Generate new uncertainty distribution charts for all four KPIs
+                kpis_mapping = {
+                    "Global Warming": "gwp",
+                    "Acidification": "acid",
+                    "Water Consumption": "water",
+                    "Feedstock Cost": "cost"
+                }
                 
-                LcaVisualizer.generate_uncertainty_chart(sub_report, unc_path_dark, theme="dark")
-                LcaVisualizer.generate_uncertainty_chart(sub_report, unc_path_light, theme="light")
+                unc_urls_dark = {}
+                unc_urls_light = {}
                 
-                LcaVisualizer.generate_uncertainty_chart(
-                    sub_report, 
-                    "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_distribution_dark.png",
-                    theme="dark"
-                )
-                LcaVisualizer.generate_uncertainty_chart(
-                    sub_report, 
-                    "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_distribution_light.png",
-                    theme="light"
-                )
+                for kpi, short_name in kpis_mapping.items():
+                    unc_filename_dark = f"uncertainty_{short_name}_dark.png"
+                    unc_filename_light = f"uncertainty_{short_name}_light.png"
+                    
+                    unc_path_dark = os.path.join(app.root_path, 'static', unc_filename_dark)
+                    unc_path_light = os.path.join(app.root_path, 'static', unc_filename_light)
+                    
+                    LcaVisualizer.generate_uncertainty_chart(sub_report, unc_path_dark, metric_name=kpi, theme="dark")
+                    LcaVisualizer.generate_uncertainty_chart(sub_report, unc_path_light, metric_name=kpi, theme="light")
+                    
+                    # Save copy in brain artifacts
+                    LcaVisualizer.generate_uncertainty_chart(
+                        sub_report, 
+                        f"/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_{short_name}_dark.png",
+                        metric_name=kpi,
+                        theme="dark"
+                    )
+                    LcaVisualizer.generate_uncertainty_chart(
+                        sub_report, 
+                        f"/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_{short_name}_light.png",
+                        metric_name=kpi,
+                        theme="light"
+                    )
+                    
+                    unc_urls_dark[kpi] = f"/static/{unc_filename_dark}"
+                    unc_urls_light[kpi] = f"/static/{unc_filename_light}"
                 
                 # Fetch new LLM justification
                 new_just = ""
@@ -980,8 +1016,8 @@ def chat():
                     "method_id": method_id,
                     "chart_url_dark": f"/static/{chart_filename_dark}?t={int(time.time())}",
                     "chart_url_light": f"/static/{chart_filename_light}?t={int(time.time())}",
-                    "unc_url_dark": f"/static/{unc_filename_dark}?t={int(time.time())}",
-                    "unc_url_light": f"/static/{unc_filename_light}?t={int(time.time())}"
+                    "unc_urls_dark": unc_urls_dark,
+                    "unc_urls_light": unc_urls_light
                 })
                 
             finally:

@@ -123,7 +123,19 @@ Output only the JSON array and nothing else.
             }
 
         # Format the list of exchanges for the LLM
-        flows_str = "\n".join([f"- ID: {ex['id']} | Name: {ex['name']} | Amount: {ex['amount']} {ex['unit']}" for ex in exchanges_list])
+        if exchanges_list:
+            flows_str = "\n".join([f"- ID: {ex['id']} | Name: {ex['name']} | Amount: {ex['amount']} {ex['unit']}" for ex in exchanges_list])
+            inventory_note = ""
+        else:
+            flows_str = "[Empty Inventory - No feedstock or materials loaded yet]"
+            inventory_note = (
+                "\nNOTE: The feedstock inventory is currently empty. The user hasn't loaded any case study or BOM yet. "
+                "If they ask general questions, seek guidance, or seem confused, please answer their question warmly and "
+                "explain how they can get started (e.g., loading a case study from the dropdown on the left under 'Flat List', "
+                "pasting a hierarchical JSON BOM in the second tab 'Hierarchical JSON', or typing a sustainability goal in "
+                "the 'Autonomous Loop' tab). Explain the main capabilities of the tool: semantic mapping, mass-balance "
+                "verification, multi-objective Pareto optimization, uncertainty histograms, and interactive substitutions."
+            )
         
         prompt = f"""
 You are the brain of an interactive LCA Copilot.
@@ -134,6 +146,7 @@ Here are the input exchanges in the current synthesized manufacturing process:
 
 LCA Report Data (Carbon footprint, water, cost):
 {json.dumps(report) if report else 'No calculation report available yet.'}
+{inventory_note}
 
 Your task:
 1. Determine if the user wants to test a material substitution (e.g. "replace steel with scrap steel" or "what if we use recycled plastic?").

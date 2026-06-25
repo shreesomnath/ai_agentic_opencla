@@ -121,31 +121,33 @@ class LcaVisualizer:
         return True
 
     @staticmethod
-    def generate_uncertainty_chart(report, output_path="uncertainty_distribution.png", theme="dark"):
+    def generate_uncertainty_chart(report, output_path="uncertainty_distribution.png", metric_name="Global Warming", theme="dark"):
         """
         Creates a stochastically-resolved histogram comparison comparing baseline and optimized
-        carbon footprint (GWP) Monte Carlo distribution trials. Displays mean lines and confidence intervals.
+        Monte Carlo distribution trials for a specific metric (e.g. GWP, Acidification, Water, Cost).
+        Displays mean lines and confidence intervals.
         """
         metrics = report.get("metrics", {})
-        gwp = metrics.get("Global Warming", {})
-        if not gwp:
-            # Fallback to check first available metric key
+        metric_data = metrics.get(metric_name, {})
+        if not metric_data:
+            # Fallback to search case-insensitive
             for k in metrics.keys():
-                if "warming" in k.lower() or "carbon" in k.lower() or "gwp" in k.lower():
-                    gwp = metrics[k]
+                if metric_name.lower() in k.lower():
+                    metric_data = metrics[k]
+                    metric_name = k
                     break
-            if not gwp and metrics:
-                gwp = list(metrics.values())[0]
+            if not metric_data and metrics:
+                metric_data = list(metrics.values())[0]
                 
-        if not gwp:
-            print("No GWP metrics found for uncertainty distribution plot.")
+        if not metric_data:
+            print(f"No metric data found for '{metric_name}' in uncertainty distribution plot.")
             return False
             
-        base_trials = gwp.get("baseline_uncertainty", {}).get("trials", [])
-        opt_trials = gwp.get("optimized_uncertainty", {}).get("trials", [])
+        base_trials = metric_data.get("baseline_uncertainty", {}).get("trials", [])
+        opt_trials = metric_data.get("optimized_uncertainty", {}).get("trials", [])
         
         if not base_trials or not opt_trials:
-            print("No raw Monte Carlo trials found in GWP metrics for plotting.")
+            print(f"No raw Monte Carlo trials found in '{metric_name}' metrics for plotting.")
             return False
 
         # Check theme color configuration
@@ -165,18 +167,18 @@ class LcaVisualizer:
         ax.set_facecolor(bg_color)
         
         # Plot histograms
-        ax.hist(base_trials, bins=40, alpha=0.5, label='Baseline GWP Distribution', color=base_color, edgecolor=border_color, linewidth=0.5)
-        ax.hist(opt_trials, bins=40, alpha=0.7, label='Optimized GWP Distribution', color=opt_color, edgecolor=opt_color, linewidth=0.5)
+        ax.hist(base_trials, bins=40, alpha=0.5, label=f'Baseline {metric_name} Dist', color=base_color, edgecolor=border_color, linewidth=0.5)
+        ax.hist(opt_trials, bins=40, alpha=0.7, label=f'Optimized {metric_name} Dist', color=opt_color, edgecolor=opt_color, linewidth=0.5)
         
         # Draw mean vertical lines
         base_mean = sum(base_trials) / len(base_trials)
         opt_mean = sum(opt_trials) / len(opt_trials)
-        ax.axvline(base_mean, color=base_color, linestyle='--', linewidth=1.5, label=f'Baseline Mean ({base_mean:.3f})')
-        ax.axvline(opt_mean, color=opt_color, linestyle='--', linewidth=1.5, label=f'Optimized Mean ({opt_mean:.3f})')
+        ax.axvline(base_mean, color=base_color, linestyle='--', linewidth=1.5, label=f'Baseline Mean ({base_mean:.4f})')
+        ax.axvline(opt_mean, color=opt_color, linestyle='--', linewidth=1.5, label=f'Optimized Mean ({opt_mean:.4f})')
         
         # Label axes
-        unit = gwp.get("unit", "kg CO2 eq")
-        ax.set_xlabel(f'Carbon Footprint / Global Warming Potential ({unit})', fontsize=11, fontweight='bold', labelpad=10, color=text_primary)
+        unit = metric_data.get("unit", "")
+        ax.set_xlabel(f'{metric_name} ({unit})' if unit else metric_name, fontsize=11, fontweight='bold', labelpad=10, color=text_primary)
         ax.set_ylabel('Trial Frequency (Counts)', fontsize=11, fontweight='bold', labelpad=10, color=text_primary)
         ax.set_title(f"Uncertainty Propagation: {report.get('process_name', 'Process Substitution')}\n"
                      f"Stochastic Monte Carlo Simulation ({len(base_trials)} Trials)",
@@ -196,5 +198,5 @@ class LcaVisualizer:
         fig.tight_layout()
         plt.savefig(output_path, bbox_inches='tight', facecolor=fig.get_facecolor(), edgecolor='none')
         plt.close()
-        print(f" -> Uncertainty distribution chart generated and saved to: {output_path} (theme: {theme})")
+        print(f" -> Uncertainty distribution chart generated for '{metric_name}' and saved to: {output_path} (theme: {theme})")
         return True
