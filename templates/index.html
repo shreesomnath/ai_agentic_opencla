@@ -293,152 +293,153 @@
 
                 </div>
 
-                <!-- Controls & Verification Grid -->
-                <div class="controls-row">
-                    <!-- Dynamic Process Parameters (Sliders) -->
-                    <div class="visual-panel control-panel-card">
-                        <div class="panel-header">
-                            <h3>
-                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                                Process Scaling
-                            </h3>
-                        </div>
-                        <div class="control-card-body" style="display: flex; flex-direction: column; gap: 14px; flex: 1; justify-content: center;">
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                    <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Process Efficiency</label>
-                                    <span id="val-process-efficiency" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-emerald);">1.00</span>
-                                </div>
-                                <input type="range" id="param-process-efficiency" min="0.5" max="1.2" step="0.05" value="1.0" class="custom-slider">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                    <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Recycle Substitute Rate</label>
-                                    <span id="val-recycle-rate" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-emerald);">0.00</span>
-                                </div>
-                                <input type="range" id="param-recycle-rate" min="0.0" max="0.9" step="0.05" value="0.0" class="custom-slider">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                    <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Loss/Scrap Factor</label>
-                                    <span id="val-loss-factor" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-emerald);">0.00</span>
-                                </div>
-                                <input type="range" id="param-loss-factor" min="0.0" max="0.3" step="0.05" value="0.0" class="custom-slider">
-                            </div>
-                        </div>
-                    </div>
+            </main>
+        </div>
 
-                    <!-- Multi-Criteria Optimization Priorities (TOPSIS) -->
-                    <div class="visual-panel control-panel-card">
-                        <div class="panel-header">
-                            <h3>
-                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                                TOPSIS MCDA Weights
-                            </h3>
+        <!-- Controls & Verification Grid (Spans the complete row from left to right) -->
+        <div class="controls-row">
+            <!-- Dynamic Process Parameters (Sliders) -->
+            <div class="visual-panel control-panel-card">
+                <div class="panel-header">
+                    <h3>
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        Process Scaling
+                    </h3>
+                </div>
+                <div class="control-card-body" style="display: flex; flex-direction: column; gap: 14px; flex: 1; justify-content: center;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Process Efficiency</label>
+                            <span id="val-process-efficiency" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-emerald);">1.00</span>
                         </div>
-                        <div class="control-card-body" style="display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: center;">
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                                    <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Carbon (GWP) Weight</label>
-                                    <span id="val-weight-gwp" style="font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; color: var(--accent-violet);">40%</span>
-                                </div>
-                                <input type="range" id="weight-gwp" min="0" max="100" step="5" value="40" class="custom-slider">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                                    <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Acidification Weight</label>
-                                    <span id="val-weight-acid" style="font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; color: var(--accent-violet);">15%</span>
-                                </div>
-                                <input type="range" id="weight-acid" min="0" max="100" step="5" value="15" class="custom-slider">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                                    <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Water Weight</label>
-                                    <span id="val-weight-water" style="font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; color: var(--accent-violet);">15%</span>
-                                </div>
-                                <input type="range" id="weight-water" min="0" max="100" step="5" value="15" class="custom-slider">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                                    <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Material Cost Weight</label>
-                                    <span id="val-weight-cost" style="font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; color: var(--accent-violet);">30%</span>
-                                </div>
-                                <input type="range" id="weight-cost" min="0" max="100" step="5" value="30" class="custom-slider">
-                            </div>
-                        </div>
+                        <input type="range" id="param-process-efficiency" min="0.5" max="1.2" step="0.05" value="1.0" class="custom-slider">
                     </div>
-
-                    <!-- Thermodynamic Mass Balance Check -->
-                    <div class="visual-panel control-panel-card">
-                        <div class="panel-header">
-                            <h3>
-                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                                TVL Mass Balance
-                            </h3>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Recycle Substitute Rate</label>
+                            <span id="val-recycle-rate" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-emerald);">0.00</span>
                         </div>
-                        <div class="control-card-body" style="display: flex; flex-direction: column; gap: 14px; flex: 1; justify-content: center;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
-                                <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Verification Status</span>
-                                <span class="tvl-status-badge" id="tvl-badge">Not Checked</span>
-                            </div>
-                            <div class="verification-stats" style="display: flex; gap: 8px; width: 100%;">
-                                <div class="stat-pill" style="flex: 1; padding: 8px 10px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; text-align: center;">
-                                    <label style="font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px;">Inputs</label>
-                                    <span id="tvl-input-mass" style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; color: var(--text-primary);">0.00 kg</span>
-                                </div>
-                                <div class="stat-pill" style="flex: 1; padding: 8px 10px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; text-align: center;">
-                                    <label style="font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px;">Outputs</label>
-                                    <span id="tvl-output-mass" style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; color: var(--text-primary);">0.00 kg</span>
-                                </div>
-                            </div>
-                            <div class="stat-pill" style="padding: 8px 10px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; text-align: center; width: 100%;">
-                                <label style="font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px;">Stoichiometric Balance Error</label>
-                                <span id="tvl-error" style="font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; color: var(--text-primary);">0.00%</span>
-                            </div>
-                        </div>
+                        <input type="range" id="param-recycle-rate" min="0.0" max="0.9" step="0.05" value="0.0" class="custom-slider">
                     </div>
-
-                    <!-- Chat Copilot Panel (Moved back to right side controls-row) -->
-                    <div class="visual-panel control-panel-card chat-panel">
-                        <div class="panel-header">
-                            <h3>
-                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                                Copilot Decision Chat
-                            </h3>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Loss/Scrap Factor</label>
+                            <span id="val-loss-factor" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-emerald);">0.00</span>
                         </div>
-                        <div class="control-card-body" style="display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: center;">
-                            <div class="chat-logs" id="chat-box" style="max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
-                                <div class="message system-msg">
-                                    <strong>Copilot:</strong> Welcome! Load a study template or build a custom BOM flow. Once optimized, I can explain emission tradeoffs, identify hotspots, or run automated substitutions (e.g. try: <em>"What if we substitute steel with scrap steel?"</em>).
-                                </div>
-                            </div>
-                            <div class="chat-terminal-bar" style="display: flex; gap: 6px; border-top: 1px solid var(--border-color); padding-top: 8px;">
-                                <input type="text" id="chat-input" placeholder="Ask Copilot a question or request feedstock swap..." style="flex: 1; font-size: 11.5px; padding: 6px 10px;">
-                                <button type="button" id="chat-send-btn" style="background-color: var(--accent-emerald); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                                </button>
-                            </div>
-                        </div>
+                        <input type="range" id="param-loss-factor" min="0.0" max="0.3" step="0.05" value="0.0" class="custom-slider">
                     </div>
                 </div>
+            </div>
 
-                <!-- LLM Engineering Justification Report -->
-                <div class="visual-panel justification-panel" id="justification-wrapper" style="display: none;">
-                    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <h3 style="margin: 0;">
-                            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                            Engineering Justification Report
-                        </h3>
-                        <button type="button" class="btn btn-secondary" id="print-report-btn" style="background: #27272a; color: white; border: 1px solid #3f3f46; font-size: 11px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                            Print PDF Report
+            <!-- Multi-Criteria Optimization Priorities (TOPSIS) -->
+            <div class="visual-panel control-panel-card">
+                <div class="panel-header">
+                    <h3>
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        TOPSIS MCDA Weights
+                    </h3>
+                </div>
+                <div class="control-card-body" style="display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: center;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                            <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Carbon (GWP) Weight</label>
+                            <span id="val-weight-gwp" style="font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; color: var(--accent-violet);">40%</span>
+                        </div>
+                        <input type="range" id="weight-gwp" min="0" max="100" step="5" value="40" class="custom-slider">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                            <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Acidification Weight</label>
+                            <span id="val-weight-acid" style="font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; color: var(--accent-violet);">15%</span>
+                        </div>
+                        <input type="range" id="weight-acid" min="0" max="100" step="5" value="15" class="custom-slider">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                            <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Water Weight</label>
+                            <span id="val-weight-water" style="font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; color: var(--accent-violet);">15%</span>
+                        </div>
+                        <input type="range" id="weight-water" min="0" max="100" step="5" value="15" class="custom-slider">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                            <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Material Cost Weight</label>
+                            <span id="val-weight-cost" style="font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; color: var(--accent-violet);">30%</span>
+                        </div>
+                        <input type="range" id="weight-cost" min="0" max="100" step="5" value="30" class="custom-slider">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thermodynamic Mass Balance Check -->
+            <div class="visual-panel control-panel-card">
+                <div class="panel-header">
+                    <h3>
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        TVL Mass Balance
+                    </h3>
+                </div>
+                <div class="control-card-body" style="display: flex; flex-direction: column; gap: 14px; flex: 1; justify-content: center;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                        <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Verification Status</span>
+                        <span class="tvl-status-badge" id="tvl-badge">Not Checked</span>
+                    </div>
+                    <div class="verification-stats" style="display: flex; gap: 8px; width: 100%;">
+                        <div class="stat-pill" style="flex: 1; padding: 8px 10px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; text-align: center;">
+                            <label style="font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px;">Inputs</label>
+                            <span id="tvl-input-mass" style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; color: var(--text-primary);">0.00 kg</span>
+                        </div>
+                        <div class="stat-pill" style="flex: 1; padding: 8px 10px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; text-align: center;">
+                            <label style="font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px;">Outputs</label>
+                            <span id="tvl-output-mass" style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; color: var(--text-primary);">0.00 kg</span>
+                        </div>
+                    </div>
+                    <div class="stat-pill" style="padding: 8px 10px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; text-align: center; width: 100%;">
+                        <label style="font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px;">Stoichiometric Balance Error</label>
+                        <span id="tvl-error" style="font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; color: var(--text-primary);">0.00%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Copilot Panel (Moved back to right side controls-row) -->
+            <div class="visual-panel control-panel-card chat-panel">
+                <div class="panel-header">
+                    <h3>
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        Copilot Decision Chat
+                    </h3>
+                </div>
+                <div class="control-card-body" style="display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: center;">
+                    <div class="chat-logs" id="chat-box" style="max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                        <div class="message system-msg">
+                            <strong>Copilot:</strong> Welcome! Load a study template or build a custom BOM flow. Once optimized, I can explain emission tradeoffs, identify hotspots, or run automated substitutions (e.g. try: <em>"What if we substitute steel with scrap steel?"</em>).
+                        </div>
+                    </div>
+                    <div class="chat-terminal-bar" style="display: flex; gap: 6px; border-top: 1px solid var(--border-color); padding-top: 8px;">
+                        <input type="text" id="chat-input" placeholder="Ask Copilot a question or request feedstock swap..." style="flex: 1; font-size: 11.5px; padding: 6px 10px;">
+                        <button type="button" id="chat-send-btn" style="background-color: var(--accent-emerald); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                         </button>
                     </div>
-                    <div class="justification-body">
-                        <blockquote id="justification-content"></blockquote>
-                    </div>
                 </div>
-            </main>
+            </div>
+        </div>
+
+        <!-- LLM Engineering Justification Report (Full width) -->
+        <div class="visual-panel justification-panel" id="justification-wrapper" style="display: none;">
+            <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <h3 style="margin: 0;">
+                    <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    Engineering Justification Report
+                </h3>
+                <button type="button" class="btn btn-secondary" id="print-report-btn" style="background: #27272a; color: white; border: 1px solid #3f3f46; font-size: 11px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    Print PDF Report
+                </button>
+            </div>
+            <div class="justification-body">
+                <blockquote id="justification-content"></blockquote>
+            </div>
         </div>
 
         <!-- App Footer -->
