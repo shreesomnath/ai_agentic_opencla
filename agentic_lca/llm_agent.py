@@ -154,7 +154,11 @@ Your task:
    - Identify which virgin flow from the list above they want to replace. Choose the exact matching name from the list.
    - Formulate a search query to look up the recycled/green substitute in the flow database.
    - Respond in JSON format: {{"action": "substitute", "virgin_flow_name": "exact_name_from_list", "substitute_search_query": "search_term_for_substitute"}}
-3. If they are asking a question, seeking help, explaining results, or asking for next steps:
+3. Determine if the user is explicitly teaching you a new material mapping, abbreviation, or synonym (e.g., "PLA stands for polylactic acid", "map carbon fiber to carbon fibre", or "remember that PET is polyethylene terephthalate").
+   - If they are teaching you a mapping:
+     - Identify the informal term/abbreviation and the standard database name.
+     - Respond in JSON format: {{"action": "learn", "abbreviation": "informal_term", "standard_name": "standard_db_name", "response": "I have mapped 'informal_term' to 'standard_db_name' in my dictionary. I will use this for future mapping searches."}}
+4. If they are asking a question, seeking help, explaining results, or asking for next steps:
    - Respond in JSON format: {{"action": "chat", "response": "Your helpful, expert response explaining the LCA results or guiding the user on their next step."}}
 
 Respond only with a valid JSON object. Do not add any conversational text before or after the JSON.

@@ -20,8 +20,47 @@ class FlowMapper:
         self.inverted_index = {}
         self.flow_norms = {}
         self.indexed_flows = []
+        self.dictionary_path = '/Users/somnath.luitel/documents/airlab/openlca/agentic_lca/resources/mapping_dictionary.json'
+        self.synonyms = self._load_synonyms()
         
         self._load_and_index_flows()
+
+    def _load_synonyms(self):
+        import json
+        import os
+        if os.path.exists(self.dictionary_path):
+            try:
+                with open(self.dictionary_path, 'r') as f:
+                    return json.load(f)
+            except Exception as e:
+                print(f"Error loading synonyms from JSON: {e}")
+        # Default fallback
+        return {
+            "pet": "polyethylene terephthalate",
+            "hdpe": "polyethylene, high density",
+            "ldpe": "polyethylene, low density",
+            "pvc": "polyvinyl chloride",
+            "pp": "polypropylene",
+            "ps": "polystyrene",
+            "cullet": "glass cullet",
+            "scrap": "scrap steel",
+            "glass fiber": "glass fibre",
+            "glass fibers": "glass fibre"
+        }
+
+    def save_synonym(self, abbreviation, standard_name):
+        import json
+        import os
+        self.synonyms[abbreviation.lower().strip()] = standard_name.lower().strip()
+        try:
+            os.makedirs(os.path.dirname(self.dictionary_path), exist_ok=True)
+            with open(self.dictionary_path, 'w') as f:
+                json.dump(self.synonyms, f, indent=2)
+            print(f" -> Dynamically learned mapping: '{abbreviation}' -> '{standard_name}' saved to dictionary.")
+            return True
+        except Exception as e:
+            print(f"Error saving synonym to JSON: {e}")
+            return False
 
     def _tokenize(self, text):
         """Tokenizes text and filters out short words."""
@@ -83,18 +122,9 @@ class FlowMapper:
         Returns a list of tuples: (flow_descriptor, similarity_score)
         """
         # 1. Fast Dictionary Synonyms/Abbreviations matching
-        synonyms = {
-            "pet": "polyethylene terephthalate",
-            "hdpe": "polyethylene, high density",
-            "ldpe": "polyethylene, low density",
-            "pvc": "polyvinyl chloride",
-            "pp": "polypropylene",
-            "ps": "polystyrene",
-            "cullet": "glass cullet",
-            "scrap": "scrap steel",
-            "glass fiber": "glass fibre",
-            "glass fibers": "glass fibre"
-        }
+        # Reload synonyms to pick up any dynamically learned mappings
+        self.synonyms = self._load_synonyms()
+        synonyms = self.synonyms
         
         query_lower = query.lower().strip()
         expanded_queries = []

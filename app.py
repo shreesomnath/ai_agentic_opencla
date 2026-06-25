@@ -784,9 +784,18 @@ def chat():
         evaluator = MultiObjectiveEvaluator(executor, verifier, cost_registry)
         llm_agent = LcaLlmAgent()
         
-        # 1. Parse query via LLM
         command = llm_agent.parse_chat_command(message, exchanges, report)
         action = command.get("action", "chat")
+        
+        if action == "learn":
+            abbreviation = command.get("abbreviation", "").strip()
+            standard_name = command.get("standard_name", "").strip()
+            if abbreviation and standard_name:
+                mapper.save_synonym(abbreviation, standard_name)
+                return jsonify({
+                    "action": "chat",
+                    "response": command.get("response", f"Successfully mapped '{abbreviation}' to '{standard_name}' in the dictionary.")
+                })
         
         if action == "substitute" and not (temp_proc_id and temp_sys_id and method_id):
             action = "chat"

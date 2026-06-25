@@ -1,0 +1,12 @@
+{
+  "pet": "polyethylene terephthalate",
+  "hdpe": "polyethylene, high density",
+  "ldpe": "polyethylene, low density",
+  "pvc": "polyvinyl chloride",
+  "pp": "polypropylene",
+  "ps": "polystyrene",
+  "cullet": "glass cullet",
+  "scrap": "scrap steel",
+  "glass fiber": "glass fibre",
+  "glass fibers": "glass fibre"
+}
