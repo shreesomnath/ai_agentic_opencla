@@ -182,6 +182,7 @@ textarea:focus-visible,
     display: flex;
     align-items: center;
     gap: 9px;
+    color: var(--signal);
 }
 
 .badge-tag {
@@ -669,10 +670,21 @@ body.light-theme .btn-agentic { color: #2A1D03; }
 
 .slider-value {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 13.5px;
     font-weight: 700;
     color: var(--signal);
 }
+
+/* Slider specific styles for color variety */
+#val-weight-gwp { color: var(--accent-emerald); }
+#val-weight-acid { color: var(--accent-purple); }
+#val-weight-water { color: var(--accent-blue); }
+#val-weight-cost { color: var(--accent-amber); }
+
+#weight-gwp::-webkit-slider-thumb:hover { background-color: var(--accent-emerald) !important; }
+#weight-acid::-webkit-slider-thumb:hover { background-color: var(--accent-purple) !important; }
+#weight-water::-webkit-slider-thumb:hover { background-color: var(--accent-blue) !important; }
+#weight-cost::-webkit-slider-thumb:hover { background-color: var(--accent-amber) !important; }
 
 input[type="range"].custom-slider {
     -webkit-appearance: none;
@@ -837,26 +849,52 @@ input[type="range"].custom-slider::-moz-range-thumb {
     letter-spacing: 0.05em;
     color: var(--text-muted);
     gap: 8px;
-}
-
 .unit-tag { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0; text-transform: none; opacity: 0.85; }
 
 .kpi-comparison { display: flex; align-items: flex-end; gap: 14px; }
 .kpi-value-box { display: flex; flex-direction: column; }
+.kpi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    gap: 8px;
+}
 
 .val-label {
-    font-size: 8px; color: var(--text-muted); text-transform: uppercase;
+    font-size: 10px; color: var(--text-muted); text-transform: uppercase;
     font-weight: 600; letter-spacing: 0.04em; margin-bottom: 2px;
 }
 
 .val-num {
     font-family: var(--font-display);
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 22px;
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
 }
 .val-num.base { color: var(--text-muted); font-weight: 500; }
 .val-num.opt { color: var(--text-primary); }
+
+/* Color code metric values and headers for visual variety */
+#card-gwp .kpi-header { color: var(--accent-emerald); }
+#card-gwp .val-num.opt { color: var(--accent-emerald); }
+#card-gwp .val-label { color: var(--accent-emerald); opacity: 0.8; }
+
+#card-acid .kpi-header { color: var(--accent-violet); }
+#card-acid .val-num.opt { color: var(--accent-violet); }
+#card-acid .val-label { color: var(--accent-violet); opacity: 0.8; }
+
+#card-water .kpi-header { color: var(--accent-blue); }
+#card-water .val-num.opt { color: var(--accent-blue); }
+#card-water .val-label { color: var(--accent-blue); opacity: 0.8; }
+
+#card-cost .kpi-header { color: var(--accent-amber); }
+#card-cost .val-num.opt { color: var(--accent-amber); }
+#card-cost .val-label { color: var(--accent-amber); opacity: 0.8; }
 
 .val-error-bounds {
     font-family: var(--font-mono);
@@ -946,15 +984,22 @@ input[type="range"].custom-slider::-moz-range-thumb {
 
 .panel-header h3 {
     font-family: var(--font-display);
-    font-size: 11.5px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     gap: 8px;
 }
+
+/* Color-coded icons inside panel headers for visual variety */
+.workspace-card:nth-of-type(1) h2 .card-icon { color: var(--signal); }
+.controls-row > .visual-panel:nth-child(1) h3 .card-icon { color: var(--accent-indigo); }
+.controls-row > .visual-panel:nth-child(2) h3 .card-icon { color: var(--accent-amber); }
+.controls-row > .visual-panel:nth-child(3) h3 .card-icon { color: var(--accent-emerald); }
+.controls-row > .visual-panel:nth-child(4) h3 .card-icon { color: var(--accent-blue); }
 
 .justification-panel h3 .card-icon { color: var(--accent-violet); }
 
@@ -1054,7 +1099,7 @@ input[type="range"].custom-slider::-moz-range-thumb {
 }
 
 .message {
-    font-size: 12px;
+    font-size: 13.5px;
     padding: 9px 12px;
     border-radius: 7px;
     max-width: 92%;
@@ -1089,7 +1134,7 @@ body.light-theme .user-msg { color: #ffffff; }
 
 #chat-input {
     flex: 1;
-    font-size: 11.5px;
+    font-size: 13.5px;
     background-color: var(--bg-input);
     color: var(--text-primary);
     padding: 7px 10px;
@@ -1123,7 +1168,7 @@ body.light-theme .user-msg { color: #ffffff; }
 }
 
 .justification-body blockquote {
-    font-size: 13px;
+    font-size: 15px;
     line-height: 1.65;
     color: var(--text-secondary);
 }
@@ -1138,7 +1183,7 @@ body.light-theme .user-msg { color: #ffffff; }
     border-top: 1px solid var(--border-color);
     padding-top: 16px;
     margin-top: 8px;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-muted);
     flex-wrap: wrap;
     gap: 8px;
