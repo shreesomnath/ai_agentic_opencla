@@ -173,7 +173,7 @@ textarea:focus-visible,
 .logo-svg {
     width: 26px;
     height: 26px;
-    color: var(--signal);
+    color: var(--wku-red);
 }
 
 .logo-area h1 {
@@ -184,6 +184,11 @@ textarea:focus-visible,
     display: flex;
     align-items: center;
     gap: 9px;
+    color: var(--text-primary);
+}
+
+.logo-highlight {
+    color: var(--wku-red);
 }
 
 .badge-tag {
@@ -224,8 +229,8 @@ textarea:focus-visible,
 
 .names {
     font-size: 14px;
-    font-weight: 500;
-    color: var(--text-secondary);
+    font-weight: 600;
+    color: var(--wku-red);
 }
 
 .server-status {
