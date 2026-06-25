@@ -57,12 +57,11 @@ You have two options to enable the LLM copilot chat:
   export ANTHROPIC_API_KEY="your-anthropic-api-key"
   ```
 * **Option B: Offline/Local LLM (Ollama)**
-  1. Download and run **Ollama** from [ollama.com](https://ollama.com).
-  2. Pull the recommended coder model in your terminal:
-     ```bash
-     ollama pull qwen2.5-coder:7b
-     ```
-  3. Keep Ollama active. The pipeline automatically connects to `http://localhost:11434`.
+  You can let the CLI handle downloading, installing, starting Ollama, and pulling the recommended model:
+  ```bash
+  lca-copilot --install-ollama
+  ```
+  *(Alternatively, you can manually download and run **Ollama** from [ollama.com](https://ollama.com) and run `ollama pull qwen2.5-coder:7b` in your terminal.)*
 
 ---
 

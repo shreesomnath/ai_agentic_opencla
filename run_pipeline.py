@@ -41,6 +41,12 @@ def main():
         app.run(port=5000, debug=False)
         sys.exit(0)
 
+    # Check if Ollama installation is requested
+    if "--install-ollama" in sys.argv:
+        from install_ollama import install_ollama
+        install_ollama()
+        sys.exit(0)
+
     # Initialize references to clean up in case of failure
     temp_sys_id = None
     temp_proc_id = None
