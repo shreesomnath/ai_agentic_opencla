@@ -1,0 +1,37 @@
+name: Build and Push Apptainer Image
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Apptainer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y apptainer
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | apptainer registry login -u ${{ github.actor }} --password-stdin oras://ghcr.io
+
+      - name: Build Apptainer Image
+        run: |
+          apptainer build lca_copilot.sif Apptainer.def
+
+      - name: Push Apptainer Image to GHCR (ORAS)
+        run: |
+          # Convert repository name to lowercase for GHCR compatibility
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          apptainer push lca_copilot.sif oras://ghcr.io/${REPO_LOWER}:latest
