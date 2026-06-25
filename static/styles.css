@@ -18,9 +18,9 @@
     --border-color: #232A34;
     --border-focus: #3A4452;
 
-    --text-primary: #ECEFF3;
-    --text-secondary: #8995A6;
-    --text-muted: #5B6675;
+    --text-primary: #F3F4F6;
+    --text-secondary: #9EB0C6;
+    --text-muted: #6D7E96;
 
     /* Metric family — desaturated, instrument-grade tones, not Tailwind neons */
     --accent-emerald: #3FA88B;  /* GWP / carbon */
@@ -60,9 +60,9 @@ body.light-theme {
     --border-color: #D7DEE6;
     --border-focus: #3F6FA8;
 
-    --text-primary: #161B22;
-    --text-secondary: #4A5C72;
-    --text-muted: #748094;
+    --text-primary: #111827;
+    --text-secondary: #374151;
+    --text-muted: #4B5563;
 
     --accent-emerald: #2E8470;
     --accent-violet:  #7C699E;
@@ -176,7 +176,7 @@ textarea:focus-visible,
 
 .logo-area h1 {
     font-family: var(--font-display);
-    font-size: 18px;
+    font-size: 21px;
     font-weight: 600;
     letter-spacing: -0.01em;
     display: flex;
@@ -186,7 +186,7 @@ textarea:focus-visible,
 
 .badge-tag {
     font-family: var(--font-mono);
-    font-size: 9.5px;
+    font-size: 11px;
     background-color: var(--bg-input);
     color: var(--text-secondary);
     padding: 3px 7px;
@@ -212,7 +212,7 @@ textarea:focus-visible,
 }
 
 .credit-label {
-    font-size: 8px;
+    font-size: 9.5px;
     font-weight: 600;
     letter-spacing: 0.1em;
     color: var(--text-muted);
@@ -221,7 +221,7 @@ textarea:focus-visible,
 }
 
 .names {
-    font-size: 12.5px;
+    font-size: 14px;
     font-weight: 500;
     color: var(--text-secondary);
 }
@@ -233,7 +233,7 @@ textarea:focus-visible,
 
 .status-indicator {
     font-family: var(--font-mono);
-    font-size: 10.5px;
+    font-size: 12px;
     font-weight: 500;
     display: flex;
     align-items: center;
@@ -315,7 +315,7 @@ body.light-theme .theme-toggle-btn .moon-icon { display: block; color: var(--acc
 
 .workspace-header h2 {
     font-family: var(--font-display);
-    font-size: 13.5px;
+    font-size: 15.5px;
     font-weight: 600;
     color: var(--text-primary);
     display: flex;
@@ -328,7 +328,7 @@ body.light-theme .theme-toggle-btn .moon-icon { display: block; color: var(--acc
 .card-icon { width: 15px; height: 15px; color: var(--text-muted); flex-shrink: 0; }
 
 .section-desc {
-    font-size: 11.5px;
+    font-size: 13px;
     color: var(--text-muted);
     margin-top: 5px;
 }
@@ -337,7 +337,7 @@ body.light-theme .theme-toggle-btn .moon-icon { display: block; color: var(--acc
 
 /* ---------- Forms ---------- */
 label {
-    font-size: 10.5px;
+    font-size: 12.5px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -347,7 +347,7 @@ label {
 .form-group { display: flex; flex-direction: column; gap: 7px; }
 
 .form-group label {
-    font-size: 10.5px;
+    font-size: 12.5px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -361,7 +361,7 @@ select, input[type="text"], input[type="number"] {
     padding: 9px 12px;
     border-radius: 6px;
     font-family: inherit;
-    font-size: 13px;
+    font-size: 14.5px;
     outline: none;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -388,7 +388,7 @@ select:focus, input:focus {
     border: 1px solid transparent;
     color: var(--text-muted);
     font-family: var(--font-sans);
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 500;
     padding: 7px 4px;
     cursor: pointer;
@@ -424,7 +424,7 @@ select:focus, input:focus {
 }
 
 .section-title-row h3 {
-    font-size: 10.5px;
+    font-size: 12.5px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.07em;
@@ -432,7 +432,7 @@ select:focus, input:focus {
 }
 
 .rows-indicator {
-    font-size: 10px;
+    font-size: 12px;
     background-color: var(--bg-input);
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
@@ -451,7 +451,7 @@ select:focus, input:focus {
     background-color: var(--bg-input);
 }
 
-#bom-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+#bom-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 
 #bom-table th {
     text-align: left;
@@ -459,7 +459,7 @@ select:focus, input:focus {
     padding: 9px 12px;
     color: var(--text-muted);
     font-weight: 600;
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     border-bottom: 1px solid var(--border-color);
@@ -482,7 +482,7 @@ select:focus, input:focus {
     width: 100%;
     color: var(--text-primary);
     font-family: var(--font-mono);
-    font-size: 12.5px;
+    font-size: 14px;
 }
 
 #bom-table input:focus {
