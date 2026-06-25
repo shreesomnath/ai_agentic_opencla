@@ -1,5 +1,7 @@
 # 🌟 Agentic LCA: Autonomous Multi-Agent AI for Lifecycle Assessment
 
+Developed by **Somnath Luitel**, **Dr. Manmeet Singh**, and **Dr. Jani Das** at the [AIR-LAB, WKU](https://air-lab-wku.github.io/).
+
 Welcome to **Agentic LCA**, a next-generation scientific AI copilot designed to automate, verify, and optimize Life Cycle Assessments (LCA). 
 
 This platform connects directly to **OpenLCA 2.x** and uses **local offline Large Language Models (LLMs)** (via Ollama) to ingest raw Bills of Materials (BOM), verify thermodynamic mass conservation, dynamically identify environmental hotspots, search circular feedstock substitutes, and evaluate multi-objective Pareto trade-offs.
