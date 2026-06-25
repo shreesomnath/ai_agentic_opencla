@@ -172,28 +172,6 @@
 
                 </div>
 
-                <!-- Chat Copilot Panel (Moved to Sidebar to balance whitespace) -->
-                <div class="visual-panel chat-panel" style="margin-top: 24px;">
-                    <div class="panel-header">
-                        <h3>
-                            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                            Copilot Decision Chat
-                        </h3>
-                    </div>
-                    <div class="chat-terminal" style="min-height: 320px;">
-                        <div class="chat-logs" id="chat-box" style="max-height: 250px;">
-                            <div class="message system-msg">
-                                <strong>Copilot:</strong> Welcome! Load a study template or build a custom BOM flow. Once optimized, I can explain emission tradeoffs, identify hotspots, or run automated substitutions (e.g. try: <em>"What if we substitute steel with scrap steel?"</em>).
-                            </div>
-                        </div>
-                        <div class="chat-terminal-bar">
-                            <input type="text" id="chat-input" placeholder="Ask Copilot a question...">
-                            <button type="button" id="chat-send-btn">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </aside>
 
             <!-- Main Analytics Canvas -->
@@ -416,6 +394,29 @@
                             <div class="stat-pill" style="padding: 8px 10px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; text-align: center; width: 100%;">
                                 <label style="font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px;">Stoichiometric Balance Error</label>
                                 <span id="tvl-error" style="font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; color: var(--text-primary);">0.00%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Copilot Panel (Moved back to right side controls-row) -->
+                    <div class="visual-panel control-panel-card chat-panel">
+                        <div class="panel-header">
+                            <h3>
+                                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                Copilot Decision Chat
+                            </h3>
+                        </div>
+                        <div class="control-card-body" style="display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: center;">
+                            <div class="chat-logs" id="chat-box" style="max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                                <div class="message system-msg">
+                                    <strong>Copilot:</strong> Welcome! Load a study template or build a custom BOM flow. Once optimized, I can explain emission tradeoffs, identify hotspots, or run automated substitutions (e.g. try: <em>"What if we substitute steel with scrap steel?"</em>).
+                                </div>
+                            </div>
+                            <div class="chat-terminal-bar" style="display: flex; gap: 6px; border-top: 1px solid var(--border-color); padding-top: 8px;">
+                                <input type="text" id="chat-input" placeholder="Ask Copilot a question or request feedstock swap..." style="flex: 1; font-size: 11.5px; padding: 6px 10px;">
+                                <button type="button" id="chat-send-btn" style="background-color: var(--accent-emerald); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                </button>
                             </div>
                         </div>
                     </div>
