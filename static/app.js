@@ -218,7 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Display loading status
         optimizeBtn.disabled = true;
         optimizeBtn.textContent = "Processing...";
-        appendChatMessage("System", "Running automated ingestion, mass verification, sensitivity hotspot mapping, and multi-objective calculation setup. This takes a few seconds...");
+        appendChatMessage("System", "Running automated ingestion, mass verification, sensitivity hotspot mapping, and multi-objective calculation setup. This will take about a minute...");
 
         fetch("/api/optimize", {
             method: "POST",
@@ -790,7 +790,7 @@ document.addEventListener("DOMContentLoaded", () => {
         
         compileHierarchicalBtn.disabled = true;
         compileHierarchicalBtn.textContent = "Compiling...";
-        appendChatMessage("System", `Compiling hierarchical BOM for '${bomJson.name}' in openLCA. Running mapping search, custom sub-assemblies synthesis, and uncertainty propagation. This takes a few seconds...`);
+        appendChatMessage("System", `Compiling hierarchical BOM for '${bomJson.name}' in openLCA. Running mapping search, custom sub-assemblies synthesis, and uncertainty propagation. This will take about a minute...`);
         
         fetch("/api/compile", {
             method: "POST",
