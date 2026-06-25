@@ -9,7 +9,7 @@ class LcaExecutor:
     """
     def __init__(self, port=8080):
         self.port = port
-        self.client = ipc.Client(port=port)
+        self.client = ipc.Client(port)
         
     def find_process(self, query):
         """Find processes matching a query string."""
