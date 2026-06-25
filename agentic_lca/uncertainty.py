@@ -10,14 +10,13 @@ class SensitivityAnalyzer:
         self.executor = executor
         self.client = executor.client
 
-    def analyze_sensitivities(self, process_id, system_id, method_id, target_category_query="fossil", num_inputs_to_test=5):
+    def analyze_sensitivities(self, process_id, system_id, method_id, target_category_query="fossil", num_inputs_to_test=5, parameter_redefs=None):
         """
-        Runs sensitivity analysis for the top inputs of a process.
-        Returns a dictionary of flow names and their corresponding sensitivities (elasticity).
+        Runs sensitivity analysis for the top inputs of a process with optional parameter overrides.
         """
         # 1. Run baseline calculation
         print("Running baseline calculation...")
-        baseline_results = self.executor.calculate(system_id, method_id)
+        baseline_results = self.executor.calculate(system_id, method_id, parameter_redefs=parameter_redefs)
         
         # Find target impact category baseline
         baseline_item = next((r for r in baseline_results if target_category_query.lower() in r["category_name"].lower()), None)
@@ -51,18 +50,20 @@ class SensitivityAnalyzer:
         for idx, exchange in enumerate(input_exchanges):
             flow_name = exchange.flow.name
             orig_amount = exchange.amount
+            orig_formula = exchange.amount_formula
             perturbation = 0.10 # +10% perturbation
             new_amount = orig_amount * (1.0 + perturbation)
             
             print(f"[{idx+1}/{len(input_exchanges)}] Testing sensitivity of '{flow_name}' (perturbing {orig_amount:.4f} -> {new_amount:.4f})...")
             
             try:
-                # Apply perturbation in database
+                # Apply perturbation in database (temporarily clear formula so openLCA uses perturbed amount)
+                exchange.amount_formula = None
                 exchange.amount = new_amount
                 self.client.put(proc)
                 
                 # Re-run calculation
-                new_results = self.executor.calculate(system_id, method_id)
+                new_results = self.executor.calculate(system_id, method_id, parameter_redefs=parameter_redefs)
                 new_item = next((r for r in new_results if r["category_name"] == target_category_name), None)
                 
                 if new_item:
@@ -85,7 +86,8 @@ class SensitivityAnalyzer:
                 print(f"   -> Error perturbing '{flow_name}': {e}")
                 
             finally:
-                # Restore original amount in database
+                # Restore original amount and formula in database
+                exchange.amount_formula = orig_formula
                 exchange.amount = orig_amount
                 self.client.put(proc)
                 
@@ -103,26 +105,16 @@ class UncertaintyPropagator:
         from .multiobjective import CostRegistry
         self.cost_registry = cost_registry if cost_registry else CostRegistry()
 
-    def propagate(self, process_id, system_id, method_id, mapping_scores=None, num_trials=1000):
+    def propagate(self, process_id, system_id, method_id, mapping_scores=None, num_trials=1000, parameter_redefs=None):
         """
-        Runs Monte Carlo propagation of inventory mapping uncertainty.
-        
-        Parameters:
-          process_id: ID of the process to analyze
-          system_id: ID of the product system
-          method_id: ID of the LCIA method
-          mapping_scores: Dict mapping flow_id to mapping_score float (0.0 to 1.0)
-          num_trials: Number of Monte Carlo iterations
-          
-        Returns:
-          A dictionary of impact categories containing statistics: mean, stddev, and 95% CI.
+        Runs Monte Carlo propagation of inventory mapping uncertainty with optional parameter overrides.
         """
         if mapping_scores is None:
             mapping_scores = {}
 
         # 1. Run baseline environmental calculation
         print("[Uncertainty] Running baseline calculation...")
-        baseline_results = self.executor.calculate(system_id, method_id)
+        baseline_results = self.executor.calculate(system_id, method_id, parameter_redefs=parameter_redefs)
         
         # We target GWP, Acidification, and Water Consumption
         target_categories = {
@@ -183,6 +175,7 @@ class UncertaintyPropagator:
             flow_id = exchange.flow.id
             flow_name = exchange.flow.name
             orig_amount = exchange.amount
+            orig_formula = exchange.amount_formula
             perturbation = 0.10 # +10% perturbation
             new_amount = orig_amount * (1.0 + perturbation)
             delta_x = new_amount - orig_amount
@@ -199,12 +192,13 @@ class UncertaintyPropagator:
                 
             print(f"[Uncertainty] Computing sensitivity for exchange '{flow_name}'...")
             try:
-                # Apply perturbation in database
+                # Apply perturbation in database (temporarily clear formula so openLCA uses perturbed amount)
+                exchange.amount_formula = None
                 exchange.amount = new_amount
                 self.client.put(proc)
                 
                 # Re-calculate
-                new_results = self.executor.calculate(system_id, method_id)
+                new_results = self.executor.calculate(system_id, method_id, parameter_redefs=parameter_redefs)
                 
                 for kpi, queries in target_categories.items():
                     target_name = category_full_names[kpi]
@@ -223,7 +217,8 @@ class UncertaintyPropagator:
                 for kpi in target_categories.keys():
                     coefficients[kpi][flow_id] = 0.0
             finally:
-                # Restore original amount in database
+                # Restore original amount and formula in database
+                exchange.amount_formula = orig_formula
                 exchange.amount = orig_amount
                 self.client.put(proc)
 

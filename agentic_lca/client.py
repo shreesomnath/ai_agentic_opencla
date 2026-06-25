@@ -34,13 +34,15 @@ class LcaExecutor:
         """Retrieve the full details of a flow by its ID."""
         return self.client.get(o.Flow, flow_id)
         
-    def calculate(self, system_id, method_id, amount=1.0):
-        """Run an LCA calculation for the given system ID and method ID."""
+    def calculate(self, system_id, method_id, amount=1.0, parameter_redefs=None):
+        """Run an LCA calculation for the given system ID and method ID with optional parameter overrides."""
         setup = o.CalculationSetup()
         setup.target = o.Ref(ref_type=o.RefType.ProductSystem, id=system_id)
         setup.impact_method = o.Ref(ref_type=o.RefType.ImpactMethod, id=method_id)
         setup.amount = amount
-        
+        if parameter_redefs:
+            setup.parameters = parameter_redefs
+            
         result = self.client.calculate(setup)
         
         # Poll for results

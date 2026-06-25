@@ -10,6 +10,31 @@ document.addEventListener("DOMContentLoaded", () => {
     const chatBox = document.getElementById("chat-box");
     const themeToggle = document.getElementById("theme-toggle");
     
+    // Dynamic Process Parameters Sliders
+    const paramProcessEfficiency = document.getElementById("param-process-efficiency");
+    const paramRecycleRate = document.getElementById("param-recycle-rate");
+    const paramLossFactor = document.getElementById("param-loss-factor");
+    
+    const valProcessEfficiency = document.getElementById("val-process-efficiency");
+    const valRecycleRate = document.getElementById("val-recycle-rate");
+    const valLossFactor = document.getElementById("val-loss-factor");
+
+    if (paramProcessEfficiency && valProcessEfficiency) {
+        paramProcessEfficiency.addEventListener("input", () => {
+            valProcessEfficiency.textContent = parseFloat(paramProcessEfficiency.value).toFixed(2);
+        });
+    }
+    if (paramRecycleRate && valRecycleRate) {
+        paramRecycleRate.addEventListener("input", () => {
+            valRecycleRate.textContent = parseFloat(paramRecycleRate.value).toFixed(2);
+        });
+    }
+    if (paramLossFactor && valLossFactor) {
+        paramLossFactor.addEventListener("input", () => {
+            valLossFactor.textContent = parseFloat(paramLossFactor.value).toFixed(2);
+        });
+    }
+    
     const openlcaStatus = document.getElementById("openlca-status");
     const ollamaStatus = document.getElementById("ollama-status");
     
@@ -267,7 +292,14 @@ document.addEventListener("DOMContentLoaded", () => {
         fetch("/api/optimize", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ items: items })
+            body: JSON.stringify({ 
+                items: items,
+                parameters: {
+                    process_efficiency: parseFloat(paramProcessEfficiency.value),
+                    recycle_rate: parseFloat(paramRecycleRate.value),
+                    loss_factor: parseFloat(paramLossFactor.value)
+                }
+            })
         })
         .then(res => res.json())
         .then(data => {
@@ -590,7 +622,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 report: activeState.report,
                 temp_proc_id: activeState.temp_proc_id,
                 temp_sys_id: activeState.temp_sys_id,
-                method_id: activeState.method_id
+                method_id: activeState.method_id,
+                parameters: {
+                    process_efficiency: parseFloat(paramProcessEfficiency.value),
+                    recycle_rate: parseFloat(paramRecycleRate.value),
+                    loss_factor: parseFloat(paramLossFactor.value)
+                }
             })
         })
         .then(res => res.json())

@@ -67,7 +67,7 @@ class MultiObjectiveEvaluator:
                 total_cost += cost
         return total_cost
 
-    def evaluate_substitution(self, process_id, system_id, method_id, target_flow_id, substitute_flow_desc, mapping_scores=None):
+    def evaluate_substitution(self, process_id, system_id, method_id, target_flow_id, substitute_flow_desc, mapping_scores=None, parameter_redefs=None):
         """
         Evaluates the trade-offs of substituting a process input exchange with an alternative,
         propagating mapping uncertainty through a Monte Carlo simulation.
@@ -79,6 +79,7 @@ class MultiObjectiveEvaluator:
           target_flow_id: ID of the flow to replace in the process exchanges
           substitute_flow_desc: FlowDescriptor of the substitute flow
           mapping_scores: Dictionary of flow IDs to mapping confidence scores
+          parameter_redefs: List of parameter overrides to apply during calculations
           
         Returns:
           A dictionary containing comparison reports for GWP, Acidification, Water, and Cost.
@@ -106,7 +107,8 @@ class MultiObjectiveEvaluator:
             system_id=system_id,
             method_id=method_id,
             mapping_scores=mapping_scores,
-            num_trials=1000
+            num_trials=1000,
+            parameter_redefs=parameter_redefs
         )
         
         # 3. TVL Check for Substitution
@@ -172,7 +174,8 @@ class MultiObjectiveEvaluator:
                 system_id=temp_sys.id,
                 method_id=method_id,
                 mapping_scores=mapping_scores,
-                num_trials=1000
+                num_trials=1000,
+                parameter_redefs=parameter_redefs
             )
             
         finally:

@@ -154,6 +154,36 @@
                         </div>
                     </div>
 
+                    <!-- Dynamic Process Parameters (Sliders) -->
+                    <div class="workspace-section" style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 16px;">
+                        <div class="section-title-row">
+                            <h3>Dynamic Process Parameters</h3>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary);">Process Efficiency</label>
+                                    <span id="val-process-efficiency" style="font-family: monospace; font-size: 11px; font-weight: 700; color: var(--accent-indigo);">1.00</span>
+                                </div>
+                                <input type="range" id="param-process-efficiency" min="0.5" max="1.2" step="0.05" value="1.0" style="width: 100%; accent-color: var(--accent-indigo);">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary);">Recycle Substitute Rate</label>
+                                    <span id="val-recycle-rate" style="font-family: monospace; font-size: 11px; font-weight: 700; color: var(--accent-indigo);">0.00</span>
+                                </div>
+                                <input type="range" id="param-recycle-rate" min="0.0" max="0.9" step="0.05" value="0.0" style="width: 100%; accent-color: var(--accent-indigo);">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary);">Loss/Scrap Factor</label>
+                                    <span id="val-loss-factor" style="font-family: monospace; font-size: 11px; font-weight: 700; color: var(--accent-indigo);">0.00</span>
+                                </div>
+                                <input type="range" id="param-loss-factor" min="0.0" max="0.3" step="0.05" value="0.0" style="width: 100%; accent-color: var(--accent-indigo);">
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Thermodynamic Mass Balance Check -->
                     <div class="verification-status-panel">
                         <div class="verification-header">

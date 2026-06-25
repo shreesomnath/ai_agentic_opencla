@@ -91,6 +91,9 @@ def run_optimization():
     """
     data = request.json or {}
     items = data.get("items", [])
+    param_vals = data.get("parameters", {})
+    efficiency = float(param_vals.get("process_efficiency", 1.0))
+    loss_factor = float(param_vals.get("loss_factor", 0.0))
     
     # Write items to a temporary BOM file
     temp_bom_path = "temp_bom_web.csv"
@@ -152,6 +155,7 @@ def run_optimization():
                 ref_unit=matched_flow.ref_unit
             )
             exchange.amount = amount
+            exchange.amount_formula = f"{amount} * (1 + loss_factor) / process_efficiency"
             exchange.unit = o.Ref(ref_type=o.RefType.Unit, id=matched_unit.id, name=matched_unit.name)
             exchange.flow_property = o.Ref(
                 ref_type=o.RefType.FlowProperty,
@@ -199,6 +203,19 @@ def run_optimization():
         process.name = "Web-Synthesized Product Manufacturing"
         process.process_type = o.ProcessType.UNIT_PROCESS
         
+        # Add process parameters
+        eff_param = o.Parameter()
+        eff_param.name = "process_efficiency"
+        eff_param.value = 1.0
+        eff_param.is_input_parameter = True
+        
+        loss_param = o.Parameter()
+        loss_param.name = "loss_factor"
+        loss_param.value = 0.0
+        loss_param.is_input_parameter = True
+        
+        process.parameters = [eff_param, loss_param]
+        
         out_exchange = o.Exchange()
         out_exchange.is_input = False
         out_exchange.flow = o.Ref(ref_type=o.RefType.Flow, id=module_flow.id, name=module_flow.name, ref_unit="kg")
@@ -228,13 +245,28 @@ def run_optimization():
             raise ValueError("ReCiPe 2016 Midpoint (H) method not found.")
         method_desc = methods[0]
         
+        # Construct parameter redefinitions
+        parameter_redefs = [
+            o.ParameterRedef(
+                name="process_efficiency",
+                value=efficiency,
+                context=o.Ref(ref_type=o.RefType.Process, id=temp_proc_id, name="Web-Synthesized Product Manufacturing")
+            ),
+            o.ParameterRedef(
+                name="loss_factor",
+                value=loss_factor,
+                context=o.Ref(ref_type=o.RefType.Process, id=temp_proc_id, name="Web-Synthesized Product Manufacturing")
+            )
+        ]
+        
         # 5. Run sensitivities to identify hotspot
         sensitivities = analyzer.analyze_sensitivities(
             process_id=temp_proc_id,
             system_id=temp_sys_id,
             method_id=method_desc.id,
             target_category_query="global warming",
-            num_inputs_to_test=5
+            num_inputs_to_test=5,
+            parameter_redefs=parameter_redefs
         )
         
         hotspot_flow_name = None
@@ -290,7 +322,8 @@ def run_optimization():
             method_id=method_desc.id,
             target_flow_id=hotspot_flow_id,
             substitute_flow_desc=substitute_flow_desc,
-            mapping_scores=mapping_scores
+            mapping_scores=mapping_scores,
+            parameter_redefs=parameter_redefs
         )
         
         if report.get("status") != "SUCCESS":
@@ -363,12 +396,25 @@ def run_optimization():
             
         # Format exchanges for context list
         exchanges_list = []
+        params_dict = {
+            "process_efficiency": efficiency,
+            "loss_factor": loss_factor
+        }
         for ex in process.exchanges:
             if ex.is_input and ex.flow:
+                amount = ex.amount
+                if ex.amount_formula:
+                    expr = ex.amount_formula
+                    for name, val in params_dict.items():
+                        expr = expr.replace(name, str(val))
+                    try:
+                        amount = float(eval(expr, {"__builtins__": None}, {}))
+                    except:
+                        pass
                 exchanges_list.append({
                     "id": ex.flow.id,
                     "name": ex.flow.name,
-                    "amount": ex.amount,
+                    "amount": amount,
                     "unit": ex.unit.name if ex.unit else ""
                 })
                 
@@ -772,6 +818,9 @@ def chat():
     temp_proc_id = data.get("temp_proc_id")
     temp_sys_id = data.get("temp_sys_id")
     method_id = data.get("method_id")
+    param_vals = data.get("parameters", {})
+    efficiency = float(param_vals.get("process_efficiency", 1.0))
+    loss_factor = float(param_vals.get("loss_factor", 0.0))
     
     if not message:
         return jsonify({"error": "Message is empty"}), 400
@@ -855,11 +904,13 @@ def chat():
                 ex_flow_name = sub_desc.name if ex["id"] == target_flow_id else ex["name"]
                 
                 matched_unit = unit_map.get(ex["unit"].lower(), kg_unit)
+                base_amount = float(ex["amount"]) * efficiency / (1.0 + loss_factor)
                 
                 new_ex = o.Exchange()
                 new_ex.is_input = True
                 new_ex.flow = o.Ref(ref_type=o.RefType.Flow, id=ex_flow_id, name=ex_flow_name)
-                new_ex.amount = float(ex["amount"])
+                new_ex.amount = base_amount
+                new_ex.amount_formula = f"{base_amount} * (1 + loss_factor) / process_efficiency"
                 new_ex.unit = o.Ref(ref_type=o.RefType.Unit, id=matched_unit.id, name=matched_unit.name)
                 new_ex.flow_property = o.Ref(ref_type=o.RefType.FlowProperty, id="93a60a56-a3c8-11da-a746-0800200b9a66", name="Mass")
                 new_ex.internal_id = internal_counter
@@ -868,11 +919,11 @@ def chat():
                 
                 # Mass sum
                 if ex["unit"].lower() == "kg":
-                    total_mass += float(ex["amount"])
+                    total_mass += base_amount
                 elif ex["unit"].lower() == "g":
-                    total_mass += float(ex["amount"]) * 1e-3
-                elif "water" in ex["name"].lower() and ex["unit"].lower() in ["m3", "cubic meter"]:
-                    total_mass += float(ex["amount"]) * 1000.0
+                    total_mass += base_amount * 1e-3
+                elif "water" in ex_flow_name.lower() and ex["unit"].lower() in ["m3", "cubic meter"]:
+                    total_mass += base_amount * 1000.0
             
             # Rebuild finished flow
             temp_flow_id = str(uuid.uuid4())
@@ -895,6 +946,19 @@ def chat():
             process.id = rebuild_proc_id
             process.name = "Web-Rebuild Manufacturing"
             process.process_type = o.ProcessType.UNIT_PROCESS
+            
+            # Add process parameters
+            eff_param = o.Parameter()
+            eff_param.name = "process_efficiency"
+            eff_param.value = 1.0
+            eff_param.is_input_parameter = True
+            
+            loss_param = o.Parameter()
+            loss_param.name = "loss_factor"
+            loss_param.value = 0.0
+            loss_param.is_input_parameter = True
+            
+            process.parameters = [eff_param, loss_param]
             
             out_exchange = o.Exchange()
             out_exchange.is_input = False
@@ -929,6 +993,20 @@ def chat():
                 mapping_scores[ex_flow_id] = score
 
             try:
+                # Construct parameter redefinitions
+                parameter_redefs = [
+                    o.ParameterRedef(
+                        name="process_efficiency",
+                        value=efficiency,
+                        context=o.Ref(ref_type=o.RefType.Process, id=rebuild_proc_id, name="Web-Rebuild Manufacturing")
+                    ),
+                    o.ParameterRedef(
+                        name="loss_factor",
+                        value=loss_factor,
+                        context=o.Ref(ref_type=o.RefType.Process, id=rebuild_proc_id, name="Web-Rebuild Manufacturing")
+                    )
+                ]
+                
                 # Calculate updated metrics
                 sub_report = evaluator.evaluate_substitution(
                     process_id=rebuild_proc_id,
@@ -936,7 +1014,8 @@ def chat():
                     method_id=method_id,
                     target_flow_id=target_flow_id,
                     substitute_flow_desc=sub_desc,
-                    mapping_scores=mapping_scores
+                    mapping_scores=mapping_scores,
+                    parameter_redefs=parameter_redefs
                 )
                 
                 # Save new chart
@@ -1005,11 +1084,24 @@ def chat():
                     
                 # Reconstruct updated exchanges list
                 updated_exchanges = []
+                params_dict = {
+                    "process_efficiency": efficiency,
+                    "loss_factor": loss_factor
+                }
                 for ex_obj in exchanges_objs:
+                    amount = ex_obj.amount
+                    if ex_obj.amount_formula:
+                        expr = ex_obj.amount_formula
+                        for name, val in params_dict.items():
+                            expr = expr.replace(name, str(val))
+                        try:
+                            amount = float(eval(expr, {"__builtins__": None}, {}))
+                        except:
+                            pass
                     updated_exchanges.append({
                         "id": ex_obj.flow.id,
                         "name": ex_obj.flow.name,
-                        "amount": ex_obj.amount,
+                        "amount": amount,
                         "unit": ex_obj.unit.name if ex_obj.unit else ""
                     })
                     
