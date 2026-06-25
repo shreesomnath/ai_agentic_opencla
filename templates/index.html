@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agentic LCA | Sustainability Ingestion & Optimization</title>
-    <!-- Premium Google Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -21,19 +20,19 @@
                 </svg>
                 <h1>Agentic LCA <span class="badge-tag">Platform</span></h1>
             </div>
-            
+
             <div class="header-right">
                 <div class="developer-credit">
-                    <span class="credit-label">DEVELOPERS</span>
-                    <span class="names">Somnath Luitel & Manmeet Singh</span>
+                    <span class="credit-label">Developers</span>
+                    <span class="names">Somnath Luitel &amp; Manmeet Singh</span>
                 </div>
-                
+
                 <div class="server-status">
                     <div class="status-indicator online" id="openlca-status">OpenLCA Server</div>
                     <div class="status-indicator online" id="ollama-status">Ollama LLM</div>
                 </div>
-                
-                <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme">
+
+                <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
                     <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                     <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                 </button>
@@ -41,7 +40,7 @@
         </header>
 
         <div class="main-layout">
-            <!-- Workspace Panel (Unified Column) -->
+            <!-- Workspace Panel -->
             <aside class="workspace-panel">
                 <div class="workspace-card">
                     <div class="workspace-header">
@@ -58,7 +57,7 @@
                         <p class="section-desc">Map raw materials and test dynamic process variations</p>
                     </div>
 
-                    <!-- Tabs navigation -->
+                    <!-- Tabs -->
                     <div class="workspace-tabs">
                         <button type="button" class="tab-btn active" id="tab-flat">Flat List</button>
                         <button type="button" class="tab-btn" id="tab-hierarchical">Hierarchical JSON</button>
@@ -69,7 +68,7 @@
                     <div id="panel-flat" class="tab-panel active">
                         <div class="workspace-section">
                             <div class="form-group">
-                                <label for="sample-select">Load Study Template</label>
+                                <label for="sample-select">Load study template</label>
                                 <select id="sample-select">
                                     <option value="">-- Choose case study --</option>
                                 </select>
@@ -81,15 +80,15 @@
                                 <h3>BOM Feedstock Inventory</h3>
                                 <span class="rows-indicator" id="rows-count">0 items</span>
                             </div>
-                            
+
                             <div class="bom-table-container">
                                 <table id="bom-table">
                                     <thead>
                                         <tr>
-                                            <th>Material Flow</th>
+                                            <th>Material flow</th>
                                             <th>Amount</th>
                                             <th>Unit</th>
-                                            <th style="width: 40px;"></th>
+                                            <th style="width: 36px;"></th>
                                         </tr>
                                     </thead>
                                     <tbody id="bom-tbody">
@@ -97,23 +96,23 @@
                                     </tbody>
                                 </table>
                             </div>
-                            
+
                             <div class="bom-actions">
                                 <button type="button" class="btn btn-secondary" id="add-row-btn">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                    Add Flow
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    <span class="btn-label">Add flow</span>
                                 </button>
                                 <button type="button" class="btn btn-primary" id="optimize-btn">
-                                    Run Optimization
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                    <span class="btn-label">Run Optimization</span>
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                                 </button>
-                                <button type="button" class="btn btn-secondary" id="pareto-btn" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; border: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
-                                    Pareto Frontier
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                                <button type="button" class="btn btn-accent" id="pareto-btn">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                                    <span class="btn-label">Pareto Frontier</span>
                                 </button>
-                                <button type="button" class="btn btn-secondary" id="export-csv-btn" style="display: none; background: #27272a; color: white; border: 1px solid #3f3f46; font-weight: 600; align-items: center; gap: 6px;">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                                    Export CSV
+                                <button type="button" class="btn btn-secondary" id="export-csv-btn" style="display: none;">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                    <span class="btn-label">Export CSV</span>
                                 </button>
                             </div>
                         </div>
@@ -122,30 +121,31 @@
                     <!-- Panel 2: Hierarchical BOM Compiler -->
                     <div id="panel-hierarchical" class="tab-panel">
                         <div class="workspace-section">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                <label for="bom-json-textarea" style="margin: 0; font-weight: 600;">Hierarchical BOM Schema (JSON)</label>
-                                <label for="bom-file-input" style="font-size: 11px; color: var(--accent-indigo); cursor: pointer; text-decoration: underline; margin: 0; font-weight: 600;">
+                            <div class="section-title-row">
+                                <label for="bom-json-textarea" style="margin: 0;">Hierarchical BOM schema (JSON)</label>
+                                <label for="bom-file-input" class="upload-link">
                                     Upload JSON
                                     <input type="file" id="bom-file-input" accept=".json" style="display: none;">
                                 </label>
                             </div>
                             <textarea id="bom-json-textarea" class="bom-textarea" rows="8" placeholder="Paste or upload custom nested BOM JSON here..."></textarea>
                         </div>
-                        
+
                         <!-- Visual Tree Previewer -->
-                        <div class="workspace-section" id="tree-preview-section" style="display: none; border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 12px;">
-                            <label style="font-weight: 600; margin-bottom: 6px; display: block;">Visual Assembly Tree Preview</label>
-                            <div id="bom-tree-container" style="background: #18181b; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; max-height: 185px; overflow-y: auto; font-family: monospace; font-size: 11px; line-height: 1.5; color: var(--text-primary);">
+                        <div class="workspace-section" id="tree-preview-section" style="display: none; border-top: 1px solid var(--border-color); padding-top: 12px;">
+                            <label style="display: block; margin-bottom: 6px;">Visual assembly tree preview</label>
+                            <div id="bom-tree-container" class="tree-preview-box">
                                 <!-- Rendered recursively -->
                             </div>
                         </div>
 
-                        <div class="bom-actions" style="margin-top: 12px;">
+                        <div class="bom-actions">
                             <button type="button" class="btn btn-secondary" id="load-hierarchical-sample-btn">
-                                Wind Blade Sample
+                                <span class="btn-label">Wind blade sample</span>
                             </button>
                             <button type="button" class="btn btn-primary" id="compile-hierarchical-btn">
-                                Compile & Calculate 🚀
+                                <span class="btn-label">Compile &amp; Calculate</span>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                             </button>
                         </div>
                     </div>
@@ -153,30 +153,28 @@
                     <!-- Panel 3: Autonomous Agent Loop -->
                     <div id="panel-autonomous" class="tab-panel">
                         <div class="workspace-section">
-                            <label for="autonomous-goal-input">Specify Sustainability Directive (Goal)</label>
+                            <label for="autonomous-goal-input">Specify sustainability directive (goal)</label>
                             <textarea id="autonomous-goal-input" class="bom-textarea" rows="4" placeholder="e.g. Minimize carbon footprint as much as possible, keeping feedstock cost under $10.00"></textarea>
                         </div>
                         <div class="bom-actions">
-                            <button type="button" class="btn btn-primary" id="run-autonomous-btn" style="width: 100%; background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
-                                Launch Autonomous Agent 🚀
+                            <button type="button" class="btn btn-agentic btn-block" id="run-autonomous-btn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+                                <span class="btn-label">Launch Autonomous Agent</span>
                             </button>
                         </div>
-                        
+
                         <!-- Terminal Log Stream -->
-                        <div class="workspace-section" style="margin-top: 16px;">
-                            <label>Consensus Log Stream</label>
-                            <div id="autonomous-terminal" style="background-color: #0f172a; color: #38bdf8; font-family: monospace; font-size: 11px; padding: 12px; border-radius: 8px; border: 1px solid #334155; height: 180px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5; box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);">Waiting to launch agent loop...</div>
+                        <div class="workspace-section" style="margin-top: 14px;">
+                            <label>Consensus log stream</label>
+                            <div id="autonomous-terminal" class="agent-terminal">Waiting to launch agent loop...</div>
                         </div>
                     </div>
-
-
                 </div>
-
             </aside>
 
             <!-- Main Analytics Canvas -->
             <main class="analytics-canvas">
-                <!-- Single Unified Banner for KPI Metrics -->
+                <!-- KPI Banner -->
                 <div class="analytics-kpi-banner">
                     <div class="kpi-card" id="card-gwp">
                         <div class="kpi-header">
@@ -186,17 +184,17 @@
                         <div class="kpi-comparison">
                             <div class="kpi-value-box">
                                 <span class="val-label">Baseline</span>
-                                <span class="val-num base" id="gwp-baseline">-</span>
+                                <span class="val-num base" id="gwp-baseline">–</span>
                                 <span class="val-error-bounds" id="gwp-baseline-uncertainty"></span>
                             </div>
                             <div class="kpi-value-box">
                                 <span class="val-label">Optimized</span>
-                                <span class="val-num opt" id="gwp-optimized">-</span>
+                                <span class="val-num opt" id="gwp-optimized">–</span>
                                 <span class="val-error-bounds" id="gwp-optimized-uncertainty"></span>
                             </div>
                         </div>
                         <div class="kpi-badge-row">
-                            <span class="kpi-badge" id="gwp-change">-</span>
+                            <span class="kpi-badge" id="gwp-change">–</span>
                         </div>
                     </div>
 
@@ -208,17 +206,17 @@
                         <div class="kpi-comparison">
                             <div class="kpi-value-box">
                                 <span class="val-label">Baseline</span>
-                                <span class="val-num base" id="acid-baseline">-</span>
+                                <span class="val-num base" id="acid-baseline">–</span>
                                 <span class="val-error-bounds" id="acid-baseline-uncertainty"></span>
                             </div>
                             <div class="kpi-value-box">
                                 <span class="val-label">Optimized</span>
-                                <span class="val-num opt" id="acid-optimized">-</span>
+                                <span class="val-num opt" id="acid-optimized">–</span>
                                 <span class="val-error-bounds" id="acid-optimized-uncertainty"></span>
                             </div>
                         </div>
                         <div class="kpi-badge-row">
-                            <span class="kpi-badge" id="acid-change">-</span>
+                            <span class="kpi-badge" id="acid-change">–</span>
                         </div>
                     </div>
 
@@ -230,17 +228,17 @@
                         <div class="kpi-comparison">
                             <div class="kpi-value-box">
                                 <span class="val-label">Baseline</span>
-                                <span class="val-num base" id="water-baseline">-</span>
+                                <span class="val-num base" id="water-baseline">–</span>
                                 <span class="val-error-bounds" id="water-baseline-uncertainty"></span>
                             </div>
                             <div class="kpi-value-box">
                                 <span class="val-label">Optimized</span>
-                                <span class="val-num opt" id="water-optimized">-</span>
+                                <span class="val-num opt" id="water-optimized">–</span>
                                 <span class="val-error-bounds" id="water-optimized-uncertainty"></span>
                             </div>
                         </div>
                         <div class="kpi-badge-row">
-                            <span class="kpi-badge" id="water-change">-</span>
+                            <span class="kpi-badge" id="water-change">–</span>
                         </div>
                     </div>
 
@@ -252,53 +250,50 @@
                         <div class="kpi-comparison">
                             <div class="kpi-value-box">
                                 <span class="val-label">Baseline</span>
-                                <span class="val-num base" id="cost-baseline">-</span>
+                                <span class="val-num base" id="cost-baseline">–</span>
                                 <span class="val-error-bounds" id="cost-baseline-uncertainty"></span>
                             </div>
                             <div class="kpi-value-box">
                                 <span class="val-label">Optimized</span>
-                                <span class="val-num opt" id="cost-optimized">-</span>
+                                <span class="val-num opt" id="cost-optimized">–</span>
                                 <span class="val-error-bounds" id="cost-optimized-uncertainty"></span>
                             </div>
                         </div>
                         <div class="kpi-badge-row">
-                            <span class="kpi-badge" id="cost-change">-</span>
+                            <span class="kpi-badge" id="cost-change">–</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Plot and Chat Row -->
+                <!-- Chart panel -->
                 <div class="visuals-row">
-                    <!-- Plot Panel -->
                     <div class="visual-panel chart-panel">
-                        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                            <h3 style="margin: 0;">
+                        <div class="panel-header">
+                            <h3>
                                 <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line><line x1="2" y1="20" x2="22" y2="20"></line></svg>
-                                Analysis & Charts
+                                Analysis &amp; Charts
                             </h3>
-                            <div class="chart-toggle-tabs" style="display: flex; gap: 4px; background: var(--border-color); padding: 2px; border-radius: 6px;">
+                            <div class="chart-toggle-tabs">
                                 <button type="button" class="chart-tab-btn active" id="chart-tab-tradeoff">Trade-Offs</button>
                                 <button type="button" class="chart-tab-btn" id="chart-tab-uncertainty">Uncertainty Dist.</button>
                             </div>
                         </div>
                         <div class="chart-content-area">
-                            <div class="chart-active-title" id="chart-active-title" style="display: none; font-size: 11.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 12px; padding: 4px 8px; background: rgba(255,255,255,0.02); border-radius: 4px; border: 1px solid var(--border-color); text-align: center; letter-spacing: 0.02em;"></div>
+                            <div class="chart-active-title" id="chart-active-title" style="display: none;"></div>
                             <div class="placeholder-text" id="chart-placeholder">
                                 Run optimization to display comparison metrics
                             </div>
-                            <img id="tradeoff-chart-img" style="display: none; width: 100%; height: auto;" alt="Optimization Tradeoffs Bar Chart">
-                            <img id="uncertainty-chart-img" style="display: none; width: 100%; height: auto;" alt="Uncertainty Distribution Histogram">
+                            <img id="tradeoff-chart-img" style="display: none;" alt="Optimization tradeoffs bar chart">
+                            <img id="uncertainty-chart-img" style="display: none;" alt="Uncertainty distribution histogram">
                         </div>
                     </div>
-
                 </div>
-
             </main>
         </div>
 
-        <!-- Controls & Verification Grid (Spans the complete row from left to right) -->
+        <!-- Controls & Verification Grid -->
         <div class="controls-row">
-            <!-- Dynamic Process Parameters (Sliders) -->
+            <!-- Dynamic Process Parameters -->
             <div class="visual-panel control-panel-card">
                 <div class="panel-header">
                     <h3>
@@ -306,32 +301,32 @@
                         Process Scaling
                     </h3>
                 </div>
-                <div class="control-card-body" style="display: flex; flex-direction: column; gap: 14px; flex: 1; justify-content: center;">
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Process Efficiency</label>
-                            <span id="val-process-efficiency" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-emerald);">1.00</span>
+                <div class="control-card-body">
+                    <div class="slider-row">
+                        <div class="slider-row-head">
+                            <span class="slider-label">Process efficiency</span>
+                            <span class="slider-value" id="val-process-efficiency">1.00</span>
                         </div>
                         <input type="range" id="param-process-efficiency" min="0.5" max="1.2" step="0.05" value="1.0" class="custom-slider">
                     </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Recycle Substitute Rate</label>
-                            <span id="val-recycle-rate" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-emerald);">0.00</span>
+                    <div class="slider-row">
+                        <div class="slider-row-head">
+                            <span class="slider-label">Recycle substitute rate</span>
+                            <span class="slider-value" id="val-recycle-rate">0.00</span>
                         </div>
                         <input type="range" id="param-recycle-rate" min="0.0" max="0.9" step="0.05" value="0.0" class="custom-slider">
                     </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Loss/Scrap Factor</label>
-                            <span id="val-loss-factor" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-emerald);">0.00</span>
+                    <div class="slider-row">
+                        <div class="slider-row-head">
+                            <span class="slider-label">Loss / scrap factor</span>
+                            <span class="slider-value" id="val-loss-factor">0.00</span>
                         </div>
                         <input type="range" id="param-loss-factor" min="0.0" max="0.3" step="0.05" value="0.0" class="custom-slider">
                     </div>
                 </div>
             </div>
 
-            <!-- Multi-Criteria Optimization Priorities (TOPSIS) -->
+            <!-- TOPSIS Weights -->
             <div class="visual-panel control-panel-card">
                 <div class="panel-header">
                     <h3>
@@ -339,39 +334,39 @@
                         TOPSIS MCDA Weights
                     </h3>
                 </div>
-                <div class="control-card-body" style="display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: center;">
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                            <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Carbon (GWP) Weight</label>
-                            <span id="val-weight-gwp" style="font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; color: var(--accent-violet);">40%</span>
+                <div class="control-card-body">
+                    <div class="slider-row">
+                        <div class="slider-row-head">
+                            <span class="slider-label">Carbon (GWP) weight</span>
+                            <span class="slider-value" id="val-weight-gwp">40%</span>
                         </div>
                         <input type="range" id="weight-gwp" min="0" max="100" step="5" value="40" class="custom-slider">
                     </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                            <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Acidification Weight</label>
-                            <span id="val-weight-acid" style="font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; color: var(--accent-violet);">15%</span>
+                    <div class="slider-row">
+                        <div class="slider-row-head">
+                            <span class="slider-label">Acidification weight</span>
+                            <span class="slider-value" id="val-weight-acid">15%</span>
                         </div>
                         <input type="range" id="weight-acid" min="0" max="100" step="5" value="15" class="custom-slider">
                     </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                            <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Water Weight</label>
-                            <span id="val-weight-water" style="font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; color: var(--accent-violet);">15%</span>
+                    <div class="slider-row">
+                        <div class="slider-row-head">
+                            <span class="slider-label">Water weight</span>
+                            <span class="slider-value" id="val-weight-water">15%</span>
                         </div>
                         <input type="range" id="weight-water" min="0" max="100" step="5" value="15" class="custom-slider">
                     </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                            <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Material Cost Weight</label>
-                            <span id="val-weight-cost" style="font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; color: var(--accent-violet);">30%</span>
+                    <div class="slider-row">
+                        <div class="slider-row-head">
+                            <span class="slider-label">Material cost weight</span>
+                            <span class="slider-value" id="val-weight-cost">30%</span>
                         </div>
                         <input type="range" id="weight-cost" min="0" max="100" step="5" value="30" class="custom-slider">
                     </div>
                 </div>
             </div>
 
-            <!-- Thermodynamic Mass Balance Check -->
+            <!-- Mass Balance Check -->
             <div class="visual-panel control-panel-card">
                 <div class="panel-header">
                     <h3>
@@ -379,29 +374,29 @@
                         TVL Mass Balance
                     </h3>
                 </div>
-                <div class="control-card-body" style="display: flex; flex-direction: column; gap: 14px; flex: 1; justify-content: center;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
-                        <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Verification Status</span>
+                <div class="control-card-body">
+                    <div class="verification-header">
+                        <span>Verification status</span>
                         <span class="tvl-status-badge" id="tvl-badge">Not Checked</span>
                     </div>
-                    <div class="verification-stats" style="display: flex; gap: 8px; width: 100%;">
-                        <div class="stat-pill" style="flex: 1; padding: 8px 10px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; text-align: center;">
-                            <label style="font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px;">Inputs</label>
-                            <span id="tvl-input-mass" style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; color: var(--text-primary);">0.00 kg</span>
+                    <div class="verification-stats">
+                        <div class="stat-pill">
+                            <label>Inputs</label>
+                            <span id="tvl-input-mass">0.00 kg</span>
                         </div>
-                        <div class="stat-pill" style="flex: 1; padding: 8px 10px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; text-align: center;">
-                            <label style="font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px;">Outputs</label>
-                            <span id="tvl-output-mass" style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; color: var(--text-primary);">0.00 kg</span>
+                        <div class="stat-pill">
+                            <label>Outputs</label>
+                            <span id="tvl-output-mass">0.00 kg</span>
                         </div>
                     </div>
-                    <div class="stat-pill" style="padding: 8px 10px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; text-align: center; width: 100%;">
-                        <label style="font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px;">Stoichiometric Balance Error</label>
-                        <span id="tvl-error" style="font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; color: var(--text-primary);">0.00%</span>
+                    <div class="stat-pill">
+                        <label>Stoichiometric balance error</label>
+                        <span id="tvl-error">0.00%</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Chat Copilot Panel (Moved back to right side controls-row) -->
+            <!-- Chat Copilot -->
             <div class="visual-panel control-panel-card chat-panel">
                 <div class="panel-header">
                     <h3>
@@ -409,32 +404,32 @@
                         Copilot Decision Chat
                     </h3>
                 </div>
-                <div class="control-card-body" style="display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: center;">
-                    <div class="chat-logs" id="chat-box" style="max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                <div class="control-card-body">
+                    <div class="chat-logs" id="chat-box">
                         <div class="message system-msg">
                             <strong>Copilot:</strong> Welcome! Load a study template or build a custom BOM flow. Once optimized, I can explain emission tradeoffs, identify hotspots, or run automated substitutions (e.g. try: <em>"What if we substitute steel with scrap steel?"</em>).
                         </div>
                     </div>
-                    <div class="chat-terminal-bar" style="display: flex; gap: 6px; border-top: 1px solid var(--border-color); padding-top: 8px;">
-                        <input type="text" id="chat-input" placeholder="Ask Copilot a question or request feedstock swap..." style="flex: 1; font-size: 11.5px; padding: 6px 10px;">
-                        <button type="button" id="chat-send-btn" style="background-color: var(--accent-emerald); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    <div class="chat-terminal-bar">
+                        <input type="text" id="chat-input" placeholder="Ask Copilot a question or request feedstock swap...">
+                        <button type="button" id="chat-send-btn" aria-label="Send message">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                         </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- LLM Engineering Justification Report (Full width) -->
+        <!-- LLM Engineering Justification Report -->
         <div class="visual-panel justification-panel" id="justification-wrapper" style="display: none;">
-            <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div class="panel-header">
                 <h3 style="margin: 0;">
                     <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                     Engineering Justification Report
                 </h3>
-                <button type="button" class="btn btn-secondary" id="print-report-btn" style="background: #27272a; color: white; border: 1px solid #3f3f46; font-size: 11px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                    Print PDF Report
+                <button type="button" class="btn btn-secondary" id="print-report-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    <span class="btn-label">Print PDF report</span>
                 </button>
             </div>
             <div class="justification-body">
@@ -448,15 +443,14 @@
                 <span>Agentic Life Cycle Assessment (LCA) Platform</span>
             </div>
             <div class="footer-center">
-                <span>Developed by: <strong>Somnath Luitel</strong> & <strong>Manmeet Singh</strong></span>
+                <span>Developed by <strong>Somnath Luitel</strong>, <strong>Dr. Manmeet Singh</strong> &amp; <strong>Dr. Jani Das</strong> at the <a href="https://air-lab-wku.github.io/" target="_blank" class="footer-link">AIR-LAB, WKU</a></span>
             </div>
             <div class="footer-right">
-                <span>© 2026 <a href="https://air-lab-wku.github.io/" target="_blank" class="footer-link">AirLab</a> | OpenLCA Integration v2.0</span>
+                <span>© 2026 <a href="https://air-lab-wku.github.io/" target="_blank" class="footer-link">AirLab</a> · OpenLCA Integration v2.0</span>
             </div>
         </footer>
     </div>
 
-    <!-- Script imports -->
     <script src="/static/app.js"></script>
 </body>
 </html>

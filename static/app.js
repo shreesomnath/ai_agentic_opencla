@@ -322,7 +322,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Display loading status
         optimizeBtn.disabled = true;
-        optimizeBtn.textContent = "Processing...";
+        optimizeBtn.querySelector(".btn-label").textContent = "Processing...";
         appendChatMessage("System", "Running automated ingestion, mass verification, sensitivity hotspot mapping, and multi-objective calculation setup. This will take about a minute...");
 
         fetch("/api/optimize", {
@@ -346,7 +346,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(res => res.json())
         .then(data => {
             optimizeBtn.disabled = false;
-            optimizeBtn.textContent = "Run Optimization 🚀";
+            optimizeBtn.querySelector(".btn-label").textContent = "Run Optimization";
             
             if (data.success) {
                 // Update active state
@@ -376,7 +376,7 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(err => {
             optimizeBtn.disabled = false;
-            optimizeBtn.textContent = "Run Optimization 🚀";
+            optimizeBtn.querySelector(".btn-label").textContent = "Run Optimization";
             alert("Calculation network error: " + err);
         });
     });
@@ -403,7 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Display loading status
         paretoBtn.disabled = true;
-        paretoBtn.textContent = "Processing...";
+        paretoBtn.querySelector(".btn-label").textContent = "Processing...";
         appendChatMessage("System", "Running multi-objective Pareto Frontier search over GWP, Acidification, Water, and Cost metrics using surrogate model simulations. This may take up to a minute...");
 
         fetch("/api/pareto", {
@@ -423,7 +423,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(res => res.json())
         .then(data => {
             paretoBtn.disabled = false;
-            paretoBtn.textContent = "Pareto Frontier";
+            paretoBtn.querySelector(".btn-label").textContent = "Pareto Frontier";
             
             if (data.success) {
                 const frontier = data.frontier;
@@ -529,7 +529,7 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(err => {
             paretoBtn.disabled = false;
-            paretoBtn.textContent = "Pareto Frontier";
+            paretoBtn.querySelector(".btn-label").textContent = "Pareto Frontier";
             alert("Calculation network error: " + err);
         });
     });
@@ -820,7 +820,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Display loading status
         runAutonomousBtn.disabled = true;
-        runAutonomousBtn.textContent = "Agent Running...";
+        runAutonomousBtn.querySelector(".btn-label").textContent = "Agent Running...";
         autonomousTerminal.textContent = "[Coordinator] Booting multi-agent environment...\n";
         appendChatMessage("System", `Launching autonomous loop for goal: "${goalText}"`);
 
@@ -833,7 +833,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(data => {
             if (!data.success) {
                 runAutonomousBtn.disabled = false;
-                runAutonomousBtn.textContent = "Launch Autonomous Agent 🚀";
+                runAutonomousBtn.querySelector(".btn-label").textContent = "Launch Autonomous Agent";
                 autonomousTerminal.textContent += `\n[ERROR] Start failed: ${data.error}`;
                 alert("Autonomous loop start failed: " + data.error);
                 return;
@@ -851,7 +851,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else if (streamData.type === 'completed') {
                     eventSource.close();
                     runAutonomousBtn.disabled = false;
-                    runAutonomousBtn.textContent = "Launch Autonomous Agent 🚀";
+                    runAutonomousBtn.querySelector(".btn-label").textContent = "Launch Autonomous Agent";
                     
                     const result = streamData.result;
                     
@@ -920,7 +920,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else if (streamData.type === 'failed') {
                     eventSource.close();
                     runAutonomousBtn.disabled = false;
-                    runAutonomousBtn.textContent = "Launch Autonomous Agent 🚀";
+                    runAutonomousBtn.querySelector(".btn-label").textContent = "Launch Autonomous Agent";
                     autonomousTerminal.textContent += `\n[ERROR] Optimization Loop failed: ${streamData.error}`;
                     autonomousTerminal.scrollTop = autonomousTerminal.scrollHeight;
                     alert("Autonomous loop execution failed: " + streamData.error);
@@ -930,14 +930,14 @@ document.addEventListener("DOMContentLoaded", () => {
             eventSource.onerror = (err) => {
                 eventSource.close();
                 runAutonomousBtn.disabled = false;
-                runAutonomousBtn.textContent = "Launch Autonomous Agent 🚀";
+                runAutonomousBtn.querySelector(".btn-label").textContent = "Launch Autonomous Agent";
                 autonomousTerminal.textContent += `\n[ERROR] Stream connection lost.`;
                 autonomousTerminal.scrollTop = autonomousTerminal.scrollHeight;
             };
         })
         .catch(err => {
             runAutonomousBtn.disabled = false;
-            runAutonomousBtn.textContent = "Launch Autonomous Agent 🚀";
+            runAutonomousBtn.querySelector(".btn-label").textContent = "Launch Autonomous Agent";
             autonomousTerminal.textContent += `\n[ERROR] Network calculation error: ${err}`;
             autonomousTerminal.scrollTop = autonomousTerminal.scrollHeight;
             alert("Calculation network error.");
@@ -1093,7 +1093,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         
         compileHierarchicalBtn.disabled = true;
-        compileHierarchicalBtn.textContent = "Compiling...";
+        compileHierarchicalBtn.querySelector(".btn-label").textContent = "Compiling...";
         appendChatMessage("System", `Compiling hierarchical BOM for '${bomJson.name}' in openLCA. Running mapping search, custom sub-assemblies synthesis, and uncertainty propagation. This will take about a minute...`);
         
         fetch("/api/compile", {
@@ -1104,7 +1104,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(res => res.json())
         .then(data => {
             compileHierarchicalBtn.disabled = false;
-            compileHierarchicalBtn.textContent = "Compile & Calculate 🚀";
+            compileHierarchicalBtn.querySelector(".btn-label").textContent = "Compile & Calculate";
             
             if (data.success) {
                 activeState.exchanges = data.exchanges;
@@ -1152,7 +1152,7 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(err => {
             compileHierarchicalBtn.disabled = false;
-            compileHierarchicalBtn.textContent = "Compile & Calculate 🚀";
+            compileHierarchicalBtn.querySelector(".btn-label").textContent = "Compile & Calculate";
             alert("Calculation network error: " + err);
         });
     });

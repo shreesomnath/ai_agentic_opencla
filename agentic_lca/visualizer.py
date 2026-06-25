@@ -1,6 +1,7 @@
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
 import numpy as np
 
 class LcaVisualizer:
@@ -43,28 +44,37 @@ class LcaVisualizer:
 
         # Check theme color configuration
         is_light = (theme == "light")
-        bg_color = '#ffffff' if is_light else '#09090b'
-        card_color = '#ffffff' if is_light else '#18181b'
-        border_color = '#cbd5e1' if is_light else '#27272a'
-        text_primary = '#1e1e38' if is_light else '#fafafa'
-        text_secondary = '#3730a3' if is_light else '#a1a1aa'
-        grid_color = '#cbd5e1' if is_light else '#27272a'
+        bg_color = '#F1F4F7' if is_light else '#0A0D12'
+        card_color = '#ffffff' if is_light else '#11151B'
+        border_color = '#D7DEE6' if is_light else '#232A34'
+        text_primary = '#161B22' if is_light else '#ECEFF3'
+        text_secondary = '#4A5C72' if is_light else '#8995A6'
+        grid_color = '#D7DEE6' if is_light else '#232A34'
         
         # Draw bars color configuration
-        bar1_color = '#94a3b8' if is_light else '#27272a' # Slate 400 vs Dark Zinc
-        bar1_edge = '#64748b' if is_light else '#3f3f46'  # Slate 500 vs Zinc 700
-        bar2_color = '#0d9488' if is_light else '#10b981' # Teal 600 vs Emerald 500
-        bar2_edge = '#0f766e' if is_light else '#059669'  # Teal 700 vs Emerald 600
-        text_savings = '#0d9488' if is_light else '#34d399'
-        text_base = '#64748b' if is_light else '#71717a'
+        bar1_color = '#B9C2CC' if is_light else '#2A323D' # Bench grey vs Instrument grey
+        bar1_edge = '#8B97A3' if is_light else '#3A4452'  # Bench grey edge vs Instrument edge
+        bar2_color = '#2E8470' if is_light else '#3FA88B' # Muted teal (optimized signal)
+        bar2_edge = '#1F5F50' if is_light else '#2C7C66'  # Muted teal edge
+        text_savings = '#2E8470' if is_light else '#3FA88B'
+        text_base = '#4A5C72' if is_light else '#8995A6'
+
+        # A regression (optimized worse than baseline) gets the warning tone instead
+        # of the "improved" teal — a cost or emissions *increase* should never read
+        # as good news just because it's the "Optimized" bar.
+        text_regression = '#AE4F4F' if is_light else '#C0605C'
+        bar_regression_color = '#AE4F4F' if is_light else '#C0605C'
+        bar_regression_edge = '#7A3636' if is_light else '#8E4341'
+        opt_fill_colors = [bar_regression_color if p > 100.0 else bar2_color for p in optimized_pcts]
+        opt_edge_colors = [bar_regression_edge if p > 100.0 else bar2_edge for p in optimized_pcts]
 
         # Set up a themed, professional modern design style matching the dashboard
         fig, ax = plt.subplots(figsize=(10, 5.5), dpi=150, facecolor=bg_color)
         ax.set_facecolor(bg_color)
         
         # Draw bars
-        rects1 = ax.bar(x - width/2, baseline_pcts, width, label='Baseline', color=bar1_color, edgecolor=bar1_edge, linewidth=1)
-        rects2 = ax.bar(x + width/2, optimized_pcts, width, label='Optimized (Substituted)', color=bar2_color, edgecolor=bar2_edge, linewidth=1)
+        rects1 = ax.bar(x - width/2, baseline_pcts, width, color=bar1_color, edgecolor=bar1_edge, linewidth=1)
+        rects2 = ax.bar(x + width/2, optimized_pcts, width, color=opt_fill_colors, edgecolor=opt_edge_colors, linewidth=1)
 
         # Labels, title and custom x-axis tick labels
         ax.set_ylabel('Percentage of Baseline (%)', fontsize=11, fontweight='bold', labelpad=10, color=text_primary)
@@ -74,8 +84,15 @@ class LcaVisualizer:
         ax.set_xticks(x)
         ax.set_xticklabels(labels, fontsize=10, fontweight='semibold', color=text_secondary)
         
-        # Style legend
-        legend = ax.legend(frameon=True, facecolor=card_color, edgecolor=border_color, loc='upper right')
+        # Build the legend explicitly (rather than from the bars themselves) so that
+        # color-coding individual "optimized" bars by sign doesn't distort it.
+        legend_handles = [
+            Patch(facecolor=bar1_color, edgecolor=bar1_edge, label='Baseline'),
+            Patch(facecolor=bar2_color, edgecolor=bar2_edge, label='Optimized — improved'),
+        ]
+        if any(p > 100.0 for p in optimized_pcts):
+            legend_handles.append(Patch(facecolor=bar_regression_color, edgecolor=bar_regression_edge, label='Optimized — increased'))
+        legend = ax.legend(handles=legend_handles, frameon=True, facecolor=card_color, edgecolor=border_color, loc='upper right')
         for text in legend.get_texts():
             text.set_color(text_primary)
             
@@ -84,8 +101,10 @@ class LcaVisualizer:
         for spine in ax.spines.values():
             spine.set_color(border_color)
         
-        # Set y-axis limit with some room for labels
-        ax.set_ylim(0, 130)
+        # Set y-axis limit with enough headroom that a regression bar's label
+        # (which can sit well above 100%) never collides with the legend box
+        highest_opt = max(optimized_pcts, default=100.0)
+        ax.set_ylim(0, max(130, highest_opt * 1.35 + 10))
         
         # Add grid lines matching theme
         ax.grid(axis='y', linestyle='--', color=grid_color, alpha=0.6)
@@ -97,15 +116,16 @@ class LcaVisualizer:
                 height = rect.get_height()
                 if is_opt:
                     label_text = f"{height:.1f}%"
-                    # Highlight savings
+                    # Highlight savings (or flag a regression in the warning tone)
                     change = height - 100.0
+                    label_color = text_regression if change > 0 else text_savings
                     if change != 0:
                         label_text += f"\n({change:+.1f}%)"
                     ax.annotate(label_text,
                                 xy=(rect.get_x() + rect.get_width() / 2, height),
                                 xytext=(0, 4),  # 4 points vertical offset
                                 textcoords="offset points",
-                                ha='center', va='bottom', fontsize=8, fontweight='bold', color=text_savings)
+                                ha='center', va='bottom', fontsize=8, fontweight='bold', color=label_color)
                 else:
                     ax.annotate('100.0%',
                                 xy=(rect.get_x() + rect.get_width() / 2, height),
@@ -156,16 +176,17 @@ class LcaVisualizer:
 
         # Check theme color configuration
         is_light = (theme == "light")
-        bg_color = '#ffffff' if is_light else '#09090b'
-        card_color = '#ffffff' if is_light else '#18181b'
-        border_color = '#cbd5e1' if is_light else '#27272a'
-        text_primary = '#1e1e38' if is_light else '#fafafa'
-        text_secondary = '#3730a3' if is_light else '#a1a1aa'
-        grid_color = '#cbd5e1' if is_light else '#27272a'
+        signal_color = '#B8842E' if is_light else '#D9A441'
+        bg_color = '#F1F4F7' if is_light else '#0A0D12'
+        card_color = '#ffffff' if is_light else '#11151B'
+        border_color = '#D7DEE6' if is_light else '#232A34'
+        text_primary = '#161B22' if is_light else '#ECEFF3'
+        text_secondary = '#4A5C72' if is_light else '#8995A6'
+        grid_color = '#D7DEE6' if is_light else '#232A34'
         
         # Colors for baseline (zinc/grey) and optimized (emerald green)
-        base_color = '#94a3b8' if is_light else '#52525b'
-        opt_color = '#0d9488' if is_light else '#10b981'
+        base_color = '#B9C2CC' if is_light else '#3A4452'
+        opt_color = '#2E8470' if is_light else '#3FA88B'
         
         fig, ax = plt.subplots(figsize=(10, 5.5), dpi=150, facecolor=bg_color)
         ax.set_facecolor(bg_color)
@@ -178,7 +199,7 @@ class LcaVisualizer:
         base_mean = sum(base_trials) / len(base_trials)
         opt_mean = sum(opt_trials) / len(opt_trials)
         ax.axvline(base_mean, color=base_color, linestyle='--', linewidth=1.5, label=f'Baseline Mean ({base_mean:.4f})')
-        ax.axvline(opt_mean, color=opt_color, linestyle='--', linewidth=1.5, label=f'Optimized Mean ({opt_mean:.4f})')
+        ax.axvline(opt_mean, color=signal_color, linestyle='--', linewidth=2, label=f'Optimized Mean ({opt_mean:.4f})')
         
         # Label axes
         unit = metric_data.get("unit", "")
@@ -239,12 +260,13 @@ class LcaVisualizer:
         opt_gwp = opt_pt["metrics"]["GWP"]
 
         is_light = (theme == "light")
-        bg_color = '#ffffff' if is_light else '#09090b'
-        card_color = '#ffffff' if is_light else '#18181b'
-        border_color = '#cbd5e1' if is_light else '#27272a'
-        text_primary = '#1e1e38' if is_light else '#fafafa'
-        text_secondary = '#3730a3' if is_light else '#a1a1aa'
-        grid_color = '#cbd5e1' if is_light else '#27272a'
+        signal_color = '#B8842E' if is_light else '#D9A441'
+        bg_color = '#F1F4F7' if is_light else '#0A0D12'
+        card_color = '#ffffff' if is_light else '#11151B'
+        border_color = '#D7DEE6' if is_light else '#232A34'
+        text_primary = '#161B22' if is_light else '#ECEFF3'
+        text_secondary = '#4A5C72' if is_light else '#8995A6'
+        grid_color = '#D7DEE6' if is_light else '#232A34'
 
         fig, ax = plt.subplots(figsize=(10, 5.5), dpi=150, facecolor=bg_color)
         ax.set_facecolor(bg_color)
@@ -260,7 +282,7 @@ class LcaVisualizer:
         cbar.outline.set_edgecolor(border_color)
 
         # Highlight the optimal configuration
-        ax.scatter(opt_cost, opt_gwp, color='#fbbf24', edgecolors='black', marker='*', s=250, zorder=5, label=f"TOPSIS Optimal (Score: {opt_pt.get('topsis_score', 0.0):.4f})")
+        ax.scatter(opt_cost, opt_gwp, color=signal_color, edgecolors=text_primary, marker='*', s=250, zorder=5, label=f"TOPSIS Optimal (Score: {opt_pt.get('topsis_score', 0.0):.4f})")
 
         # Annotate the optimal point with ratio summaries and continuous parameters
         blend_summary = []
@@ -273,13 +295,27 @@ class LcaVisualizer:
             blend_summary.append(f"Loss: {params.get('loss_factor', 0.0)*100:.0f}%")
         blend_label = "\n".join(blend_summary)
 
+        # Keep the annotation box on-canvas: the TOPSIS optimum often sits at an
+        # extreme of the trade-off space, so a fixed offset can push the box off
+        # the plot (or behind the colorbar). Flip the offset direction based on
+        # which quadrant the optimal point actually falls in.
+        cost_min, cost_max = min(costs), max(costs)
+        gwp_min, gwp_max = min(gwps), max(gwps)
+        cost_frac = (opt_cost - cost_min) / (cost_max - cost_min) if cost_max > cost_min else 0.5
+        gwp_frac = (opt_gwp - gwp_min) / (gwp_max - gwp_min) if gwp_max > gwp_min else 0.5
+
+        x_off, ha = (-18, 'right') if cost_frac > 0.55 else (18, 'left')
+        y_off, va = (18, 'bottom') if gwp_frac < 0.5 else (-18, 'top')
+        arc_rad = 0.2 if x_off > 0 else -0.2
+
         ax.annotate(f"Optimal Blend:\n{blend_label}",
                     xy=(opt_cost, opt_gwp),
-                    xytext=(15, -15),
+                    xytext=(x_off, y_off),
                     textcoords="offset points",
-                    arrowprops=dict(arrowstyle="->", color='#fbbf24', connectionstyle="arc3,rad=0.2"),
-                    fontsize=9, fontweight='bold', color='#fbbf24',
-                    bbox=dict(boxstyle="round,pad=0.3", fc=card_color, ec='#fbbf24', alpha=0.9))
+                    ha=ha, va=va,
+                    arrowprops=dict(arrowstyle="->", color=signal_color, connectionstyle=f"arc3,rad={arc_rad}"),
+                    fontsize=9, fontweight='bold', color=signal_color,
+                    bbox=dict(boxstyle="round,pad=0.3", fc=card_color, ec=signal_color, alpha=0.92))
 
         # Titles and labels
         ax.set_title(f"Pareto Frontier & TOPSIS Decision Support\nProcess: {process_name}", fontsize=12, fontweight='bold', pad=15, color=text_primary)
