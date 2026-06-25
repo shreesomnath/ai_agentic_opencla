@@ -25,6 +25,8 @@ class LcaAutonomousCoordinator:
         self.optimizer = ParetoOptimizer(self.executor, self.mapper, self.verifier, self.cost_registry)
         self.llm_agent = llm_agent if llm_agent else LcaLlmAgent()
         self.logger = logger
+        from .self_healing import DatabaseDoctor
+        self.doctor = DatabaseDoctor(self.executor, self.llm_agent, self.log)
 
     def log(self, message):
         print(message)
@@ -180,6 +182,13 @@ class LcaAutonomousCoordinator:
         
         # Save baseline process
         self.client.put(process)
+        
+        # Self-healing and Quality Guardrails scan
+        defects = self.doctor.diagnose_process(process.id)
+        if defects:
+            self.doctor.heal_process(process.id, defects)
+            # Re-fetch healed process
+            process = self.client.get(o.Process, process.id)
         
         temp_sys_id = None
         try:
@@ -530,6 +539,18 @@ Output only the JSON object. Do not add any conversational text before or after.
             top_flow_ref, top_proc_ref, root_sys_ref = compiler.compile_bom(bom_dict)
             print(f" -> Hierarchical BOM tree compiled.")
             print(f"    Root Process: '{top_proc_ref.name}' (ID: {top_proc_ref.id})")
+            
+            # Self-healing and Quality Guardrails scan
+            defects = self.doctor.diagnose_process(top_proc_ref.id)
+            if defects:
+                self.doctor.heal_process(top_proc_ref.id, defects)
+                # Re-fetch healed process
+                top_proc_ref = self.client.get(o.Process, top_proc_ref.id)
+                # Re-compile root system to link healed providers
+                try: self.client.delete(o.Ref(ref_type=o.RefType.ProductSystem, id=root_sys_ref.id))
+                except: pass
+                root_sys_ref = self.client.create_product_system(top_proc_ref)
+                
             print(f"    Root Product System: '{bom_dict['name']}' (ID: {root_sys_ref.id})")
             
             # Locate ReCiPe
