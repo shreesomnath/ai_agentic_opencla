@@ -16,9 +16,9 @@ class LcaLlmAgent:
     def is_ollama_active(self):
         """
         Checks if the local Ollama server is active and accessible,
-        or if a cloud LLM fallback API key (GEMINI_API_KEY or OPENAI_API_KEY) is configured.
+        or if a cloud LLM fallback API key (GEMINI_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY) is configured.
         """
-        if os.environ.get("GEMINI_API_KEY") or os.environ.get("OPENAI_API_KEY"):
+        if os.environ.get("GEMINI_API_KEY") or os.environ.get("OPENAI_API_KEY") or os.environ.get("ANTHROPIC_API_KEY"):
             return True
         try:
             response = requests.get(f"{self.ollama_url}/api/tags", timeout=2)
@@ -97,6 +97,35 @@ class LcaLlmAgent:
             except Exception as e:
                 print(f"[LLM Fallback] OpenAI API Error: {e}")
 
+        # 4. Try Anthropic Claude API
+        anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
+        if anthropic_key:
+            url = "https://api.anthropic.com/v1/messages"
+            headers = {
+                "x-api-key": anthropic_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json"
+            }
+            payload = {
+                "model": "claude-3-5-sonnet-20241022",
+                "max_tokens": 1024,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.2
+            }
+            try:
+                res = requests.post(url, headers=headers, json=payload, timeout=15)
+                if res.status_code == 200:
+                    data = res.json()
+                    text = data["content"][0]["text"].strip()
+                    # Strip markdown code blocks if the LLM wrapped it
+                    if text.startswith("```json") and text.endswith("```"):
+                        text = text[7:-3].strip()
+                    elif text.startswith("```") and text.endswith("```"):
+                        text = text[3:-3].strip()
+                    return text
+            except Exception as e:
+                print(f"[LLM Fallback] Anthropic API Error: {e}")
+
         return None
 
     def generate_engineering_justification(self, report, weights=None):
@@ -107,7 +136,7 @@ class LcaLlmAgent:
         if not self.is_ollama_active():
             return (
                 "LLM justification could not be generated: No active LLM backend found. "
-                "Please run a local Ollama server or configure GEMINI_API_KEY / OPENAI_API_KEY."
+                "Please run a local Ollama server or configure GEMINI_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY."
             )
 
         metrics = report.get("metrics", {})

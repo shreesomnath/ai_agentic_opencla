@@ -48,11 +48,13 @@ pip install -e .
 You have two options to enable the LLM copilot chat:
 
 * **Option A: Cloud API (Easiest - Zero Installation) 🌟**
-  Simply export your Gemini or OpenAI API Key. The library uses direct HTTP calls with zero extra python dependencies:
+  Simply export your Gemini, OpenAI, or Anthropic (Claude) API Key. The library uses direct HTTP calls with zero extra python dependencies:
   ```bash
   export GEMINI_API_KEY="your-gemini-api-key"
   # OR
   export OPENAI_API_KEY="your-openai-api-key"
+  # OR
+  export ANTHROPIC_API_KEY="your-anthropic-api-key"
   ```
 * **Option B: Offline/Local LLM (Ollama)**
   1. Download and run **Ollama** from [ollama.com](https://ollama.com).
