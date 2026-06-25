@@ -248,7 +248,99 @@ Output only the JSON array and nothing else.
         if not self.is_ollama_active():
             query_clean = user_query.lower().strip()
             
-            # 1. Match Learn/Synonym mapping requests
+            # 1. Match Product Creation requests (e.g. "LCA for coke can", "produce a laptop")
+            DEFAULT_BOMS = {
+                "coke can": [
+                    {"flow_name": "aluminium", "amount": 0.015, "unit": "kg"},
+                    {"flow_name": "polyethylene", "amount": 0.0005, "unit": "kg"},
+                    {"flow_name": "tap water", "amount": 0.1, "unit": "kg"},
+                    {"flow_name": "sugar", "amount": 0.01, "unit": "kg"}
+                ],
+                "coca-cola": [
+                    {"flow_name": "aluminium", "amount": 0.015, "unit": "kg"},
+                    {"flow_name": "polyethylene", "amount": 0.0005, "unit": "kg"},
+                    {"flow_name": "tap water", "amount": 0.1, "unit": "kg"},
+                    {"flow_name": "sugar", "amount": 0.01, "unit": "kg"}
+                ],
+                "cola": [
+                    {"flow_name": "aluminium", "amount": 0.015, "unit": "kg"},
+                    {"flow_name": "polyethylene", "amount": 0.0005, "unit": "kg"},
+                    {"flow_name": "tap water", "amount": 0.1, "unit": "kg"},
+                    {"flow_name": "sugar", "amount": 0.01, "unit": "kg"}
+                ],
+                "aluminum can": [
+                    {"flow_name": "aluminium", "amount": 0.015, "unit": "kg"},
+                    {"flow_name": "polyethylene", "amount": 0.0005, "unit": "kg"}
+                ],
+                "laptop": [
+                    {"flow_name": "aluminium", "amount": 1.2, "unit": "kg"},
+                    {"flow_name": "polyethylene", "amount": 0.5, "unit": "kg"},
+                    {"flow_name": "silicon", "amount": 0.1, "unit": "kg"},
+                    {"flow_name": "copper", "amount": 0.2, "unit": "kg"},
+                    {"flow_name": "steel", "amount": 0.1, "unit": "kg"}
+                ],
+                "solar panel": [
+                    {"flow_name": "glass", "amount": 12.5, "unit": "kg"},
+                    {"flow_name": "polyethylene", "amount": 1.2, "unit": "kg"},
+                    {"flow_name": "silicon", "amount": 0.45, "unit": "kg"},
+                    {"flow_name": "steel", "amount": 2.5, "unit": "kg"},
+                    {"flow_name": "tap water", "amount": 5.0, "unit": "kg"}
+                ],
+                "wind turbine": [
+                    {"flow_name": "steel", "amount": 150000.0, "unit": "kg"},
+                    {"flow_name": "glass fibre", "amount": 25000.0, "unit": "kg"},
+                    {"flow_name": "silicon", "amount": 500.0, "unit": "kg"},
+                    {"flow_name": "polyethylene", "amount": 2000.0, "unit": "kg"},
+                    {"flow_name": "tap water", "amount": 5000.0, "unit": "kg"}
+                ],
+                "electric car": [
+                    {"flow_name": "steel", "amount": 900.0, "unit": "kg"},
+                    {"flow_name": "aluminium", "amount": 250.0, "unit": "kg"},
+                    {"flow_name": "copper", "amount": 80.0, "unit": "kg"},
+                    {"flow_name": "polyethylene", "amount": 150.0, "unit": "kg"},
+                    {"flow_name": "silicon", "amount": 10.0, "unit": "kg"}
+                ]
+            }
+            
+            matched_key = None
+            for key in DEFAULT_BOMS.keys():
+                if key in query_clean:
+                    matched_key = key
+                    break
+                    
+            # Check if they explicitly request product creation
+            is_create = False
+            for word in ["lca for", "produce", "make", "create", "carbon footprint of", "calculate footprint of", "lca to"]:
+                if word in query_clean:
+                    is_create = True
+                    break
+                    
+            if matched_key and (is_create or len(query_clean.split()) < 6):
+                multiplier = 1.0
+                volume_ml = 100.0
+                import re
+                ml_match = re.search(r'(\d+)\s*ml', query_clean)
+                if ml_match:
+                    volume_ml = float(ml_match.group(1))
+                    # Normal default coke can is 100 ml (0.1 kg water)
+                    multiplier = volume_ml / 100.0
+                
+                scaled_bom = []
+                for item in DEFAULT_BOMS[matched_key]:
+                    scaled_bom.append({
+                        "flow_name": item["flow_name"],
+                        "amount": item["amount"] * multiplier,
+                        "unit": item["unit"]
+                    })
+                    
+                product_display_name = f"{int(volume_ml)} ml {matched_key}" if ml_match else matched_key.title()
+                return {
+                    "action": "create_product",
+                    "product_name": product_display_name,
+                    "bom": scaled_bom
+                }
+
+            # 2. Match Learn/Synonym mapping requests
             is_learn = False
             abbrev_found = ""
             standard_found = ""
@@ -383,8 +475,10 @@ LCA Report Data (Carbon footprint, water, cost):
 {inventory_note}
 
 Your task:
-1. Determine if the user wants to test a material substitution (e.g. "replace steel with scrap steel" or "what if we use recycled plastic?").
-2. If they want to test a substitution:
+1. Determine if the user wants to calculate or run an LCA for a new product, item, or template (e.g. "LCA for a coke can" or "calculate footprint of a laptop" or "i want to produce a 100 ml coke can").
+   - If so, determine the name of the product and dynamically synthesize a realistic Bill of Materials (BOM) recipe for 1 unit of this product (with realistic feedstocks/materials and mass quantities in kg, matching standard concepts like 'aluminium', 'polyethylene', 'steel', 'glass', 'silicon', etc.).
+   - Respond in JSON format: {{"action": "create_product", "product_name": "Product Name", "bom": [{{"flow_name": "material 1", "amount": 0.05, "unit": "kg"}}, ...]}}
+2. Determine if the user wants to test a material substitution (e.g. "replace steel with scrap steel" or "what if we use recycled plastic?").
    - Identify which virgin flow from the list above they want to replace. Choose the exact matching name from the list.
    - Formulate a search query to look up the recycled/green substitute in the flow database.
    - Respond in JSON format: {{"action": "substitute", "virgin_flow_name": "exact_name_from_list", "substitute_search_query": "search_term_for_substitute"}}

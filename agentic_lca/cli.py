@@ -584,7 +584,10 @@ Commands:
             if not user_query:
                 continue
                 
-            query_lower = user_query.lower()
+            query_lower = user_query.lower().strip()
+            if query_lower.startswith("/"):
+                query_lower = query_lower[1:]
+                
             if query_lower in ["exit", "quit", "end"]:
                 print("Ending interactive session. Cleaning up database resources...")
                 do_db_cleanup()
@@ -694,6 +697,60 @@ Commands:
                 virgin = llm_command.get("virgin_flow_name")
                 substitute = llm_command.get("substitute_search_query")
                 do_substitution(virgin, substitute)
+            elif action == "create_product":
+                product_name = llm_command.get("product_name")
+                bom_items = llm_command.get("bom", [])
+                print(f"\n[Copilot Action] Dynamically synthesizing LCA for '{product_name}'...")
+                
+                # Write to temp BOM csv
+                temp_csv = "temp_product_bom.csv"
+                try:
+                    with open(temp_csv, mode="w", newline="") as f:
+                        writer = csv.writer(f)
+                        writer.writerow(["flow_name", "amount", "unit"])
+                        for item in bom_items:
+                            writer.writerow([item["flow_name"], item["amount"], item["unit"]])
+                    
+                    # Load the BOM
+                    success = do_load_bom(temp_csv)
+                    if success:
+                        print(f"🟢 Successfully created and loaded product model for '{product_name}'!")
+                        
+                        # Calculate baseline impacts report
+                        base_metrics = calculate_simulated_metrics(raw_exchanges)
+                        
+                        print("\n" + "="*80)
+                        print(f"                 BASELINE LCA CALCULATION REPORT: {product_name.upper()}")
+                        print("="*80)
+                        print(f"Product:       {product_name}")
+                        print(f"Process:       Synthesized Manufacturing Process")
+                        print("-" * 80)
+                        print(f"{'Indicator':<25} | {'Baseline Value':<15} | {'Unit':<10}")
+                        print("-" * 80)
+                        for key, details in base_metrics.items():
+                            print(f"{key:<25} | {details['baseline']:<15.6f} | {details['unit']:<10}")
+                        print("="*80)
+                        
+                        # Generate active report for explain/substitute
+                        active_report = {
+                            "status": "SUCCESS",
+                            "process_name": f"{product_name} Manufacturing",
+                            "substituted_from": "None",
+                            "substituted_to": "None",
+                            "metrics": {}
+                        }
+                        for key, details in base_metrics.items():
+                            active_report["metrics"][key] = {
+                                "baseline": details["baseline"],
+                                "optimized": details["baseline"],
+                                "difference": 0.0,
+                                "percentage_change": 0.0,
+                                "unit": details["unit"],
+                                "baseline_uncertainty": details,
+                                "optimized_uncertainty": details
+                            }
+                except Exception as ex_create:
+                    print(f"Error creating product: {ex_create}")
             elif action == "learn":
                 abbreviation = llm_command.get("abbreviation")
                 standard_name = llm_command.get("standard_name")
