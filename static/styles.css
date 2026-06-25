@@ -173,7 +173,7 @@ textarea:focus-visible,
 .logo-svg {
     width: 26px;
     height: 26px;
-    color: var(--wku-red);
+    color: var(--signal);
 }
 
 .logo-area h1 {
@@ -188,7 +188,7 @@ textarea:focus-visible,
 }
 
 .logo-highlight {
-    color: var(--wku-red);
+    color: var(--accent-blue);
 }
 
 .badge-tag {
@@ -219,6 +219,7 @@ textarea:focus-visible,
 }
 
 .credit-label {
+    font-family: var(--font-mono);
     font-size: 9.5px;
     font-weight: 600;
     letter-spacing: 0.1em;
@@ -228,9 +229,10 @@ textarea:focus-visible,
 }
 
 .names {
-    font-size: 14px;
+    font-family: var(--font-sans);
+    font-size: 13.5px;
     font-weight: 600;
-    color: var(--wku-red);
+    color: var(--text-secondary);
 }
 
 .server-status {
