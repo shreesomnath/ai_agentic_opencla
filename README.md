@@ -112,14 +112,19 @@ If you have already cloned the repository and installed everything, here is how 
    cd ~/documents/airlab/openlca/ai_agentic_opencla
    # or wherever you cloned the repo
    ```
-2. **Activate your AI Backend:**
+2. **Activate your Python Environment (If Applicable):**
+   If you installed the project inside a virtual environment (e.g. `.venv`), you must activate it first so your terminal recognizes the `agentic-lca` command:
+   ```bash
+   source .venv/bin/activate
+   ```
+3. **Activate your AI Backend:**
    * **If using a Cloud API:** Re-export your API keys in the new terminal.
      ```bash
      export OPENAI_API_KEY="your-api-key"
      ```
    * **If using local Ollama:** Ensure the Ollama background service is running on your machine. You can verify it is active by opening a terminal and running `ollama list` (or start it by running the Ollama desktop app / `ollama serve`).
-3. **Ensure OpenLCA IPC server is running:** Open the OpenLCA desktop app and start the IPC Server on port `8080`.
-4. **Launch the platform:**
+4. **Ensure OpenLCA IPC server is running:** Open the OpenLCA desktop app and start the IPC Server on port `8080`.
+5. **Launch the platform:**
    * **To use the Web Dashboard:** 
      ```bash
      agentic-lca --web
@@ -128,7 +133,6 @@ If you have already cloned the repository and installed everything, here is how 
      ```bash
      agentic-lca --chat
      ```
-   *Note: If `agentic-lca` is not found, you may need to activate your Python virtual environment if you used one.*
 ---
 
 ## 📋 Selecting Sample BOMs
