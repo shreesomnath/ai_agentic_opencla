@@ -140,7 +140,7 @@ You can configure your system so that you never have to run `source .venv/bin/ac
 **For Mac / Linux (Zsh or Bash):**
 Run this command once in your terminal to create a permanent alias:
 ```bash
-echo 'alias agentic-lca="~/documents/airlab/openlca/ai_agentic_opencla/.venv/bin/agentic-lca"' >> ~/.zshrc
+echo 'alias agentic-lca="/path/to/your/ai_agentic_opencla/.venv/bin/agentic-lca"' >> ~/.zshrc
 source ~/.zshrc
 ```
 *(Note: If you use bash, replace `.zshrc` with `.bashrc` or `.bash_profile`)*
