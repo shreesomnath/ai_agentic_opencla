@@ -1,8 +1,8 @@
 @echo off
-rem LCA-Copilot Single-Click Setup & Launcher Script for Windows
+rem Agentic-LCA Single-Click Setup & Launcher Script for Windows
 
 echo ================================================================================
-echo                    LCA-COPILOT ONE-CLICK INSTALLER & LAUNCHER
+echo                    AGENTIC-LCA ONE-CLICK INSTALLER & LAUNCHER
 echo ================================================================================
 
 cd /d "%~dp0"

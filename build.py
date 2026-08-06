@@ -5,7 +5,7 @@ import PyInstaller.__main__
 
 def build():
     print("="*80)
-    print("    Starting Cross-Platform PyInstaller Build for LCA-Copilot")
+    print("    Starting Cross-Platform PyInstaller Build for Agentic-LCA")
     print("="*80)
 
     # Determine the separator for --add-data based on the OS
@@ -20,7 +20,7 @@ def build():
     
     PyInstaller.__main__.run([
         'run_pipeline.py',           # Entry point
-        '--name=LCA-Copilot',
+        '--name=Agentic-LCA',
         '--onefile',                 # Package into a single executable
         '--console',                 # Keep the console window so users can see Flask startup logs & connect ports
         f'--add-data={templates_path}',

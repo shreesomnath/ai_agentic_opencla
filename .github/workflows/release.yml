@@ -1,4 +1,4 @@
-name: Build and Release LCA-Copilot
+name: Build and Release Agentic-LCA
 
 on:
   push:
@@ -15,17 +15,17 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            executable_name: LCA-Copilot-Linux
-            artifact_name: LCA-Copilot-Linux
-            pyinstaller_output: dist/LCA-Copilot
+            executable_name: Agentic-LCA-Linux
+            artifact_name: Agentic-LCA-Linux
+            pyinstaller_output: dist/Agentic-LCA
           - os: windows-latest
-            executable_name: LCA-Copilot-Windows.exe
-            artifact_name: LCA-Copilot-Windows
-            pyinstaller_output: dist/LCA-Copilot.exe
+            executable_name: Agentic-LCA-Windows.exe
+            artifact_name: Agentic-LCA-Windows
+            pyinstaller_output: dist/Agentic-LCA.exe
           - os: macos-latest
-            executable_name: LCA-Copilot-MacOS
-            artifact_name: LCA-Copilot-MacOS
-            pyinstaller_output: dist/LCA-Copilot
+            executable_name: Agentic-LCA-MacOS
+            artifact_name: Agentic-LCA-MacOS
+            pyinstaller_output: dist/Agentic-LCA
 
     steps:
       - name: Checkout Code
@@ -80,9 +80,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist-artifacts/LCA-Copilot-Linux/LCA-Copilot-Linux
-            dist-artifacts/LCA-Copilot-Windows/LCA-Copilot-Windows.exe
-            dist-artifacts/LCA-Copilot-MacOS/LCA-Copilot-MacOS
+            dist-artifacts/Agentic-LCA-Linux/Agentic-LCA-Linux
+            dist-artifacts/Agentic-LCA-Windows/Agentic-LCA-Windows.exe
+            dist-artifacts/Agentic-LCA-MacOS/Agentic-LCA-MacOS
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

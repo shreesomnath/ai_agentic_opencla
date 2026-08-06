@@ -1,8 +1,8 @@
 #!/bin/bash
-# LCA-Copilot Single-Click Setup & Launcher Script
+# Agentic-LCA Single-Click Setup & Launcher Script
 
 echo "================================================================================"
-echo "                   LCA-COPILOT ONE-CLICK INSTALLER & LAUNCHER"
+echo "                   AGENTIC-LCA ONE-CLICK INSTALLER & LAUNCHER"
 echo "================================================================================"
 
 # Get the directory of this script

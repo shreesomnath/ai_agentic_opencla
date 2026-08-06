@@ -42,7 +42,7 @@ While standard OpenLCA is a powerful desktop software for lifecycle assessment, 
 Follow these steps to set up **Agentic LCA** on your local machine:
 
 ### 1. Clone & Install as a Single Python Library (Recommended)
-Register the library globally so you can use the unified `lca-copilot` command line tool directly:
+Register the library globally so you can use the unified `agentic-lca` command line tool directly:
 ```bash
 git clone https://github.com/shreesomnath/ai_agentic_opencla.git
 cd ai_agentic_opencla
@@ -72,7 +72,7 @@ You have two options to enable the LLM copilot chat:
 * **Option B: Offline/Local LLM (Ollama)**
   You can let the CLI handle downloading, installing, starting Ollama, and pulling the recommended model:
   ```bash
-  lca-copilot --install-ollama
+  agentic-lca --install-ollama
   ```
   *(Alternatively, you can manually download and run **Ollama** from [ollama.com](https://ollama.com) and run `ollama pull qwen2.5-coder:7b` in your terminal.)*
 
@@ -80,24 +80,24 @@ You have two options to enable the LLM copilot chat:
 
 ## 💻 Running the Tool
 
-Once installed as a library, you can run all components using the single `lca-copilot` command:
+Once installed as a library, you can run all components using the single `agentic-lca` command:
 
 ### Mode A: Standard Ingestion & Pareto Optimization
 Runs bulk BOM Ingestion, TVL mass checks, sensitivity scans, feedstock optimization, and outputs a trade-offs chart:
 ```bash
-lca-copilot
+agentic-lca
 ```
 
 ### Mode B: Interactive CLI Copilot (Command-Line Chat)
 Enters an interactive terminal chat session to ask questions or run feedstock substitutions dynamically:
 ```bash
-lca-copilot --chat
+agentic-lca --chat
 ```
 
 ### Mode C: Graphical Web Dashboard (Easiest & Most Visual)
 Launches the premium, theme-toggleable web dashboard with dynamic BOM table editing and visual chat copilot support:
 ```bash
-lca-copilot --web
+agentic-lca --web
 ```
 After starting the server, open your web browser and navigate to: **`http://127.0.0.1:5000/`**
 
@@ -120,9 +120,9 @@ If you have already cloned the repository and installed everything, here is how 
 3. **Ensure OpenLCA IPC server is running:** Open the OpenLCA desktop app and start the IPC Server on port `8080`.
 4. **Launch the web dashboard:**
    ```bash
-   lca-copilot --web
+   agentic-lca --web
    ```
-   *Note: If `lca-copilot` is not found, you may need to activate your Python virtual environment if you used one.*
+   *Note: If `agentic-lca` is not found, you may need to activate your Python virtual environment if you used one.*
 
 ---
 
@@ -131,18 +131,18 @@ We have bundled pre-configured case studies representing key clean technologies 
 
 | Technology Case Study | Direct CLI Command |
 | :--- | :--- |
-| **Silicon Solar Cell (Default)** | `lca-copilot` |
-| **Perovskite Tandem Solar Cell** | `lca-copilot --bom samples/perovskite_tandem_cell.csv --chat` |
-| **Wind Turbine Blade** | `lca-copilot --bom samples/wind_turbine_blade.csv --chat` |
-| **Lithium-Ion Battery Pack** | `lca-copilot --bom samples/lithium_ion_battery.csv --chat` |
+| **Silicon Solar Cell (Default)** | `agentic-lca` |
+| **Perovskite Tandem Solar Cell** | `agentic-lca --bom samples/perovskite_tandem_cell.csv --chat` |
+| **Wind Turbine Blade** | `agentic-lca --bom samples/wind_turbine_blade.csv --chat` |
+| **Lithium-Ion Battery Pack** | `agentic-lca --bom samples/lithium_ion_battery.csv --chat` |
 
 ---
 
 ## 🗣️ Interactive Terminal Copilot Guide
 
-When running in **Interactive CLI Chat Mode (`lca-copilot --chat`)**, you can interface with the AirLab Decision Advisor directly from your terminal. Here is how to use it:
+When running in **Interactive CLI Chat Mode (`agentic-lca --chat`)**, you can interface with the AirLab Decision Advisor directly from your terminal. Here is how to use it:
 
-1. **Start the Chat**: Run `lca-copilot --chat` or `lca-copilot --bom samples/wind_turbine_blade.csv --chat`.
+1. **Start the Chat**: Run `agentic-lca --chat` or `agentic-lca --bom samples/wind_turbine_blade.csv --chat`.
 2. **Initial Ingestion**: The system will automatically map the raw BOM, run initial verification, and present a baseline trade-off analysis.
 3. **Ask Questions**: Type your queries directly into the terminal prompt. For example:
    * *"What are the main environmental hotspots in this BOM?"*
@@ -157,7 +157,7 @@ When running in **Interactive CLI Chat Mode (`lca-copilot --chat`)**, you can in
 
 ## 🧭 Interactive Web Dashboard Guide
 
-When running in **Web Dashboard Mode (`lca-copilot --web`)**, here is how to use the dashboard:
+When running in **Web Dashboard Mode (`agentic-lca --web`)**, here is how to use the dashboard:
 1. **Load a Case Study**: In the left column under "Case Study Select", choose one of the preloaded technologies (e.g. Silicon Solar Cell) and click "Load Case Study".
 2. **Review Feedstock & Mappings**:
    - **Flat List**: Shows the flat bill of materials, ecoinvent mapped flows, mapping scores, unit, and prices.
