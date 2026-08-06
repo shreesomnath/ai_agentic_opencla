@@ -28,10 +28,10 @@ jobs:
 
       - name: Build Apptainer Image
         run: |
-          apptainer build lca_copilot.sif Apptainer.def
+          apptainer build agentic_lca.sif Apptainer.def
 
       - name: Push Apptainer Image to GHCR (ORAS)
         run: |
           # Convert repository name to lowercase for GHCR compatibility
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          apptainer push lca_copilot.sif oras://ghcr.io/${REPO_LOWER}:latest
+          apptainer push agentic_lca.sif oras://ghcr.io/${REPO_LOWER}:latest

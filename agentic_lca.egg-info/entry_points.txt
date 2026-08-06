@@ -1,0 +1,2 @@
+[console_scripts]
+agentic-lca = agentic_lca.cli:main

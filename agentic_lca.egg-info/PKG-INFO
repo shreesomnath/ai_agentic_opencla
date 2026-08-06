@@ -1,0 +1,24 @@
+Metadata-Version: 2.4
+Name: agentic_lca
+Version: 1.0.0
+Summary: Autonomous Agentic LCA Multi-Objective Pareto Optimization Advisor
+Home-page: https://github.com/shreesomnath/ai_agentic_opencla.git
+Author: Somnath Luitel, Dr. Jani Das, Dr. Manmeet Singh
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+License-File: LICENSE
+Requires-Dist: olca-ipc>=2.0.0a0
+Requires-Dist: olca-schema>=2.0.0
+Requires-Dist: requests>=2.25.0
+Requires-Dist: matplotlib>=3.0.0
+Requires-Dist: numpy>=1.20.0
+Requires-Dist: flask>=2.0.0
+Dynamic: author
+Dynamic: classifier
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

@@ -1720,7 +1720,7 @@ def heal_database():
 @app.route('/api/chat', methods=['POST'])
 def chat():
     """
-    Handles user queries from the frontend Copilot chat interface.
+    Handles user queries from the frontend Advisor chat interface.
     Accepts current process exchanges, active report metrics, and user message.
     """
     data = request.json or {}
@@ -2036,7 +2036,7 @@ def chat():
                     from agentic_lca.cli import write_lca_report_file
                     report_filename = write_lca_report_file(
                         product_name="Web-Rebuild Product",
-                        loaded_bom_path="Web Copilot Chat",
+                        loaded_bom_path="Web Advisor Chat",
                         exchanges_list=updated_exchanges,
                         active_report=sub_report,
                         simulation_mode=False,

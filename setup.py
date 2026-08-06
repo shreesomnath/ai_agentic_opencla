@@ -18,7 +18,7 @@ setup(
         ]
     },
     author="Somnath Luitel, Dr. Jani Das, Dr. Manmeet Singh",
-    description="Autonomous Agentic LCA Multi-Objective Pareto Optimization Copilot",
+    description="Autonomous Agentic LCA Multi-Objective Pareto Optimization Advisor",
     url="https://github.com/shreesomnath/ai_agentic_opencla.git",
     classifiers=[
         "Programming Language :: Python :: 3",

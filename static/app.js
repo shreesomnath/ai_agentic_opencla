@@ -258,9 +258,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.success) {
                     updateConnectionUI(true, data.port, data.flows_count, data.processes_count, null, data.is_empty_db);
                     if (data.is_empty_db) {
-                        appendChatMessage("Copilot", `Sync successful! Connected to port **${data.port}** but the active database is empty. Fallback Simulation mode has been activated so you can test all features.`);
+                        appendChatMessage("Advisor", `Sync successful! Connected to port **${data.port}** but the active database is empty. Fallback Simulation mode has been activated so you can test all features.`);
                     } else {
-                        appendChatMessage("Copilot", `Sync successful! Re-established connection on port **${data.port}** with ecoinvent database context. Indexed **${data.flows_count.toLocaleString()}** flow descriptions and **${data.processes_count.toLocaleString()}** processes. TF-IDF search space initialized and optimized.`);
+                        appendChatMessage("Advisor", `Sync successful! Re-established connection on port **${data.port}** with ecoinvent database context. Indexed **${data.flows_count.toLocaleString()}** flow descriptions and **${data.processes_count.toLocaleString()}** processes. TF-IDF search space initialized and optimized.`);
                     }
                 } else {
                     updateConnectionUI(false, port, 0, 0, data.error, false);
@@ -1164,7 +1164,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     highlightBomHotspot(data.report.substituted_from);
                 }
                 
-                appendChatMessage("Copilot", `Ingested BOM items successfully. Dynamic hotspot analysis identified **${data.report.substituted_from}** as carrying the highest carbon footprint sensitivity. Substituted it with **${data.report.substituted_to}** (TVL verified). You can now chat below.`);
+                appendChatMessage("Advisor", `Ingested BOM items successfully. Dynamic hotspot analysis identified **${data.report.substituted_from}** as carrying the highest carbon footprint sensitivity. Substituted it with **${data.report.substituted_to}** (TVL verified). You can now chat below.`);
             } else {
                 appendChatMessage("System Error", data.error);
                 alert("Optimization calculation failed: " + data.error);
@@ -1249,7 +1249,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             </p>
                         </div>
                     `;
-                    appendChatMessage("Copilot", "No substitutable feedstocks were identified to run the multi-objective Pareto frontier.");
+                    appendChatMessage("Advisor", "No substitutable feedstocks were identified to run the multi-objective Pareto frontier.");
                     return;
                 }
                 
@@ -1319,10 +1319,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 chartPlaceholder.style.display = "block";
                 chartPlaceholder.innerHTML = html;
                 
-                // Formulate a beautiful summary explanation for the Chat Copilot
+                // Formulate a beautiful summary explanation for the Chat Advisor
                 let bestGwp = Math.min(...frontier.map(pt => pt.metrics.GWP));
                 let bestCost = Math.min(...frontier.map(pt => pt.metrics.Cost));
-                appendChatMessage("Copilot", `Pareto frontier optimization complete. Found **${frontier.length}** non-dominated blend options. The lowest carbon option achieves **${bestGwp.toFixed(2)} kg CO₂ eq**, while the lowest cost blend reduces cost to **$${bestCost.toFixed(2)}**. See the interactive configurations in the center panel.`);
+                appendChatMessage("Advisor", `Pareto frontier optimization complete. Found **${frontier.length}** non-dominated blend options. The lowest carbon option achieves **${bestGwp.toFixed(2)} kg CO₂ eq**, while the lowest cost blend reduces cost to **$${bestCost.toFixed(2)}**. See the interactive configurations in the center panel.`);
             } else {
                 appendChatMessage("System Error", data.error);
                 alert("Pareto calculation failed: " + data.error);
@@ -1602,12 +1602,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     // Update UI elements
                     updateDashboardUI(data);
                     
-                    appendChatMessage("Copilot", `Stock substitution calculation complete. Substituted target feedstock. Updated environmental and financial cost metrics. Visual chart re-plotted.`);
+                    appendChatMessage("Advisor", `Stock substitution calculation complete. Substituted target feedstock. Updated environmental and financial cost metrics. Visual chart re-plotted.`);
                 } else {
-                    appendChatMessage("Copilot", `Feedstock substitution calculation failed: ${data.error}`);
+                    appendChatMessage("Advisor", `Feedstock substitution calculation failed: ${data.error}`);
                 }
             } else {
-                appendChatMessage("Copilot", data.response);
+                appendChatMessage("Advisor", data.response);
             }
         })
         .catch(err => {
@@ -1626,7 +1626,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function appendChatMessage(sender, text) {
         let displaySender = sender;
-        if (sender === "Copilot") displaySender = "AirLab Advisor";
+        if (sender === "Advisor") displaySender = "AirLab Advisor";
         const msgDiv = document.createElement("div");
         const className = sender.toLowerCase().replace(/\s+/g, '-');
         if (className === "system-error") {
@@ -1821,7 +1821,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                   `• **Acidification**: ${acidPct > 0 ? '+' : ''}${acidPct.toFixed(2)}%\n` +
                                   `• **Water Consumption**: ${waterPct > 0 ? '+' : ''}${waterPct.toFixed(2)}%\n` +
                                   `• **Feedstock Cost**: ${costPct > 0 ? '+' : ''}${costPct.toFixed(2)}%`;
-                    appendChatMessage("Copilot", message);
+                    appendChatMessage("Advisor", message);
                 } else if (streamData.type === 'failed') {
                     eventSource.close();
                     runAutonomousBtn.disabled = false;
@@ -2199,7 +2199,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 chatSendBtn.disabled = false;
                 chatInput.placeholder = "Ask AirLab Advisor about this compiled hierarchy...";
                 
-                appendChatMessage("Copilot", `Successfully compiled hierarchical BOM for **${bomJson.name}** in openLCA. Programmatically registered custom intermediate assemblies, mapped Leaf feedstocks, and evaluated uncertainty. Process balance passed.`);
+                appendChatMessage("Advisor", `Successfully compiled hierarchical BOM for **${bomJson.name}** in openLCA. Programmatically registered custom intermediate assemblies, mapped Leaf feedstocks, and evaluated uncertainty. Process balance passed.`);
             } else {
                 appendChatMessage("System Error", data.error);
                 alert("Hierarchical compilation failed: " + data.error);
@@ -2651,7 +2651,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 btnHealDb.disabled = false;
                 btnHealDb.querySelector("span").textContent = "Heal Defects";
                 if (data.success) {
-                    appendChatMessage("Copilot", `Database Doctor: **${data.message}** Re-evaluating database health...`);
+                    appendChatMessage("Advisor", `Database Doctor: **${data.message}** Re-evaluating database health...`);
                     btnScanDb.click();
                 } else {
                     appendChatMessage("System Error", `Self-healing failed: ${data.error}`);

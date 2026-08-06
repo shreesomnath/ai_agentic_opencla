@@ -2,13 +2,13 @@
 
 Developed by **Somnath Luitel**, **Dr. Manmeet Singh**, and **Dr. Jani Das** at the [AIR-LAB, WKU](https://air-lab-wku.github.io/).
 
-Welcome to **Agentic LCA**, a next-generation scientific AI copilot designed to automate, verify, and optimize Life Cycle Assessments (LCA). 
+Welcome to **Agentic LCA**, a next-generation scientific AI advisor designed to automate, verify, and optimize Life Cycle Assessments (LCA). 
 
 This platform connects directly to **OpenLCA 2.x** and uses **local offline Large Language Models (LLMs)** (via Ollama) to ingest raw Bills of Materials (BOM), verify thermodynamic mass conservation, dynamically identify environmental hotspots, search circular feedstock substitutes, and evaluate multi-objective Pareto trade-offs.
 
 ## 🖥️ Web Dashboard Showcase
 
-Agentic LCA features a custom, premium web dashboard supporting dynamic Bill of Materials editing, real-time Pareto visualizations, and terminal copilot chat reasoning:
+Agentic LCA features a custom, premium web dashboard supporting dynamic Bill of Materials editing, real-time Pareto visualizations, and terminal advisor chat reasoning:
 
 | Space Theme (Dark Mode) | Normal Theme (Light Mode) |
 | :---: | :---: |
@@ -19,7 +19,7 @@ Agentic LCA features a custom, premium web dashboard supporting dynamic Bill of 
 ## 🌟 Why Agentic LCA? (Uniqueness vs Standard OpenLCA)
 
 While standard OpenLCA is a powerful desktop software for lifecycle assessment, it requires deep expertise, manual process matching, and complex navigation to run multi-objective scenarios. **Agentic LCA** introduces features you won't find in the standard desktop app:
-* **Interactive AI Advisor**: A built-in LLM copilot ("AirLab Decision Advisor") that understands natural language. Ask it questions like *"Why is glass cullet better than glass fibre?"* and get real-time, context-aware answers without leaving the tool.
+* **Interactive AI Advisor**: A built-in LLM advisor ("AirLab Decision Advisor") that understands natural language. Ask it questions like *"Why is glass cullet better than glass fibre?"* and get real-time, context-aware answers without leaving the tool.
 * **Dynamic Natural Language Substitutions**: Instruct the AI to *"substitute steel with scrap steel"* and watch it automatically recompile the BOM, run the IPC optimization, and generate a new engineering justification report instantly.
 * **Automated Flow Mapping**: Ingests raw CSV/JSON Bills of Materials and autonomously maps them to over 65,000+ ecoinvent flows using an offline TF-IDF search engine, saving hours of manual data entry.
 * **Instant Multi-Objective Trade-offs**: Visualizes environmental and financial impacts dynamically via interactive charts (Pareto, Doughnut) as you tweak scaling and TOPSIS priority weights in real-time.
@@ -29,7 +29,7 @@ While standard OpenLCA is a powerful desktop software for lifecycle assessment, 
 
 ## 🚀 Key Features
 
-* **🧠 Offline LLM Agentic Copilot**: Talk directly to your LCA model in real-time. Ask questions, get explanations, or command it to run swaps (e.g., *"replace steel with scrap steel"*).
+* **🧠 Offline LLM Agentic Advisor**: Talk directly to your LCA model in real-time. Ask questions, get explanations, or command it to run swaps (e.g., *"replace steel with scrap steel"*).
 * **📊 Multi-Objective Pareto Optimization**: Evaluates trade-offs across **Climate Change (GWP)**, **Terrestrial Acidification**, **Water Consumption**, and **Financial Material Costs** simultaneously.
 * **⚖️ Thermodynamic Verification Layer (TVL)**: Ensures physical realism using stoichiometric and bulk mass conservation checks. It prevents the AI from proposing physically impossible substitutions.
 * **🔍 Offline LCI Flow Mapper**: Custom TF-IDF search engine indexes all 65,000+ database flows to map unstructured BOM inputs to structured ecoinvent flows in milliseconds.
@@ -58,7 +58,7 @@ pip install -e .
    * Click **Start** (verify the status is "Running").
 
 ### 3. Configure Your LLM Backend (Choose One)
-You have two options to enable the LLM copilot chat:
+You have two options to enable the LLM advisor chat:
 
 * **Option A: Cloud API (Easiest - Zero Installation) 🌟**
   Simply export your Gemini, OpenAI, or Anthropic (Claude) API Key. The library uses direct HTTP calls with zero extra python dependencies:
@@ -88,14 +88,14 @@ Runs bulk BOM Ingestion, TVL mass checks, sensitivity scans, feedstock optimizat
 agentic-lca
 ```
 
-### Mode B: Interactive CLI Copilot (Command-Line Chat)
+### Mode B: Interactive CLI Advisor (Command-Line Chat)
 Enters an interactive terminal chat session to ask questions or run feedstock substitutions dynamically:
 ```bash
 agentic-lca --chat
 ```
 
 ### Mode C: Graphical Web Dashboard (Easiest & Most Visual)
-Launches the premium, theme-toggleable web dashboard with dynamic BOM table editing and visual chat copilot support:
+Launches the premium, theme-toggleable web dashboard with dynamic BOM table editing and visual chat advisor support:
 ```bash
 agentic-lca --web
 ```
@@ -165,7 +165,7 @@ We have bundled pre-configured case studies representing key clean technologies 
 
 ---
 
-## 🗣️ Interactive Terminal Copilot Guide
+## 🗣️ Interactive Terminal Advisor Guide
 
 When running in **Interactive CLI Chat Mode (`agentic-lca --chat`)**, you can interface with the AirLab Decision Advisor directly from your terminal. Here is how to use it:
 
@@ -174,10 +174,10 @@ When running in **Interactive CLI Chat Mode (`agentic-lca --chat`)**, you can in
 3. **Ask Questions**: Type your queries directly into the terminal prompt. For example:
    * *"What are the main environmental hotspots in this BOM?"*
    * *"Explain why Terrestrial Acidification is so high."*
-4. **Command Substitutions**: Ask the copilot to run substitutions. The TVL will automatically verify if the substitution is physically valid:
+4. **Command Substitutions**: Ask the advisor to run substitutions. The TVL will automatically verify if the substitution is physically valid:
    * *"What happens if we replace epoxy resin with bio-resin?"*
    * *"Substitute steel with scrap steel."*
-5. **Review Updates**: The copilot will apply the substitution, run a new optimization loop with OpenLCA, and output a new set of metrics and an engineering justification directly in the terminal.
+5. **Review Updates**: The advisor will apply the substitution, run a new optimization loop with OpenLCA, and output a new set of metrics and an engineering justification directly in the terminal.
 6. **Exit**: Type `exit` or `quit` to leave the chat session.
 
 ---
@@ -194,9 +194,9 @@ When running in **Web Dashboard Mode (`agentic-lca --web`)**, here is how to use
 4. **Tune Scaling & Multi-Criteria Weights**:
    - Adjust the **Process scaling** input.
    - Set **TOPSIS weights** for Climate Change (GWP), Acidification, Water Consumption, and Cost to prioritize specific sustainability criteria.
-5. **Interactive Copilot Chat**:
+5. **Interactive Advisor Chat**:
    - Type queries in the chat box on the right (e.g., *"Why does recycling glass cullet have less water impact?"*).
-   - Instruct the copilot to run feedstock substitutions dynamically: *"replace glass fibre with glass cullet"* or *"what if we use recycled plastic?"*. The chart and engineering justification report will update automatically in real-time!
+   - Instruct the advisor to run feedstock substitutions dynamically: *"replace glass fibre with glass cullet"* or *"what if we use recycled plastic?"*. The chart and engineering justification report will update automatically in real-time!
 
 ---
 
@@ -208,25 +208,25 @@ For multi-user clusters or zero-install deployments, you can run the prebuilt co
 You do not need to download the source repository or build the image. Simply run it directly using `apptainer run`:
 ```bash
 # 1. Run the default optimization pipeline (uses host network to talk to openLCA)
-apptainer run --network host oras://ghcr.io/shreesomnath/ai_agentic_opencla/lca_copilot:latest
+apptainer run --network host oras://ghcr.io/shreesomnath/ai_agentic_opencla/agentic_lca:latest
 
 # 2. Launch in interactive chat mode
-apptainer run --network host oras://ghcr.io/shreesomnath/ai_agentic_opencla/lca_copilot:latest --chat
+apptainer run --network host oras://ghcr.io/shreesomnath/ai_agentic_opencla/agentic_lca:latest --chat
 
 # 3. Launch the graphical web dashboard
-apptainer run --network host oras://ghcr.io/shreesomnath/ai_agentic_opencla/lca_copilot:latest --web
+apptainer run --network host oras://ghcr.io/shreesomnath/ai_agentic_opencla/agentic_lca:latest --web
 ```
 
 ### Option B: Build and Run Container Locally
 If you want to modify the container recipe, build the SIF image yourself:
 ```bash
 # 1. Build the single SIF container image
-apptainer build lca_copilot.sif Apptainer.def
+apptainer build agentic_lca.sif Apptainer.def
 
 # 2. Run locally
-apptainer run --network host lca_copilot.sif
-apptainer run --network host lca_copilot.sif --chat
-apptainer run --network host lca_copilot.sif --web
+apptainer run --network host agentic_lca.sif
+apptainer run --network host agentic_lca.sif --chat
+apptainer run --network host agentic_lca.sif --web
 ```
 
 ---

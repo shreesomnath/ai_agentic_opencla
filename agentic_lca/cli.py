@@ -67,7 +67,7 @@ def write_lca_report_file(product_name, loaded_bom_path, exchanges_list, active_
     db_mode = "Offline Simulation Mode" if simulation_mode else f"Live openLCA (Port {port})"
     
     md = f"""# Life Cycle Assessment (LCA) Study Report
-**Developers:** AirLab LCA Core Team & Antigravity Copilot  
+**Developers:** AirLab LCA Core Team & Antigravity Advisor  
 **Platform:** openLCA Agentic Integration Suite v2.0  
 **Product:** {product_name}  
 **Date:** {timestamp}  
@@ -245,7 +245,7 @@ def run_system_setup_diagnostics():
             print(f" 🟡 Ollama        : Service responded with code {res.status_code}")
     except Exception:
         print(" 🟡 Ollama        : Not running on localhost:11434.")
-        print("                   The Copilot will fall back to Rule-based Heuristic Mode offline.")
+        print("                   The Advisor will fall back to Rule-based Heuristic Mode offline.")
         print("                   If you want smart descriptions, install and start Ollama (https://ollama.com).")
         
     print("\n" + "="*80)
@@ -756,11 +756,11 @@ def run_interactive_cli_chat(port):
         save_lca_report()
 
     # Start the prompt loop
-    status_text = "🟢 Active LLM (Ollama)" if llm_agent.is_ollama_active() else "🟡 Rule-based Heuristic Copilot (Offline Mode)"
+    status_text = "🟢 Active LLM (Ollama)" if llm_agent.is_ollama_active() else "🟡 Rule-based Heuristic Advisor (Offline Mode)"
     db_text = f"🟢 Connected to openLCA on port {port}" if not simulation_mode else "🟡 Offline Simulation Mode"
     
     help_message = f"""================================================================================
-         WELCOME TO THE AGENTIC LCA INTERACTIVE COPILOT
+         WELCOME TO THE AGENTIC LCA INTERACTIVE ADVISOR
 ================================================================================
 Database: {db_text}
 LLM Brain: {status_text}
@@ -824,7 +824,7 @@ Commands:
                 continue
                 
             if query_lower == "status":
-                status_text = "🟢 Active LLM (Ollama)" if llm_agent.is_ollama_active() else "🟡 Rule-based Heuristic Copilot (Offline Mode)"
+                status_text = "🟢 Active LLM (Ollama)" if llm_agent.is_ollama_active() else "🟡 Rule-based Heuristic Advisor (Offline Mode)"
                 db_text = f"🟢 Connected to openLCA on port {port}" if not simulation_mode else "🟡 Offline Simulation Mode"
                 print(f" - Connection Status: {db_text}")
                 print(f" - LLM Provider: {status_text}")
@@ -925,7 +925,7 @@ Commands:
             elif action == "create_product":
                 product_name = llm_command.get("product_name")
                 bom_items = llm_command.get("bom", [])
-                print(f"\n[Copilot Action] Dynamically synthesizing LCA for '{product_name}'...")
+                print(f"\n[Advisor Action] Dynamically synthesizing LCA for '{product_name}'...")
                 
                 # Write to temp BOM csv
                 temp_csv = "temp_product_bom.csv"
@@ -982,7 +982,7 @@ Commands:
                 standard_name = llm_command.get("standard_name")
                 if mapper:
                     mapper.save_synonym(abbreviation, standard_name)
-                print(f"\n[Copilot Learn] Mapping definition registered:")
+                print(f"\n[Advisor Learn] Mapping definition registered:")
                 print(f" -> '{abbreviation}' is mapped to database flow '{standard_name}'")
                 print("-" * 80)
                 print(llm_command.get("response"))
