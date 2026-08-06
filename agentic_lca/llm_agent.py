@@ -409,7 +409,7 @@ Output only the JSON array and nothing else.
             # 3. Fallback Informational Q&A / Chat Response
             response_text = ""
             if any(w in query_clean for w in ["hello", "hi", "hey"]):
-                response_text = "Hello! I am your autonomous LCA Copilot. I can help guide you through optimizing your supply chain footprint. You can ask me general questions or request substitutions directly (e.g. 'replace steel with scrap steel')."
+                response_text = "Hello! I am your autonomous AirLab Advisor. I can help guide you through optimizing your supply chain footprint. You can ask me general questions or request substitutions directly (e.g. 'replace steel with scrap steel')."
             elif any(w in query_clean for w in ["explain", "results", "metrics", "carbon", "footprint"]):
                 if report:
                     metrics = report.get("metrics", {})
@@ -436,7 +436,7 @@ Output only the JSON array and nothing else.
                     )
             else:
                 response_text = (
-                    "I am your LCA Copilot. You can load a case study template from the 'Ingestion Workspace' panel, "
+                    "I am your AirLab Advisor. You can load a case study template from the 'Ingestion Workspace' panel, "
                     "compile a hierarchical BOM, or request substitutions directly (e.g. *'substitute steel with scrap steel'*)."
                 )
             return {
@@ -463,7 +463,7 @@ Output only the JSON array and nothing else.
             weights_info = f"\nUser Multi-Criteria Decision Weights Priorities (TOPSIS): {json.dumps(weights)}"
 
         prompt = f"""
-You are the brain of an interactive LCA Copilot.
+You are the brain of an interactive AirLab Decision Advisor.
 The user has asked: "{user_query}"
 {weights_info}
 

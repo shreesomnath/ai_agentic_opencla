@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agentic LCA | Sustainability Ingestion & Optimization</title>
+    <title>Agentic LCA Study Report | AirLab LCA Team</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=DM+Sans:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -13,12 +13,27 @@
     <div class="app-container">
         <!-- Top Navigation Header -->
         <header class="app-header">
-            <div class="logo-area">
-                <svg class="logo-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.58 0 8a7 7 0 0 1-8 10Z"></path>
-                    <path d="M19 2c-2.26 4.33-5.27 7.14-8 8"></path>
-                </svg>
-                <h1>Agentic <span class="logo-highlight">LCA</span> <span class="badge-tag">Platform</span></h1>
+            <div class="logo-area" style="display: flex; align-items: center; gap: 12px;">
+                <!-- Animated AIR Lab Radar Logo -->
+                <div class="radar-icon-wrap" style="width: 38px; height: 38px; background: rgba(198, 12, 48, 0.1); border: 1.5px solid rgba(198, 12, 48, 0.35); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px rgba(198, 12, 48, 0.15); flex-shrink: 0; position: relative;">
+                    <svg class="radar-svg" viewBox="0 0 30 30" style="width: 24px; height: 24px;">
+                        <circle cx="15" cy="15" r="13" fill="none" stroke="var(--wku-red)" stroke-width="1" style="opacity: 0.25;"></circle>
+                        <circle cx="15" cy="15" r="8" fill="none" stroke="var(--wku-red)" stroke-width="1.2" style="opacity: 0.5;"></circle>
+                        <circle cx="15" cy="15" r="3" fill="none" stroke="var(--wku-red)" stroke-width="1.2" style="opacity: 0.8;"></circle>
+                        <line class="radar-arm" x1="15" y1="15" x2="15" y2="2" stroke="var(--wku-red)" stroke-width="1.5"></line>
+                        <circle cx="15" cy="15" r="1.5" fill="var(--wku-red)"></circle>
+                    </svg>
+                </div>
+                <div class="logo-text-wrap" style="display: flex; flex-direction: column; justify-content: center; gap: 1px;">
+                    <h1 style="margin: 0; line-height: 1.15; display: flex; align-items: center; gap: 8px;">
+                        <span class="logo-highlight-air" style="font-family: var(--font-display); font-size: 20px; font-weight: 800; text-transform: uppercase;">AIR <span style="font-weight: 500;">Lab</span></span>
+                        <span class="logo-highlight" style="font-family: var(--font-display); font-size: 19px; font-weight: 600;">Agentic LCA</span>
+                        <span class="badge-tag">Platform</span>
+                    </h1>
+                    <span style="font-family: var(--font-ui); font-size: 7.5px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted); line-height: 1;">
+                        AI Research Laboratory | WKU DSOC
+                    </span>
+                </div>
             </div>
             
             <div class="header-right">
@@ -93,19 +108,20 @@
 
                     <!-- Panel 1: Flat List BOM Ingestion -->
                     <div id="panel-flat" class="tab-panel active">
-                        <div class="workspace-section" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-                            <div class="form-group">
-                                <label for="sample-select">Load study template</label>
+                        <div class="workspace-section" style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin-bottom: 12px; align-items: end;">
+                            <!-- Row 1: Labels -->
+                            <label for="sample-select" style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0; line-height: 1.2;">Load study template</label>
+                            <label for="smart-text-input" style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0; line-height: 1.2;">Smart Text Ingestion</label>
+                            
+                            <!-- Row 2: Fields -->
+                            <div>
                                 <select id="sample-select" style="width: 100%;">
                                     <option value="">-- Choose case study --</option>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label for="smart-text-input">Smart Text Ingestion</label>
-                                <div class="input-with-button">
-                                    <input type="text" id="smart-text-input" placeholder="e.g. 10kg steel, 2kg polyethylene" style="width: 100%;">
-                                    <button type="button" class="btn btn-secondary" id="smart-text-btn" style="padding: 9px 12px;">Parse</button>
-                                </div>
+                            <div class="input-with-button">
+                                <input type="text" id="smart-text-input" placeholder="e.g. 10kg steel, 2kg polyethylene" style="width: 100%;">
+                                <button type="button" class="btn btn-secondary" id="smart-text-btn">Parse</button>
                             </div>
                         </div>
 
@@ -212,11 +228,27 @@
                             <div id="autonomous-terminal" class="agent-terminal">Waiting to launch agent loop...</div>
                         </div>
                     </div>
-                </div>
-            </aside>
+            </div> <!-- End workspace-card -->
+
+        </aside>
 
             <!-- Main Analytics Canvas -->
             <main class="analytics-canvas">
+                <!-- Print Report Header (visible only when printing) -->
+                <div class="print-header">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #64748b; padding-bottom: 10px; margin-bottom: 20px;">
+                        <div>
+                            <h1 style="font-size: 20pt; margin: 0; font-weight: 800; color: #1e293b; font-family: var(--font-sans);">Life Cycle Assessment Study Report</h1>
+                            <p style="font-size: 10.5px; margin: 4px 0 0 0; color: #64748b; font-family: var(--font-sans); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">openLCA Agentic Suite | Multi-Agent Process Redesign</p>
+                        </div>
+                        <div style="text-align: right; font-size: 9.5px; color: #475569; font-family: var(--font-sans); line-height: 1.45;">
+                            <strong>Developers:</strong> AirLab LCA Core Team<br>
+                            <strong>Platform:</strong> openLCA Agentic Integration Suite v2.0<br>
+                            <strong>Generated:</strong> <span class="print-date"></span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- KPI Banner -->
                 <div class="analytics-kpi-banner">
                     <div class="kpi-card" id="card-gwp">
@@ -319,12 +351,16 @@
                             <div class="chart-toggle-tabs">
                                 <button type="button" class="chart-tab-btn active" id="chart-tab-tradeoff">Trade-Offs</button>
                                 <button type="button" class="chart-tab-btn" id="chart-tab-uncertainty">Uncertainty Dist.</button>
+                                <button type="button" class="chart-tab-btn" id="chart-tab-hotspot">BOM Breakdown</button>
                             </div>
                         </div>
                         <div class="chart-content-area">
                             <div class="chart-active-title" id="chart-active-title" style="display: none;"></div>
                             <div class="placeholder-text" id="chart-placeholder">
                                 Run optimization to display comparison metrics
+                            </div>
+                            <div id="interactive-chart-container" style="display: none; width: 100%; height: 260px; position: relative;">
+                                <canvas id="interactive-chart"></canvas>
                             </div>
                             <img id="tradeoff-chart-img" style="display: none;" alt="Optimization tradeoffs bar chart">
                             <img id="uncertainty-chart-img" style="display: none;" alt="Uncertainty distribution histogram">
@@ -336,6 +372,52 @@
 
         <!-- Controls & Verification Grid -->
         <div class="controls-row">
+            <!-- TOPSIS Priorities Weights -->
+            <div class="visual-panel control-panel-card">
+                <div class="panel-header">
+                    <h3>
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        TOPSIS Priorities
+                    </h3>
+                </div>
+                <div class="control-card-body">
+                    <!-- Scenario Presets -->
+                    <div style="display: flex; gap: 8px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px dashed var(--border-color);">
+                        <button type="button" class="btn btn-secondary" id="preset-eco" style="flex: 1; height: 26px; padding: 0 8px; font-size: 10px; border-radius: 4px; font-family: var(--font-sans);">Eco-First</button>
+                        <button type="button" class="btn btn-secondary" id="preset-balanced" style="flex: 1; height: 26px; padding: 0 8px; font-size: 10px; border-radius: 4px; font-family: var(--font-sans);">Balanced</button>
+                        <button type="button" class="btn btn-secondary" id="preset-cost" style="flex: 1; height: 26px; padding: 0 8px; font-size: 10px; border-radius: 4px; font-family: var(--font-sans);">Cost-First</button>
+                    </div>
+                    <div class="slider-row">
+                        <div class="slider-row-head">
+                            <span class="slider-label">Carbon (GWP) weight</span>
+                            <span class="slider-value" id="val-weight-gwp">40%</span>
+                        </div>
+                        <input type="range" id="weight-gwp" min="0" max="100" step="5" value="40" class="custom-slider">
+                    </div>
+                    <div class="slider-row">
+                        <div class="slider-row-head">
+                            <span class="slider-label">Acidification weight</span>
+                            <span class="slider-value" id="val-weight-acid">15%</span>
+                        </div>
+                        <input type="range" id="weight-acid" min="0" max="100" step="5" value="15" class="custom-slider">
+                    </div>
+                    <div class="slider-row">
+                        <div class="slider-row-head">
+                            <span class="slider-label">Water weight</span>
+                            <span class="slider-value" id="val-weight-water">15%</span>
+                        </div>
+                        <input type="range" id="weight-water" min="0" max="100" step="5" value="15" class="custom-slider">
+                    </div>
+                    <div class="slider-row">
+                        <div class="slider-row-head">
+                            <span class="slider-label">Material cost weight</span>
+                            <span class="slider-value" id="val-weight-cost">30%</span>
+                        </div>
+                        <input type="range" id="weight-cost" min="0" max="100" step="5" value="30" class="custom-slider">
+                    </div>
+                </div>
+            </div>
+
             <!-- Dynamic Process Parameters -->
             <div class="visual-panel control-panel-card">
                 <div class="panel-header">
@@ -380,45 +462,8 @@
                 </div>
             </div>
 
-            <!-- TOPSIS Weights -->
-            <div class="visual-panel control-panel-card">
-                <div class="panel-header">
-                    <h3>
-                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                        TOPSIS MCDA Weights
-                    </h3>
-                </div>
-                <div class="control-card-body">
-                    <div class="slider-row">
-                        <div class="slider-row-head">
-                            <span class="slider-label">Carbon (GWP) weight</span>
-                            <span class="slider-value" id="val-weight-gwp">40%</span>
-                        </div>
-                        <input type="range" id="weight-gwp" min="0" max="100" step="5" value="40" class="custom-slider">
-                    </div>
-                    <div class="slider-row">
-                        <div class="slider-row-head">
-                            <span class="slider-label">Acidification weight</span>
-                            <span class="slider-value" id="val-weight-acid">15%</span>
-                        </div>
-                        <input type="range" id="weight-acid" min="0" max="100" step="5" value="15" class="custom-slider">
-                    </div>
-                    <div class="slider-row">
-                        <div class="slider-row-head">
-                            <span class="slider-label">Water weight</span>
-                            <span class="slider-value" id="val-weight-water">15%</span>
-                        </div>
-                        <input type="range" id="weight-water" min="0" max="100" step="5" value="15" class="custom-slider">
-                    </div>
-                    <div class="slider-row">
-                        <div class="slider-row-head">
-                            <span class="slider-label">Material cost weight</span>
-                            <span class="slider-value" id="val-weight-cost">30%</span>
-                        </div>
-                        <input type="range" id="weight-cost" min="0" max="100" step="5" value="30" class="custom-slider">
-                    </div>
-                </div>
-            </div>
+
+
 
             <!-- Mass Balance Check -->
             <div class="visual-panel control-panel-card">
@@ -488,41 +533,29 @@
                 </div>
             </div>
 
-            <!-- Chat Copilot -->
-            <div class="visual-panel control-panel-card chat-panel">
-                <div class="panel-header">
-                    <h3>
-                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                        Copilot Decision Chat
-                    </h3>
-                </div>
-                <div class="control-card-body">
-                    <div class="chat-logs" id="chat-box">
-                        <div class="message system-msg">
-                            <strong>Copilot:</strong> Welcome! Load a study template or build a custom BOM flow. Once optimized, I can explain emission tradeoffs, identify hotspots, or run automated substitutions (e.g. try: <em>"What if we substitute steel with scrap steel?"</em>).
-                        </div>
-                    </div>
-                    <div class="chat-terminal-bar">
-                        <input type="text" id="chat-input" placeholder="Ask Copilot a question or request feedstock swap...">
-                        <button type="button" id="chat-send-btn" aria-label="Send message">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                        </button>
-                    </div>
-                </div>
             </div>
-        </div>
 
         <!-- LLM Engineering Justification Report -->
         <div class="visual-panel justification-panel" id="justification-wrapper" style="display: none;">
             <div class="panel-header">
-                <h3 style="margin: 0;">
+                <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;">
                     <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                     Engineering Justification Report
                 </h3>
-                <button type="button" class="btn btn-secondary" id="print-report-btn">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                    <span class="btn-label">Print PDF report</span>
-                </button>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn btn-secondary" id="btn-open-history" style="padding: 6px 12px; font-size: 11.5px; height: 32px; border-radius: 6px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        <span>Compare History</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="download-report-btn" style="padding: 6px 12px; font-size: 11.5px; height: 32px; border-radius: 6px; display: none;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        <span>Download MD Report</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="print-report-btn" style="padding: 6px 12px; font-size: 11.5px; height: 32px; border-radius: 6px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                        <span class="btn-label">Print PDF report</span>
+                    </button>
+                </div>
             </div>
             <div class="justification-body">
                 <blockquote id="justification-content"></blockquote>
@@ -543,6 +576,95 @@
         </footer>
     </div>
 
+    <!-- Database Doctor Diff Modal -->
+    <div id="doctor-diff-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>🛠️ Database Doctor: Healing Review</h3>
+                <button type="button" class="modal-close-btn" id="doctor-close-btn">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
+                    Review the side-by-side database modifications proposal before committing repairs to the live openLCA database.
+                </p>
+                <div id="doctor-diff-container" class="diff-viewer-box">
+                    <!-- Dynamic diff items will be rendered here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="doctor-cancel-btn">Cancel</button>
+                <button type="button" class="btn btn-accent" id="doctor-confirm-btn">Confirm & Apply Repairs</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historical Comparator Modal -->
+    <div id="history-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card" style="width: 650px; max-width: 90%;">
+            <div class="modal-header">
+                <h3>📋 Historical LCA Run Comparator</h3>
+                <button type="button" class="modal-close-btn" id="history-close-btn">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 450px; overflow-y: auto;">
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
+                    Select two or more past study reports to compare feedstock choices, carbon footprints, and economic expenditures side-by-side.
+                </p>
+                <div id="history-list-container" style="margin-bottom: 16px;">
+                    <!-- List of reports with checkboxes -->
+                </div>
+                <div id="history-comparison-results" style="display: none; border-top: 1px solid var(--border-color); padding-top: 16px;">
+                    <!-- Comparison tables and bars -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="history-close-action-btn">Close</button>
+                <button type="button" class="btn btn-primary" id="history-compare-btn">Compare Selected Runs</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating AirLab Chat Advisor -->
+    <div class="visual-panel control-panel-card chat-panel" style="margin-bottom: 0;">
+        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                AirLab Decision Advisor
+            </h3>
+            <button type="button" id="close-advisor-btn" style="background: none; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; line-height: 1;">&times;</button>
+        </div>
+        <div class="control-card-body" style="display: flex; flex-direction: column; flex-grow: 1; overflow: hidden; height: calc(100% - 50px);">
+            <div class="chat-logs" id="chat-box" style="flex-grow: 1; overflow-y: auto;">
+                <div class="message system-msg">
+                    <strong>AirLab Advisor:</strong> Welcome! Load a study template or build a custom BOM flow. Once optimized, I can explain emission tradeoffs, identify hotspots, or run automated substitutions (e.g. try: <em>"What if we substitute steel with scrap steel?"</em>).
+                </div>
+            </div>
+            <div class="chat-terminal-bar" style="display: flex; gap: 8px; margin-top: 10px;">
+                <input type="text" id="chat-input" placeholder="Ask AirLab Advisor a question or request feedstock swap..." style="flex-grow: 1;">
+                <button type="button" id="chat-send-btn" aria-label="Send message">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Chat Trigger Bubble -->
+    <button type="button" id="advisor-bubble-trigger" class="advisor-bubble" aria-label="Open AirLab Advisor">
+        <span class="bubble-pulse"></span>
+        <svg class="radar-svg" viewBox="0 0 30 30" style="width: 26px; height: 26px;">
+            <circle cx="15" cy="15" r="13" fill="none" stroke="white" stroke-width="1.2" style="opacity: 0.35;"></circle>
+            <circle cx="15" cy="15" r="8" fill="none" stroke="white" stroke-width="1.2" style="opacity: 0.6;"></circle>
+            <circle cx="15" cy="15" r="3" fill="none" stroke="white" stroke-width="1.2" style="opacity: 0.9;"></circle>
+            <line class="radar-arm" x1="15" y1="15" x2="15" y2="2" stroke="white" stroke-width="2"></line>
+            <circle cx="15" cy="15" r="2" fill="white"></circle>
+        </svg>
+    </button>
+
+    <!-- Floating Chat Trigger Tooltip Speech Bubble -->
+    <div class="advisor-bubble-tooltip" id="advisor-tooltip">
+        Hey, do you need help?
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/static/app.js"></script>
 </body>
 </html>

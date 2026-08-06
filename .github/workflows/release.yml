@@ -1,0 +1,88 @@
+name: Build and Release LCA-Copilot
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Trigger on version tags, e.g., v1.0.0
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            executable_name: LCA-Copilot-Linux
+            artifact_name: LCA-Copilot-Linux
+            pyinstaller_output: dist/LCA-Copilot
+          - os: windows-latest
+            executable_name: LCA-Copilot-Windows.exe
+            artifact_name: LCA-Copilot-Windows
+            pyinstaller_output: dist/LCA-Copilot.exe
+          - os: macos-latest
+            executable_name: LCA-Copilot-MacOS
+            artifact_name: LCA-Copilot-MacOS
+            pyinstaller_output: dist/LCA-Copilot
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build Standalone Executable
+        run: python build.py
+
+      - name: Rename Executable for Platform
+        run: |
+          mv ${{ matrix.pyinstaller_output }} dist/${{ matrix.executable_name }}
+        if: runner.os != 'Windows'
+
+      - name: Rename Executable for Windows
+        run: |
+          ren ${{ matrix.pyinstaller_output }} ${{ matrix.executable_name }}
+        if: runner.os == 'Windows'
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist/${{ matrix.executable_name }}
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download Built Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist-artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist-artifacts/LCA-Copilot-Linux/LCA-Copilot-Linux
+            dist-artifacts/LCA-Copilot-Windows/LCA-Copilot-Windows.exe
+            dist-artifacts/LCA-Copilot-MacOS/LCA-Copilot-MacOS
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

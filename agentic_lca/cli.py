@@ -67,6 +67,8 @@ def write_lca_report_file(product_name, loaded_bom_path, exchanges_list, active_
     db_mode = "Offline Simulation Mode" if simulation_mode else f"Live openLCA (Port {port})"
     
     md = f"""# Life Cycle Assessment (LCA) Study Report
+**Developers:** AirLab LCA Core Team & Antigravity Copilot  
+**Platform:** openLCA Agentic Integration Suite v2.0  
 **Product:** {product_name}  
 **Date:** {timestamp}  
 **Database Connection:** {db_mode}  
@@ -166,6 +168,89 @@ A multi-objective environmental and economic impact assessment was performed.
         pass
         
     return filename
+        
+def run_system_setup_diagnostics():
+    print("="*80)
+    print("              LCA-COPILOT SYSTEM SETUP & DIAGNOSTICS")
+    print("="*80)
+    
+    # 1. Check Python Dependencies
+    print("\n[1/3] Checking Python dependencies...")
+    dependencies = [
+        ("olca_ipc", "olca-ipc"),
+        ("olca_schema", "olca-schema"),
+        ("requests", "requests"),
+        ("flask", "flask"),
+        ("matplotlib", "matplotlib"),
+        ("numpy", "numpy")
+    ]
+    
+    all_deps_installed = True
+    for module_name, pip_name in dependencies:
+        try:
+            import importlib
+            mod = importlib.import_module(module_name)
+            ver = getattr(mod, "__version__", "unknown")
+            print(f" 🟢 {pip_name:<15} : Installed (v{ver})")
+        except ImportError:
+            print(f" 🔴 {pip_name:<15} : MISSING!")
+            all_deps_installed = False
+            
+    if not all_deps_installed:
+        print("\n[Action Required] Some Python dependencies are missing. Run:")
+        print("  pip install -r requirements.txt")
+    else:
+        print(" -> All Python package dependencies verified successfully.")
+
+    # 2. Check openLCA Database connection
+    print("\n[2/3] Checking openLCA IPC Server connection...")
+    port = 8080
+    active = scan_ports()
+    if active:
+        target_port = active[0]
+        try:
+            executor = LcaExecutor(port=target_port)
+            flows = len(list(executor.client.get_descriptors(o.Flow)))
+            processes = len(list(executor.client.get_descriptors(o.Process)))
+            print(f" 🟢 openLCA IPC   : Detected & Connected on Port {target_port}")
+            print(f"                   Database stats: {flows} flows, {processes} processes.")
+        except Exception as e:
+            print(f" 🟡 openLCA IPC   : Port {target_port} is open, but failed to query database: {e}")
+    else:
+        print(" 🔴 openLCA IPC   : No active openLCA IPC server detected on ports 8080-8085.")
+        print("\n[Action Required] Please check:")
+        print("  1. Is openLCA open with an active database loaded?")
+        print("  2. Is the IPC Server running? (Go to openLCA -> Window -> Developer Tools -> IPC Dialog and click 'Start')")
+
+    # 3. Check local Ollama setup
+    print("\n[3/3] Checking Ollama Local LLM Brain...")
+    import requests
+    try:
+        res = requests.get("http://localhost:11434/api/tags", timeout=2.0)
+        if res.status_code == 200:
+            data = res.json()
+            models = [m.get("name") for m in data.get("models", [])]
+            print(f" 🟢 Ollama        : Running on localhost:11434")
+            if models:
+                print(f"                   Installed models: {', '.join(models)}")
+                recommended = "qwen2.5-coder:7b"
+                if any(recommended in m for m in models):
+                    print(f"                   🟢 Recommended model '{recommended}' is available!")
+                else:
+                    print(f"                   🟡 Recommended model '{recommended}' not found.")
+                    print(f"                      Consider pulling it: 'ollama pull {recommended}'")
+            else:
+                print("                   🟡 Running but no models found. Run 'ollama pull qwen2.5-coder:7b'")
+        else:
+            print(f" 🟡 Ollama        : Service responded with code {res.status_code}")
+    except Exception:
+        print(" 🟡 Ollama        : Not running on localhost:11434.")
+        print("                   The Copilot will fall back to Rule-based Heuristic Mode offline.")
+        print("                   If you want smart descriptions, install and start Ollama (https://ollama.com).")
+        
+    print("\n" + "="*80)
+    print(" Diagnostics complete.")
+    print("="*80)
 
 def run_interactive_cli_chat(port):
     # Initialize components
@@ -926,6 +1011,10 @@ def main():
     if "--install-ollama" in sys.argv:
         from install_ollama import install_ollama
         install_ollama()
+        sys.exit(0)
+
+    if "--setup" in sys.argv or "--diagnose" in sys.argv:
+        run_system_setup_diagnostics()
         sys.exit(0)
 
     port = 8080

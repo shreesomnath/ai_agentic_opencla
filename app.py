@@ -20,11 +20,19 @@ from agentic_lca import (
 )
 import olca_schema as o
 
-app = Flask(__name__)
+if getattr(sys, 'frozen', False):
+    template_folder = os.path.join(sys._MEIPASS, 'templates')
+    static_folder = os.path.join(sys._MEIPASS, 'static')
+    app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
+else:
+    app = Flask(__name__)
 
 # Ensure static folder exists for saving charts
-os.makedirs(os.path.join(app.root_path, 'static'), exist_ok=True)
-os.makedirs(os.path.join(app.root_path, 'templates'), exist_ok=True)
+try:
+    os.makedirs(os.path.join(app.root_path, 'static'), exist_ok=True)
+    os.makedirs(os.path.join(app.root_path, 'templates'), exist_ok=True)
+except Exception:
+    pass
 
 # Cache common unit references to avoid querying openLCA on every request
 UNIT_MAP = None
@@ -210,15 +218,24 @@ def get_impact_methods():
     Returns a list of all impact assessment methods available in the active openLCA database.
     """
     global CONNECTION_SUCCESS, executor
-    if not CONNECTION_SUCCESS or not executor:
-        return jsonify([])
-    try:
-        methods = list(executor.client.get_descriptors(o.ImpactMethod))
+    methods = []
+    if CONNECTION_SUCCESS and executor:
+        try:
+            methods = list(executor.client.get_descriptors(o.ImpactMethod))
+        except Exception:
+            pass
+            
+    if not methods:
         return jsonify([
-            {"id": m.id, "name": m.name} for m in methods
+            {"id": "recipe_2016_midpoint", "name": "ReCiPe 2016 Midpoint (H)"},
+            {"id": "ipcc_2021_gwp100", "name": "IPCC 2021 GWP 100a (Climate Change)"},
+            {"id": "ef_3_1", "name": "Environmental Footprint (EF) 3.1"},
+            {"id": "traci_2_1", "name": "TRACI 2.1 (US EPA)"}
         ])
-    except Exception as e:
-        return jsonify([])
+        
+    return jsonify([
+        {"id": m.id, "name": m.name} for m in methods
+    ])
 
 @app.route('/api/load-sample', methods=['GET'])
 def load_sample():
@@ -577,6 +594,14 @@ def run_optimization():
     
     global executor, mapper
     is_mock = not CONNECTION_SUCCESS or not mapper or len(mapper.flows) == 0
+    if not is_mock:
+        try:
+            methods = list(executor.client.get_descriptors(o.ImpactMethod))
+            if not methods:
+                print("[Warning] No impact assessment methods found in database. Falling back to Simulation Mode.")
+                is_mock = True
+        except Exception:
+            is_mock = True
     if is_mock:
         try: os.remove(temp_bom_path)
         except: pass
@@ -815,7 +840,44 @@ def run_optimization():
             parameter_redefs=parameter_redefs
         )
         
-        if report.get("status") != "SUCCESS":
+        if report.get("status") == "REJECTED_TVL_FAILED":
+            # Gracefully handle the rejection by retaining baseline metrics
+            reject_msg = report.get("message", "TVL verification failed")
+            baseline_stats = report.get("baseline", {})
+            report_metrics = {}
+            for kpi, stat in baseline_stats.items():
+                report_metrics[kpi] = {
+                    "baseline": stat["baseline"],
+                    "baseline_uncertainty": {
+                        "stddev": stat["stddev"],
+                        "ci_low": stat["ci_low"],
+                        "ci_high": stat["ci_high"],
+                        "margin_of_error": stat["margin_of_error"],
+                        "trials": stat.get("trials", [])
+                    },
+                    "optimized": stat["baseline"],
+                    "optimized_uncertainty": {
+                        "stddev": stat["stddev"],
+                        "ci_low": stat["ci_low"],
+                        "ci_high": stat["ci_high"],
+                        "margin_of_error": stat["margin_of_error"],
+                        "trials": stat.get("trials", [])
+                    },
+                    "difference": 0.0,
+                    "percentage_change": 0.0,
+                    "unit": stat["unit"]
+                }
+            
+            report = {
+                "status": "SUCCESS_REJECTED",
+                "message_raw": reject_msg,
+                "process_name": "Product Manufacturing (Baseline Retained)",
+                "substituted_from": hotspot_flow_name,
+                "substituted_to": "Baseline (Substitute Rejected)",
+                "metrics": report_metrics
+            }
+            
+        if report.get("status") not in ["SUCCESS", "SUCCESS_REJECTED"]:
             raise RuntimeError(report.get("message", "Substitution evaluation failed."))
             
         # 8. Generate chart and save in static directory
@@ -880,7 +942,9 @@ def run_optimization():
         
         # 9. LLM justification paragraph
         justification = ""
-        if llm_agent.is_ollama_active():
+        if report.get("status") == "SUCCESS_REJECTED":
+            justification = f"LCA Auditor Alert: The proposed substitute was safely rejected because of a critical chemical profile mismatch: {report.get('message_raw')}. The baseline configuration was retained to guarantee thermodynamic mass conservation."
+        elif llm_agent.is_ollama_active():
             justification = llm_agent.generate_engineering_justification(report, weights=weights)
             
         # Format exchanges for context list
@@ -908,9 +972,10 @@ def run_optimization():
                 })
                 
         # Save study report md file
+        report_filename = None
         try:
             from agentic_lca.cli import write_lca_report_file
-            write_lca_report_file(
+            report_filename = write_lca_report_file(
                 product_name="Web-Synthesized Product",
                 loaded_bom_path="Web Ingestion Panel",
                 exchanges_list=exchanges_list,
@@ -934,7 +999,8 @@ def run_optimization():
             "chart_url_dark": f"/static/{chart_filename_dark}",
             "chart_url_light": f"/static/{chart_filename_light}",
             "unc_urls_dark": unc_urls_dark,
-            "unc_urls_light": unc_urls_light
+            "unc_urls_light": unc_urls_light,
+            "report_filename": report_filename
         })
 
     except Exception as e:
@@ -1043,6 +1109,60 @@ def stream_autonomous_redesign(job_id):
             
     return Response(event_stream(), mimetype="text/event-stream")
 
+@app.route('/api/reweigh', methods=['POST'])
+def run_topsis_reweigh():
+    """
+    Rapidly re-ranks the existing Pareto frontier using a new set of TOPSIS weights 
+    and regenerates the trade-off charts without needing to re-run the genetic algorithm.
+    """
+    data = request.json or {}
+    frontier = data.get("frontier", [])
+    weights_input = data.get("weights", {"GWP": 25, "Acidification": 25, "Water": 25, "Cost": 25})
+    baseline_metrics = data.get("baseline_metrics", {})
+    
+    if not frontier:
+        return jsonify({"success": False, "error": "No Pareto frontier data provided."}), 400
+        
+    try:
+        from agentic_lca.decision import TopsisDecisionEngine
+        from agentic_lca.visualizer import LcaVisualizer
+        
+        # Format weights for TOPSIS
+        topsis_weights = {
+            "GWP": float(weights_input.get("GWP", 25)) / 100.0,
+            "Acidification": float(weights_input.get("Acidification", 25)) / 100.0,
+            "Water": float(weights_input.get("Water", 25)) / 100.0,
+            "Cost": float(weights_input.get("Cost", 25)) / 100.0
+        }
+        
+        ranked_frontier = TopsisDecisionEngine.rank_alternatives(frontier, topsis_weights)
+        best_sol = ranked_frontier[0] if ranked_frontier else None
+        
+        pareto_report = {
+            "best_solution": best_sol,
+            "frontier": ranked_frontier,
+            "metrics": baseline_metrics
+        }
+        
+        chart_filename_dark = "pareto_tradeoffs_dark.png"
+        chart_filename_light = "pareto_tradeoffs_light.png"
+        chart_path_dark = os.path.join(app.root_path, 'static', chart_filename_dark)
+        chart_path_light = os.path.join(app.root_path, 'static', chart_filename_light)
+        
+        LcaVisualizer.generate_tradeoff_chart(pareto_report, chart_path_dark, theme="dark")
+        LcaVisualizer.generate_tradeoff_chart(pareto_report, chart_path_light, theme="light")
+        
+        import time
+        return jsonify({
+            "success": True,
+            "best_solution": best_sol,
+            "frontier": ranked_frontier,
+            "chart_url_dark": f"/static/{chart_filename_dark}?t={int(time.time())}",
+            "chart_url_light": f"/static/{chart_filename_light}?t={int(time.time())}"
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 @app.route('/api/pareto', methods=['POST'])
 def run_pareto_optimization():
     """
@@ -1061,6 +1181,14 @@ def run_pareto_optimization():
     
     global executor, mapper
     is_mock = not CONNECTION_SUCCESS or not mapper or len(mapper.flows) == 0
+    if not is_mock:
+        try:
+            methods = list(executor.client.get_descriptors(o.ImpactMethod))
+            if not methods:
+                print("[Warning] No impact assessment methods found in database. Falling back to Simulation Mode.")
+                is_mock = True
+        except Exception:
+            is_mock = True
     if is_mock:
         return run_mock_pareto(data)
         
@@ -1269,6 +1397,14 @@ def compile_hierarchical_bom():
     
     global executor, mapper
     is_mock = not CONNECTION_SUCCESS or not mapper or len(mapper.flows) == 0
+    if not is_mock:
+        try:
+            methods = list(executor.client.get_descriptors(o.ImpactMethod))
+            if not methods:
+                print("[Warning] No impact assessment methods found in database. Falling back to Simulation Mode.")
+                is_mock = True
+        except Exception:
+            is_mock = True
     if is_mock:
         return run_mock_compile(data)
         
@@ -1376,6 +1512,110 @@ def compile_hierarchical_bom():
             if flow_ref:
                 try: executor.client.delete(o.Ref(ref_type=o.RefType.Flow, id=flow_ref.id))
                 except: pass
+
+@app.route('/api/history', methods=['GET'])
+def get_lca_history():
+    """
+    Scans the local directory for saved LCA study reports (*_lca_report.md)
+    and extracts metadata and metrics for comparative analysis.
+    """
+    import glob
+    import os
+    import re
+    
+    files = glob.glob("*_lca_report.md")
+    history = []
+    
+    for filepath in files:
+        try:
+            filename = os.path.basename(filepath)
+            with open(filepath, "r") as f:
+                content = f.read()
+                
+            # Parse metadata
+            product_match = re.search(r"\*\*Product:\*\*\s*(.*)", content)
+            date_match = re.search(r"\*\*Date:\*\*\s*(.*)", content)
+            
+            product_name = product_match.group(1).strip() if product_match else "Unknown Product"
+            date = date_match.group(1).strip() if date_match else "Unknown Date"
+            
+            # Parse metrics from table in markdown
+            # Table format: | Indicator | Baseline Value | Optimized Value | Absolute Change | Percentage Change | Unit |
+            metrics = {}
+            lines = content.split("\n")
+            in_table = False
+            for line in lines:
+                if "Indicator | Baseline Value" in line:
+                    in_table = True
+                    continue
+                if in_table:
+                    if not line.strip() or not line.startswith("|"):
+                        if metrics: # we found the table and finished it
+                            break
+                        continue
+                    if "---" in line or ":---" in line:
+                        continue
+                    parts = [p.strip() for p in line.split("|")[1:-1]]
+                    if len(parts) >= 6:
+                        indicator = parts[0]
+                        try:
+                            baseline = float(parts[1])
+                            optimized = float(parts[2])
+                            pct_change = float(parts[4].replace("%", "").replace("+", ""))
+                            unit = parts[5]
+                            metrics[indicator] = {
+                                "baseline": baseline,
+                                "optimized": optimized,
+                                "percentage_change": pct_change,
+                                "unit": unit
+                            }
+                        except Exception:
+                            pass
+            
+            # Parse substitution details
+            from_match = re.search(r"\-\s+\*\*Substituted From:\*\*\s*`(.*)`", content)
+            to_match = re.search(r"\-\s+\*\*Substituted To:\*\*\s*`(.*)`", content)
+            
+            substituted_from = from_match.group(1).strip() if from_match else "None"
+            substituted_to = to_match.group(1).strip() if to_match else "None"
+            
+            history.append({
+                "filename": filename,
+                "product_name": product_name,
+                "date": date,
+                "substituted_from": substituted_from,
+                "substituted_to": substituted_to,
+                "metrics": metrics
+            })
+        except Exception as e:
+            print(f"Error parsing history file {filepath}: {e}")
+            
+    # Sort history by date descending
+    try:
+        history = sorted(history, key=lambda x: x.get("date", ""), reverse=True)
+    except:
+        pass
+        
+    return jsonify({"success": True, "history": history})
+
+@app.route('/api/reports/download/<filename>', methods=['GET'])
+def download_report_file(filename):
+    """
+    Downloads a saved LCA study report.
+    """
+    import os
+    from flask import send_file
+    filename = os.path.basename(filename)
+    if not filename.endswith("_lca_report.md"):
+        return jsonify({"success": False, "error": "Invalid file format"}), 400
+        
+    try:
+        if os.path.exists(filename):
+            return send_file(filename, as_attachment=True, download_name=filename, mimetype="text/markdown")
+        else:
+            return jsonify({"success": False, "error": "Report not found"}), 404
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/diagnose', methods=['POST'])
 def diagnose_database():
@@ -1791,9 +2031,10 @@ def chat():
                         "unit": ex_obj.unit.name if ex_obj.unit else ""
                     })
                     
+                report_filename = None
                 try:
                     from agentic_lca.cli import write_lca_report_file
-                    write_lca_report_file(
+                    report_filename = write_lca_report_file(
                         product_name="Web-Rebuild Product",
                         loaded_bom_path="Web Copilot Chat",
                         exchanges_list=updated_exchanges,
@@ -1818,7 +2059,8 @@ def chat():
                     "chart_url_dark": f"/static/{chart_filename_dark}?t={int(time.time())}",
                     "chart_url_light": f"/static/{chart_filename_light}?t={int(time.time())}",
                     "unc_urls_dark": unc_urls_dark,
-                    "unc_urls_light": unc_urls_light
+                    "unc_urls_light": unc_urls_light,
+                    "report_filename": report_filename
                 })
                 
             finally:
