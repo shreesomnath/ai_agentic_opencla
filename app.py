@@ -369,8 +369,8 @@ def run_mock_optimization(data):
     LcaVisualizer.generate_tradeoff_chart(report, chart_path_light, theme="light")
     
     # Save a copy in artifacts folder too
-    LcaVisualizer.generate_tradeoff_chart(report, "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs_dark.png", theme="dark")
-    LcaVisualizer.generate_tradeoff_chart(report, "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs_light.png", theme="light")
+    LcaVisualizer.generate_tradeoff_chart(report, "reports/optimization_tradeoffs_dark.png", theme="dark")
+    LcaVisualizer.generate_tradeoff_chart(report, "reports/optimization_tradeoffs_light.png", theme="light")
     
     unc_urls_dark = {}
     unc_urls_light = {}
@@ -385,8 +385,8 @@ def run_mock_optimization(data):
         LcaVisualizer.generate_uncertainty_chart(report, unc_path_light, metric_name=kpi, theme="light")
         
         # Save to artifacts
-        LcaVisualizer.generate_uncertainty_chart(report, f"/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_{short_name}_dark.png", metric_name=kpi, theme="dark")
-        LcaVisualizer.generate_uncertainty_chart(report, f"/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_{short_name}_light.png", metric_name=kpi, theme="light")
+        LcaVisualizer.generate_uncertainty_chart(report, f"reports/uncertainty_{short_name}_dark.png", metric_name=kpi, theme="dark")
+        LcaVisualizer.generate_uncertainty_chart(report, f"reports/uncertainty_{short_name}_light.png", metric_name=kpi, theme="light")
         
         unc_urls_dark[kpi] = f"/static/{unc_filename_dark}"
         unc_urls_light[kpi] = f"/static/{unc_filename_light}"
@@ -477,8 +477,8 @@ def run_mock_pareto(data):
     LcaVisualizer.generate_tradeoff_chart(pareto_report, chart_path_light, theme="light")
     
     # Save copies in artifacts directory
-    LcaVisualizer.generate_tradeoff_chart(pareto_report, "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs_dark.png", theme="dark")
-    LcaVisualizer.generate_tradeoff_chart(pareto_report, "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs_light.png", theme="light")
+    LcaVisualizer.generate_tradeoff_chart(pareto_report, "reports/optimization_tradeoffs_dark.png", theme="dark")
+    LcaVisualizer.generate_tradeoff_chart(pareto_report, "reports/optimization_tradeoffs_light.png", theme="light")
     
     return jsonify({
         "success": True,
@@ -893,12 +893,12 @@ def run_optimization():
         # Save a copy in artifacts too
         LcaVisualizer.generate_tradeoff_chart(
             report, 
-            "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs_dark.png",
+            "reports/optimization_tradeoffs_dark.png",
             theme="dark"
         )
         LcaVisualizer.generate_tradeoff_chart(
             report, 
-            "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs_light.png",
+            "reports/optimization_tradeoffs_light.png",
             theme="light"
         )
 
@@ -926,13 +926,13 @@ def run_optimization():
             # Save copy in artifacts
             LcaVisualizer.generate_uncertainty_chart(
                 report, 
-                f"/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_{short_name}_dark.png",
+                f"reports/uncertainty_{short_name}_dark.png",
                 metric_name=kpi,
                 theme="dark"
             )
             LcaVisualizer.generate_uncertainty_chart(
                 report, 
-                f"/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_{short_name}_light.png",
+                f"reports/uncertainty_{short_name}_light.png",
                 metric_name=kpi,
                 theme="light"
             )
@@ -1348,12 +1348,12 @@ def run_pareto_optimization():
         # Save copies in artifacts directory too!
         LcaVisualizer.generate_tradeoff_chart(
             pareto_report, 
-            "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs_dark.png",
+            "reports/optimization_tradeoffs_dark.png",
             theme="dark"
         )
         LcaVisualizer.generate_tradeoff_chart(
             pareto_report, 
-            "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs_light.png",
+            "reports/optimization_tradeoffs_light.png",
             theme="light"
         )
         
@@ -1956,12 +1956,12 @@ def chat():
                 
                 LcaVisualizer.generate_tradeoff_chart(
                     sub_report, 
-                    "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs_dark.png",
+                    "reports/optimization_tradeoffs_dark.png",
                     theme="dark"
                 )
                 LcaVisualizer.generate_tradeoff_chart(
                     sub_report, 
-                    "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs_light.png",
+                    "reports/optimization_tradeoffs_light.png",
                     theme="light"
                 )
 
@@ -1989,13 +1989,13 @@ def chat():
                     # Save copy in brain artifacts
                     LcaVisualizer.generate_uncertainty_chart(
                         sub_report, 
-                        f"/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_{short_name}_dark.png",
+                        f"reports/uncertainty_{short_name}_dark.png",
                         metric_name=kpi,
                         theme="dark"
                     )
                     LcaVisualizer.generate_uncertainty_chart(
                         sub_report, 
-                        f"/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_{short_name}_light.png",
+                        f"reports/uncertainty_{short_name}_light.png",
                         metric_name=kpi,
                         theme="light"
                     )

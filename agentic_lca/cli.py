@@ -159,7 +159,7 @@ A multi-objective environmental and economic impact assessment was performed.
         print(f"[Warning] Failed to write report file: {e}")
         
     # Write to brain artifacts directory
-    brain_path = f"/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/{filename}"
+    brain_path = f"reports/{filename}"
     try:
         with open(brain_path, "w") as f:
             f.write(md)
@@ -725,21 +725,21 @@ def run_interactive_cli_chat(port):
             LcaVisualizer.generate_tradeoff_chart(active_report, "optimization_tradeoffs.png", theme="dark")
             LcaVisualizer.generate_tradeoff_chart(
                 active_report, 
-                "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs.png",
+                "reports/optimization_tradeoffs.png",
                 theme="dark"
             )
             
             LcaVisualizer.generate_uncertainty_chart(active_report, "uncertainty_gwp_dark.png", "Global Warming", theme="dark")
             LcaVisualizer.generate_uncertainty_chart(
                 active_report, 
-                "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_gwp_dark.png",
+                "reports/uncertainty_gwp_dark.png",
                 "Global Warming", 
                 theme="dark"
             )
             LcaVisualizer.generate_uncertainty_chart(active_report, "uncertainty_cost_dark.png", "Feedstock Cost", theme="dark")
             LcaVisualizer.generate_uncertainty_chart(
                 active_report, 
-                "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/uncertainty_cost_dark.png",
+                "reports/uncertainty_cost_dark.png",
                 "Feedstock Cost", 
                 theme="dark"
             )
@@ -895,7 +895,7 @@ Commands:
                     LcaVisualizer.generate_tradeoff_chart(report, "optimization_tradeoffs.png", theme="dark")
                     LcaVisualizer.generate_tradeoff_chart(
                         report, 
-                        "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs.png",
+                        "reports/optimization_tradeoffs.png",
                         theme="dark"
                     )
                 except Exception as e_plot:
@@ -1461,7 +1461,7 @@ def main():
             LcaVisualizer.generate_tradeoff_chart(report, "optimization_tradeoffs.png")
             LcaVisualizer.generate_tradeoff_chart(
                 report, 
-                "/Users/somnath.luitel/.gemini/antigravity-cli/brain/0bbe558c-6b76-424c-99dc-0af16d676dc5/optimization_tradeoffs.png"
+                "reports/optimization_tradeoffs.png"
             )
         except Exception as e_plot:
             print(f"[Warning] Failed to generate plot: {e_plot}")

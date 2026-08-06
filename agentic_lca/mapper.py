@@ -20,7 +20,7 @@ class FlowMapper:
         self.inverted_index = {}
         self.flow_norms = {}
         self.indexed_flows = []
-        self.dictionary_path = '/Users/somnath.luitel/documents/airlab/openlca/agentic_lca/resources/mapping_dictionary.json'
+        self.dictionary_path = os.path.join(os.path.dirname(__file__), 'resources', 'mapping_dictionary.json')
         self.synonyms = self._load_synonyms()
         
         self._load_and_index_flows()
