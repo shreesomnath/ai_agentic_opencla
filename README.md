@@ -133,6 +133,24 @@ If you have already cloned the repository and installed everything, here is how 
      ```bash
      agentic-lca --chat
      ```
+
+### 🌟 Pro-Tip: Run Globally Without Activating `.venv`
+You can configure your system so that you never have to run `source .venv/bin/activate` again! By adding an alias, the `agentic-lca` command will always know to use its own virtual environment in the background.
+
+**For Mac / Linux (Zsh or Bash):**
+Run this command once in your terminal to create a permanent alias:
+```bash
+echo 'alias agentic-lca="~/documents/airlab/openlca/ai_agentic_opencla/.venv/bin/agentic-lca"' >> ~/.zshrc
+source ~/.zshrc
+```
+*(Note: If you use bash, replace `.zshrc` with `.bashrc` or `.bash_profile`)*
+
+**For Windows (PowerShell):**
+Run this command once to add an alias to your PowerShell profile:
+```powershell
+Add-Content -Path $PROFILE -Value 'Set-Alias agentic-lca "C:\path\to\your\ai_agentic_opencla\.venv\Scripts\agentic-lca.exe"'
+```
+
 ---
 
 ## 📋 Selecting Sample BOMs
