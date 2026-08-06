@@ -175,7 +175,10 @@ def get_samples():
         "Silicon Solar Cell (Default)": "sample_bom.csv",
         "Perovskite Tandem Solar Cell": "samples/perovskite_tandem_cell.csv",
         "Wind Turbine Blade": "samples/wind_turbine_blade.csv",
-        "Lithium-Ion Battery Pack": "samples/lithium_ion_battery.csv"
+        "Lithium-Ion Battery Pack": "samples/lithium_ion_battery.csv",
+        "Electric Vehicle Motor": "samples/electric_vehicle_motor.csv",
+        "Aluminum Beverage Can": "samples/aluminum_beverage_can.csv",
+        "Residential Heat Pump": "samples/residential_heat_pump.csv"
     }
     return jsonify(samples)
 
