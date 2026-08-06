@@ -1002,10 +1002,11 @@ Commands:
             print(f"Error during chat interaction: {loop_ex}")
 
 def main():
+    import sys
+    import os
     if "--web" in sys.argv or "--dashboard" in sys.argv:
         print("Launching Agentic LCA Web Dashboard...")
-        import sys
-        import os
+
         # Add the parent directory (project root) to sys.path so app.py can be found
         current_dir = os.path.dirname(os.path.abspath(__file__))
         root_dir = os.path.dirname(current_dir)
