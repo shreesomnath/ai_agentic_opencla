@@ -1004,6 +1004,14 @@ Commands:
 def main():
     if "--web" in sys.argv or "--dashboard" in sys.argv:
         print("Launching Agentic LCA Web Dashboard...")
+        import sys
+        import os
+        # Add the parent directory (project root) to sys.path so app.py can be found
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        root_dir = os.path.dirname(current_dir)
+        if root_dir not in sys.path:
+            sys.path.insert(0, root_dir)
+            
         from app import app
         app.run(port=5000, debug=False)
         sys.exit(0)
