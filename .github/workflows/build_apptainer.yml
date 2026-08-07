@@ -28,7 +28,8 @@ jobs:
 
       - name: Build Apptainer Image
         run: |
-          apptainer build agentic_lca.sif Apptainer.def
+          sudo apptainer build agentic_lca.sif Apptainer.def
+          sudo chown $USER agentic_lca.sif
 
       - name: Push Apptainer Image to GHCR (ORAS)
         run: |
